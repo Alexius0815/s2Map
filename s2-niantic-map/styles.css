@@ -235,6 +235,7 @@ button {
 .awaiting-location .panel-toggle,
 .awaiting-location .help-toggle,
 .awaiting-location .help-panel,
+.awaiting-location .about-panel,
 .awaiting-location .control-panel,
 .awaiting-location .leaflet-control-container {
   visibility: hidden;
@@ -265,6 +266,18 @@ button {
   box-shadow: 0 14px 34px rgba(12, 47, 92, 0.2);
   backdrop-filter: blur(18px);
   pointer-events: auto;
+  text-align: left;
+  transition:
+    border-color 140ms ease,
+    box-shadow 140ms ease,
+    transform 140ms ease;
+}
+
+.brand:hover,
+.brand:focus-visible {
+  border-color: var(--spark);
+  box-shadow: 0 16px 36px rgba(12, 47, 92, 0.24), 0 0 0 3px rgba(255, 203, 5, 0.32);
+  transform: translateY(-1px);
 }
 
 .brand-mark {
@@ -299,6 +312,81 @@ button {
   margin-top: 2px;
   color: var(--muted);
   font-size: 12px;
+}
+
+.about-panel {
+  position: absolute;
+  z-index: 525;
+  top: max(82px, calc(env(safe-area-inset-top) + 82px));
+  left: 12px;
+  width: min(390px, calc(100vw - 24px));
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.92);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 18px 42px rgba(12, 47, 92, 0.24);
+  backdrop-filter: blur(18px);
+  transition:
+    opacity 160ms ease,
+    transform 160ms ease,
+    visibility 160ms ease;
+}
+
+.about-panel.is-collapsed {
+  visibility: hidden;
+  opacity: 0;
+  transform: translateY(-12px);
+  pointer-events: none;
+}
+
+.about-list,
+.about-list dt,
+.about-list dd {
+  margin: 0;
+}
+
+.about-list {
+  display: grid;
+  gap: 8px;
+}
+
+.about-list div {
+  display: grid;
+  grid-template-columns: 74px minmax(0, 1fr);
+  gap: 10px;
+  align-items: baseline;
+  min-width: 0;
+  padding: 9px 10px;
+  border: 1px solid rgba(29, 140, 248, 0.14);
+  border-radius: 8px;
+  background: #f8fbff;
+}
+
+.about-list dt {
+  color: #0956b6;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.about-list dd {
+  min-width: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.about-list a {
+  color: #0956b6;
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.about-list a:hover,
+.about-list a:focus-visible {
+  text-decoration: underline;
 }
 
 .icon-button {
@@ -852,6 +940,13 @@ button {
   }
 
   .location-panel {
+    top: max(74px, calc(env(safe-area-inset-top) + 74px));
+    left: 10px;
+    right: 10px;
+    width: auto;
+  }
+
+  .about-panel {
     top: max(74px, calc(env(safe-area-inset-top) + 74px));
     left: 10px;
     right: 10px;

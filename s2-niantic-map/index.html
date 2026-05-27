@@ -21,14 +21,31 @@
         <div id="map"></div>
 
         <div class="topbar">
-          <div class="brand">
+          <button id="brandButton" class="brand" type="button" aria-expanded="false" aria-controls="aboutPanel">
             <span class="brand-mark" aria-hidden="true"></span>
             <div>
               <h1>S2 Niantic Map</h1>
               <p>Wetterboost, Waypoints und Zellgrenzen im Blick</p>
             </div>
-          </div>
+          </button>
         </div>
+
+        <aside id="aboutPanel" class="about-panel is-collapsed" aria-label="App-Info">
+          <div class="panel-header">
+            <div>
+              <h2>App-Info</h2>
+              <p>S2 Niantic Map</p>
+            </div>
+            <button id="closeAboutPanel" class="panel-close-button" type="button" aria-label="App-Info schließen">×</button>
+          </div>
+          <dl class="about-list">
+            <div><dt>Build</dt><dd>Static Web App · Leaflet · Vercel Function</dd></div>
+            <div><dt>Stand</dt><dd>27.05.2026</dd></div>
+            <div><dt>Autor</dt><dd>Alexius0815</dd></div>
+            <div><dt>Projekt</dt><dd><a href="https://github.com/Alexius0815/s2Map" target="_blank" rel="noreferrer">github.com/Alexius0815/s2Map</a></dd></div>
+            <div><dt>Daten</dt><dd>OpenStreetMap, S2-Geometrie und Open-Meteo-Näherung</dd></div>
+          </dl>
+        </aside>
 
         <div id="locationConsent" class="location-consent" role="dialog" aria-label="Standortfreigabe">
           <p>Aktuellen Standort nutzen?</p>

@@ -99,6 +99,9 @@ const ui = {
   helpToggle: document.querySelector("#helpToggle"),
   helpPanel: document.querySelector("#helpPanel"),
   closeHelpPanel: document.querySelector("#closeHelpPanel"),
+  brandButton: document.querySelector("#brandButton"),
+  aboutPanel: document.querySelector("#aboutPanel"),
+  closeAboutPanel: document.querySelector("#closeAboutPanel"),
   locationConsent: document.querySelector("#locationConsent"),
   allowLocationButton: document.querySelector("#allowLocationButton"),
   skipLocationButton: document.querySelector("#skipLocationButton"),
@@ -144,6 +147,9 @@ ui.locationGoButton.addEventListener("click", jumpToLocation);
 ui.weatherButton.addEventListener("click", toggleWeather);
 ui.helpToggle.addEventListener("click", () => setHelpPanelCollapsed(!ui.helpPanel.classList.contains("is-collapsed")));
 ui.closeHelpPanel.addEventListener("click", () => setHelpPanelCollapsed(true));
+ui.brandButton.addEventListener("click", () => setAboutPanelCollapsed(!ui.aboutPanel.classList.contains("is-collapsed")));
+ui.brandButton.addEventListener("mouseenter", () => setAboutPanelCollapsed(false));
+ui.closeAboutPanel.addEventListener("click", () => setAboutPanelCollapsed(true));
 ui.allowLocationButton.addEventListener("click", () => {
   setLocationConsentVisible(false);
   locateUser({ initial: true });
@@ -161,6 +167,9 @@ ui.locationModes.forEach((input) => {
     ui.locationInput.focus();
   });
 });
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") setAboutPanelCollapsed(true);
+});
 
 map.on("moveend zoomend resize", scheduleRender);
 scheduleRender();
@@ -172,6 +181,7 @@ function setPanelCollapsed(collapsed) {
   ui.panelToggle.setAttribute("aria-expanded", String(!collapsed));
   if (!collapsed) {
     setHelpPanelCollapsed(true);
+    setAboutPanelCollapsed(true);
   }
 }
 
@@ -187,6 +197,18 @@ function setHelpPanelCollapsed(collapsed) {
   ui.helpToggle.setAttribute("aria-expanded", String(!collapsed));
   if (!collapsed && !state.collapsed) {
     setPanelCollapsed(true);
+  }
+  if (!collapsed) {
+    setAboutPanelCollapsed(true);
+  }
+}
+
+function setAboutPanelCollapsed(collapsed) {
+  ui.aboutPanel.classList.toggle("is-collapsed", collapsed);
+  ui.brandButton.setAttribute("aria-expanded", String(!collapsed));
+  if (!collapsed) {
+    setPanelCollapsed(true);
+    setHelpPanelCollapsed(true);
   }
 }
 
