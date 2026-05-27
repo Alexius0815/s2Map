@@ -1,4 +1,4 @@
-# S2 Maps fuer Niantic Spiele
+# S2 Maps fuer Niantic-Spiele
 
 Mobile Web-App zur Orientierung mit S2-Zellen fuer Niantic-Spiele.
 
@@ -11,6 +11,13 @@ python3 -m http.server 4173
 ```
 
 Danach ist die App unter `http://127.0.0.1:4173/` erreichbar.
+
+## Installation auf dem Home-Bildschirm
+
+- iPhone/iPad: In Safari oeffnen, Teilen-Symbol antippen, `Zum Home-Bildschirm` waehlen.
+- Android: In Chrome oeffnen und den eingeblendeten Installationsdialog oder im Menue `App installieren` / `Zum Startbildschirm hinzufuegen` nutzen.
+
+Die App registriert einen Service Worker fuer die App-Shell. API- und Wetterdaten werden nicht offline gecacht.
 
 ## Hosting mit Vercel
 

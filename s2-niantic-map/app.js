@@ -41,6 +41,7 @@ const state = {
   weather: new Map(),
   weatherPending: new Set(),
   weatherEnabled: false,
+  installPrompt: null,
   renderTimer: 0,
   collapsed: true,
   locationCollapsed: false,
@@ -93,6 +94,8 @@ const ui = {
   brandButton: document.querySelector("#brandButton"),
   aboutPanel: document.querySelector("#aboutPanel"),
   closeAboutPanel: document.querySelector("#closeAboutPanel"),
+  installButton: document.querySelector("#installButton"),
+  installStatus: document.querySelector("#installStatus"),
   locationConsent: document.querySelector("#locationConsent"),
   allowLocationButton: document.querySelector("#allowLocationButton"),
   skipLocationButton: document.querySelector("#skipLocationButton"),
@@ -141,6 +144,7 @@ ui.closeHelpPanel.addEventListener("click", () => setHelpPanelCollapsed(true));
 ui.brandButton.addEventListener("click", () => setAboutPanelCollapsed(!ui.aboutPanel.classList.contains("is-collapsed")));
 ui.brandButton.addEventListener("mouseenter", () => setAboutPanelCollapsed(false));
 ui.closeAboutPanel.addEventListener("click", () => setAboutPanelCollapsed(true));
+ui.installButton.addEventListener("click", installApp);
 ui.allowLocationButton.addEventListener("click", () => {
   setLocationConsentVisible(false);
   setPanelCollapsed(true);
@@ -171,6 +175,14 @@ document.addEventListener("keydown", (event) => {
 });
 
 map.on("moveend zoomend resize", scheduleRender);
+window.addEventListener("beforeinstallprompt", handleInstallPrompt);
+window.addEventListener("appinstalled", () => {
+  state.installPrompt = null;
+  ui.installButton.classList.add("is-hidden");
+  ui.installStatus.textContent = "App ist installiert.";
+});
+registerServiceWorker();
+updateInstallHelp();
 scheduleRender();
 window.setTimeout(requestInitialLocation, 300);
 
@@ -559,15 +571,80 @@ function locateUser(options = {}) {
 
 function geolocationErrorMessage(error) {
   if (!window.isSecureContext) {
-    return "Standort braucht HTTPS. Bitte die Vercel-URL oder Home-Bildschirm-App nutzen.";
+    return "Standort braucht HTTPS. Bitte die Vercel-URL nutzen und die App zum Home-Bildschirm hinzufügen.";
   }
   if (error && error.code === error.PERMISSION_DENIED) {
-    return "Standort blockiert. Auf iPhone: Safari/Website-Einstellungen prüfen oder zum Home-Bildschirm hinzufügen.";
+    return "Standort blockiert. Auf iPhone in Safari öffnen und „Zum Home-Bildschirm“ wählen oder Website-Einstellungen prüfen.";
   }
   if (error && error.code === error.TIMEOUT) {
     return "Standort hat zu lange gedauert. Bitte erneut versuchen oder Koordinaten eingeben.";
   }
   return "Standort konnte nicht gelesen werden. Bitte Safari öffnen oder Koordinaten eingeben.";
+}
+
+function handleInstallPrompt(event) {
+  event.preventDefault();
+  state.installPrompt = event;
+  ui.installButton.classList.remove("is-hidden");
+  ui.installStatus.textContent = "Android/Chrome: Tippe auf „App installieren“, um die Web-App zum Startbildschirm hinzuzufügen.";
+}
+
+async function installApp() {
+  if (isStandaloneApp()) {
+    ui.installButton.classList.add("is-hidden");
+    ui.installStatus.textContent = "App ist bereits als Home-Bildschirm-App geöffnet.";
+    return;
+  }
+
+  if (state.installPrompt) {
+    const prompt = state.installPrompt;
+    state.installPrompt = null;
+    prompt.prompt();
+    const choice = await prompt.userChoice.catch(() => null);
+    ui.installStatus.textContent =
+      choice && choice.outcome === "accepted"
+        ? "Installation gestartet."
+        : "Installation abgebrochen. Du kannst sie später erneut über das Browser-Menü starten.";
+    return;
+  }
+
+  updateInstallHelp();
+}
+
+function updateInstallHelp() {
+  if (isStandaloneApp()) {
+    ui.installButton.classList.add("is-hidden");
+    ui.installStatus.textContent = "App ist bereits als Home-Bildschirm-App geöffnet.";
+    return;
+  }
+
+  if (isIos()) {
+    ui.installButton.textContent = "iOS-Anleitung";
+    ui.installStatus.textContent = "iPhone/iPad: In Safari öffnen, Teilen-Symbol antippen und „Zum Home-Bildschirm“ wählen.";
+    return;
+  }
+
+  ui.installButton.textContent = "App installieren";
+  ui.installStatus.textContent = state.installPrompt
+    ? "Android/Chrome: Tippe auf „App installieren“."
+    : "Android: In Chrome das Menü öffnen und „App installieren“ oder „Zum Startbildschirm hinzufügen“ wählen.";
+}
+
+function isIos() {
+  return /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+}
+
+function isStandaloneApp() {
+  return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+}
+
+function registerServiceWorker() {
+  if (!("serviceWorker" in navigator)) return;
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("sw.js").catch(() => {
+      ui.installStatus.textContent = "Installationshilfe ist verfügbar; Offline-Cache konnte nicht aktiviert werden.";
+    });
+  });
 }
 
 function jumpToLocation() {

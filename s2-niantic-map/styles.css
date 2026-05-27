@@ -425,6 +425,33 @@ button {
   text-decoration: underline;
 }
 
+.install-box {
+  display: grid;
+  gap: 7px;
+}
+
+.install-box button {
+  min-height: 38px;
+  width: fit-content;
+  padding: 0 12px;
+  border-radius: 8px;
+  color: #fff;
+  background: #1d8cf8;
+  box-shadow: 0 3px 0 #0956b6;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.install-box button.is-hidden {
+  display: none;
+}
+
+.install-box span {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
 .icon-button {
   display: grid;
   width: 44px;
@@ -1124,7 +1151,7 @@ button {
   }
 
   .about-panel {
-    top: max(74px, calc(env(safe-area-inset-top) + 74px));
+    top: max(114px, calc(env(safe-area-inset-top) + 114px));
     left: 10px;
     right: 10px;
     width: auto;
