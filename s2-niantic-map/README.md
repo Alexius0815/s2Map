@@ -12,6 +12,10 @@ python3 -m http.server 4173
 
 Danach ist die App unter `http://127.0.0.1:4173/` erreichbar.
 
+## Hosting mit Vercel
+
+Das Repository ist fuer Vercel vorbereitet. Beim Import kann das Projekt ohne Build Command deployed werden; `vercel.json` leitet die Root-URL auf die statische App in `s2-niantic-map/`.
+
 ## Layer
 
 - `Level 10`: Wetterzellen fuer Pokemon-GO-Wetterboosts.
