@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#0f766e" />
-    <title>S2 Niantic Map</title>
+    <title>S2 Maps für Niantic Spiele</title>
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="icon" href="icon.svg" type="image/svg+xml" />
     <link
@@ -24,7 +24,7 @@
           <button id="brandButton" class="brand" type="button" aria-expanded="false" aria-controls="aboutPanel">
             <span class="brand-mark" aria-hidden="true"></span>
             <div>
-              <h1>S2 Niantic Map</h1>
+              <h1>S2 Maps für Niantic Spiele</h1>
               <p>Wetterboost, Waypoints und Zellgrenzen im Blick</p>
             </div>
           </button>
@@ -34,7 +34,7 @@
           <div class="panel-header">
             <div>
               <h2>App-Info</h2>
-              <p>S2 Niantic Map</p>
+              <p>S2 Maps für Niantic Spiele</p>
             </div>
             <button id="closeAboutPanel" class="panel-close-button" type="button" aria-label="App-Info schließen">×</button>
           </div>
@@ -86,7 +86,7 @@
           ⌕
         </button>
 
-        <button id="panelToggle" class="panel-toggle" type="button" aria-expanded="true" aria-controls="controlPanel">
+        <button id="panelToggle" class="panel-toggle" type="button" aria-expanded="false" aria-controls="controlPanel">
           Layer
         </button>
 
@@ -116,7 +116,7 @@
           </div>
         </aside>
 
-        <aside id="controlPanel" class="control-panel" aria-label="S2-Layer auswählen">
+        <aside id="controlPanel" class="control-panel is-collapsed" aria-label="S2-Layer auswählen">
           <div class="panel-header">
             <div>
               <h2>Zellen</h2>

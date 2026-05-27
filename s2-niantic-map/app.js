@@ -26,22 +26,11 @@ const layers = [
     level: 17,
     title: "Level 17 · Stop/Waypoint",
     color: "#d97706",
-    checked: false,
-    minZoom: 15,
+    checked: true,
+    minZoom: 16,
     labelZoom: 17,
     description:
       "Feine Zellen für PokéStop- und Waypoint-Orientierung. Meist zählt nur ein Wayspot pro L17-Zelle in Pokémon GO.",
-  },
-  {
-    id: "ingress",
-    level: 12,
-    title: "Level 12 · Ingress-Umfeld",
-    color: "#2563eb",
-    checked: false,
-    minZoom: 11,
-    labelZoom: 13,
-    description:
-      "Mittlere Übersichtsebene für Portal-Cluster, Routen und lokale Spielbereiche in Ingress. Praktisch als Kontext zwischen Wetter- und POI-Zellen.",
   },
 ];
 
@@ -53,7 +42,7 @@ const state = {
   weatherPending: new Set(),
   weatherEnabled: false,
   renderTimer: 0,
-  collapsed: false,
+  collapsed: true,
   locationCollapsed: false,
   locationMode: "place",
   locationMarker: null,
@@ -152,9 +141,18 @@ ui.brandButton.addEventListener("mouseenter", () => setAboutPanelCollapsed(false
 ui.closeAboutPanel.addEventListener("click", () => setAboutPanelCollapsed(true));
 ui.allowLocationButton.addEventListener("click", () => {
   setLocationConsentVisible(false);
+  setPanelCollapsed(true);
+  setHelpPanelCollapsed(true);
+  setAboutPanelCollapsed(true);
+  setLocationPanelCollapsed(true);
   locateUser({ initial: true });
 });
-ui.skipLocationButton.addEventListener("click", () => setLocationConsentVisible(false));
+ui.skipLocationButton.addEventListener("click", () => {
+  setLocationConsentVisible(false);
+  setPanelCollapsed(true);
+  setHelpPanelCollapsed(true);
+  setAboutPanelCollapsed(true);
+});
 ui.locationInput.addEventListener("keydown", (event) => {
   if (event.key === "Enter") jumpToLocation();
 });
@@ -400,14 +398,13 @@ function cellKey(cell) {
 
 function gridWeight(level, zoom) {
   const levelWeight = {
-    10: 4.2,
-    12: 3.1,
-    14: 2.1,
-    17: 1.1,
+    10: 3,
+    14: 1.25,
+    17: 0.65,
   };
-  const base = levelWeight[level] || Math.max(0.9, 4.4 - (level - 10) * 0.32);
-  const zoomBoost = Math.max(0, Math.min(1.1, (zoom - 10) * 0.12));
-  return base + zoomBoost;
+  const base = levelWeight[level] || Math.max(0.6, 3.2 - (level - 10) * 0.26);
+  const zoomTrim = Math.max(0, Math.min(base * 0.22, (zoom - 10) * 0.055));
+  return Math.max(0.45, base - zoomTrim);
 }
 
 function collectVisibleCells(level) {

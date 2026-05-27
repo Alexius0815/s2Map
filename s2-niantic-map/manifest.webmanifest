@@ -1,6 +1,6 @@
 {
-  "name": "S2 Niantic Map",
-  "short_name": "S2 Map",
+  "name": "S2 Maps fuer Niantic Spiele",
+  "short_name": "S2 Maps",
   "description": "Mobile Karte mit S2-Zellen fuer Niantic-Spiele.",
   "start_url": ".",
   "display": "standalone",
