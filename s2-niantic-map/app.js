@@ -144,7 +144,6 @@ ui.allowLocationButton.addEventListener("click", () => {
   setPanelCollapsed(true);
   setHelpPanelCollapsed(true);
   setAboutPanelCollapsed(true);
-  setLocationPanelCollapsed(true);
   locateUser({ initial: true });
 });
 ui.skipLocationButton.addEventListener("click", () => {
@@ -537,6 +536,7 @@ function uvToSt(u) {
 function locateUser(options = {}) {
   if (!navigator.geolocation) {
     ui.locationStatus.textContent = "Standort wird nicht unterstützt";
+    setLocationPanelCollapsed(false);
     return;
   }
   ui.locationStatus.textContent = "Suche eigene Location ...";
@@ -547,11 +547,25 @@ function locateUser(options = {}) {
         setLocationPanelCollapsed(true);
       }
     },
-    () => {
-      ui.locationStatus.textContent = "Standort konnte nicht gelesen werden";
+    (error) => {
+      ui.locationStatus.textContent = geolocationErrorMessage(error);
+      setLocationPanelCollapsed(false);
     },
     { enableHighAccuracy: true, timeout: 8000 },
   );
+}
+
+function geolocationErrorMessage(error) {
+  if (!window.isSecureContext) {
+    return "Standort braucht HTTPS. Bitte die Vercel-URL oder Home-Bildschirm-App nutzen.";
+  }
+  if (error && error.code === error.PERMISSION_DENIED) {
+    return "Standort blockiert. Auf iPhone: Safari/Website-Einstellungen prüfen oder zum Home-Bildschirm hinzufügen.";
+  }
+  if (error && error.code === error.TIMEOUT) {
+    return "Standort hat zu lange gedauert. Bitte erneut versuchen oder Koordinaten eingeben.";
+  }
+  return "Standort konnte nicht gelesen werden. Bitte Safari öffnen oder Koordinaten eingeben.";
 }
 
 function jumpToLocation() {
