@@ -15,7 +15,7 @@ const layers = [
     level: 14,
     title: "Level 14 · Gym-Planung",
     color: "#7c3aed",
-    checked: false,
+    checked: true,
     minZoom: 13,
     labelZoom: 15,
     description:
@@ -192,6 +192,7 @@ function setHelpPanelCollapsed(collapsed) {
 
 function setLocationConsentVisible(visible) {
   ui.locationConsent.classList.toggle("is-hidden", !visible);
+  document.body.classList.toggle("awaiting-location", visible);
 }
 
 function requestInitialLocation() {
@@ -209,6 +210,7 @@ function scheduleRender() {
 
 function renderCells() {
   const zoom = map.getZoom();
+  const viewBounds = map.getBounds();
   let totalCells = 0;
   let visibleWeatherCells = [];
   const activeLayers = layers.filter((layer) => state.active.has(layer.id));
@@ -243,7 +245,7 @@ function renderCells() {
         weight: gridWeight(layer.level, zoom),
         opacity: 0.9,
         fillColor: weatherColor,
-        fillOpacity: weather ? 0.18 : layer.level >= 17 ? 0.04 : 0.07,
+        fillOpacity: 0,
         interactive: true,
       }).bindTooltip(buildTooltip(layer, cell, weather), {
         sticky: true,
@@ -251,8 +253,8 @@ function renderCells() {
       });
       leafletPolygon.addTo(state.groups.get(layer.id));
 
-      if (zoom >= layer.labelZoom && shouldLabelCell(cell, layer.level)) {
-        const center = cellCenter(cell.face, cell.i, cell.j, cell.level);
+      if ((zoom >= layer.labelZoom || weather) && shouldLabelCell(cell, layer.level)) {
+        const center = weather ? visibleLabelPosition(polygon, viewBounds) : cellCenter(cell.face, cell.i, cell.j, cell.level);
         L.marker(center, {
           interactive: false,
           icon: L.divIcon({
@@ -431,6 +433,18 @@ function shouldLabelCell(cell, level) {
 
 function polygonTouchesBounds(polygon, bounds) {
   return L.latLngBounds(polygon).intersects(bounds);
+}
+
+function visibleLabelPosition(polygon, bounds) {
+  const cellBounds = L.latLngBounds(polygon);
+  const south = Math.max(cellBounds.getSouth(), bounds.getSouth());
+  const north = Math.min(cellBounds.getNorth(), bounds.getNorth());
+  const west = Math.max(cellBounds.getWest(), bounds.getWest());
+  const east = Math.min(cellBounds.getEast(), bounds.getEast());
+  if (south <= north && west <= east) {
+    return [(south + north) / 2, (west + east) / 2];
+  }
+  return cellBounds.getCenter();
 }
 
 function latLngToCell(lat, lng, level) {

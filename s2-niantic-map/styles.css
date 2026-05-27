@@ -225,6 +225,18 @@ button {
   background: #cbdde3;
 }
 
+.awaiting-location #map,
+.awaiting-location .topbar,
+.awaiting-location .location-panel,
+.awaiting-location .location-panel-toggle,
+.awaiting-location .panel-toggle,
+.awaiting-location .help-toggle,
+.awaiting-location .help-panel,
+.awaiting-location .control-panel,
+.awaiting-location .leaflet-control-container {
+  visibility: hidden;
+}
+
 .topbar {
   position: absolute;
   z-index: 500;
@@ -430,7 +442,7 @@ button {
   color: var(--accent-strong);
   background: var(--surface);
   box-shadow: var(--shadow);
-  font-size: 24px;
+  font-size: 36px;
 }
 
 .location-panel-toggle.is-visible {
