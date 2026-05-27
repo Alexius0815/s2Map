@@ -16,6 +16,14 @@ Danach ist die App unter `http://127.0.0.1:4173/` erreichbar.
 
 Das Repository ist fuer Vercel vorbereitet. Beim Import kann das Projekt ohne Build Command deployed werden; `vercel.json` leitet die Root-URL auf die statische App in `s2-niantic-map/`.
 
+Fuer PGO-nahe Wetterdaten muss in Vercel eine Environment Variable gesetzt werden:
+
+```txt
+ACCUWEATHER_API_KEY=dein_accuweather_key
+```
+
+Die App ruft AccuWeather ueber `/api/weather` ab, damit der Key nicht im Browser sichtbar ist. Ohne Key bleibt die Karte nutzbar; der Wetterbutton zeigt dann einen Konfigurationshinweis.
+
 ## Layer
 
 - `Level 10`: Wetterzellen fuer Pokemon-GO-Wetterboosts.
