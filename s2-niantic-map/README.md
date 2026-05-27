@@ -34,3 +34,12 @@ Der Key bleibt serverseitig und wird nicht im Browser sichtbar.
 - `Level 12`: mittlere Uebersicht fuer Ingress-Umfelder.
 
 Die Regeln sind nicht offiziell dokumentiert und koennen sich aendern. Die App ist als Planungs- und Orientierungshilfe gedacht.
+
+## Hinweise zu Marken, Daten und Links
+
+Diese App ist eine inoffizielle Orientierungshilfe und nicht mit Niantic, Pokemon GO, The Pokemon Company oder PokéWiki verbunden.
+
+- Karten: OpenStreetMap-Mitwirkende, siehe https://www.openstreetmap.org/copyright
+- Wetterdaten: Open-Meteo, siehe https://open-meteo.com/
+- Kartenbibliothek: Leaflet, BSD-2-Clause
+- Externe Typ-Links fuehren zu PokéWiki. PokéWiki-Inhalte werden nicht in diese App uebernommen.

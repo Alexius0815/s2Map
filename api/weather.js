@@ -266,16 +266,7 @@ function pokemonWeather(id, label, color) {
     snow: ["Eis", "Stahl"],
     fog: ["Unlicht", "Geist"],
   };
-  const examples = {
-    clear: ["Glurak", "Groudon", "Vulpix"],
-    rain: ["Kyogre", "Karpador", "Pikachu"],
-    snow: ["Arktos", "Frosdedje", "Panzaeron"],
-    wind: ["Rayquaza", "Dratini", "Abra"],
-    cloudy: ["Machollo", "Piepi", "Sleima"],
-    "partly-cloudy": ["Relaxo", "Kleinstein"],
-    fog: ["Gengar", "Absol"],
-  };
-  return { id, label, color, boostedTypes: boosts[id] || [], examples: examples[id] || [] };
+  return { id, label, color, boostedTypes: boosts[id] || [] };
 }
 
 function getCached(cache, key) {

@@ -76,7 +76,7 @@ L.control
 
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
   maxZoom: 19,
-  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap-Mitwirkende</a>',
 }).addTo(map);
 
 const ui = {
@@ -369,9 +369,8 @@ function buildTooltip(layer, cell, weather) {
   if (weather) {
     lines.push(
       `${weather.provider}: ${weather.weatherText}`,
-      `PGO-Naeherung: ${weather.pokemonWeather.label}`,
+      `Wetterboost-Naeherung: ${weather.pokemonWeather.label}`,
       `Boost: ${formatBoostedTypes(weather)}`,
-      `Typische Funde: ${formatExamples(weather)}`,
       `Temp: ${formatValue(weather.temperatureC, "°C")} · Wind: ${formatValue(weather.windKmh, "km/h")}`,
       `Ort: ${weather.location.name}`,
     );
@@ -389,13 +388,6 @@ function formatBoostedTypes(weather) {
     ? weather.pokemonWeather.boostedTypes
     : [];
   return types.length ? types.join(", ") : "-";
-}
-
-function formatExamples(weather) {
-  const examples = weather && weather.pokemonWeather && Array.isArray(weather.pokemonWeather.examples)
-    ? weather.pokemonWeather.examples
-    : [];
-  return examples.length ? examples.join(", ") : "-";
 }
 
 function formatValue(value, unit) {

@@ -896,6 +896,40 @@ button {
   display: block;
 }
 
+.type-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.type-links a {
+  display: inline-flex;
+  min-height: 28px;
+  align-items: center;
+  padding: 0 9px;
+  border: 1px solid rgba(29, 140, 248, 0.2);
+  border-radius: 8px;
+  color: #0956b6;
+  background: #e7f3ff;
+  font-size: 12px;
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.type-links a:hover,
+.type-links a:focus-visible {
+  border-color: var(--spark);
+  background: #fff8d6;
+  text-decoration: none;
+}
+
+.source-note {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
 .legend p {
   margin-top: 5px;
   color: var(--muted);
