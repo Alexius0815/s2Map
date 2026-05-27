@@ -96,6 +96,12 @@ const ui = {
   ownLocationButton: document.querySelector("#ownLocationButton"),
   weatherButton: document.querySelector("#weatherButton"),
   weatherStatus: document.querySelector("#weatherStatus"),
+  helpToggle: document.querySelector("#helpToggle"),
+  helpPanel: document.querySelector("#helpPanel"),
+  closeHelpPanel: document.querySelector("#closeHelpPanel"),
+  locationConsent: document.querySelector("#locationConsent"),
+  allowLocationButton: document.querySelector("#allowLocationButton"),
+  skipLocationButton: document.querySelector("#skipLocationButton"),
 };
 
 layers.forEach((layer) => {
@@ -136,6 +142,13 @@ ui.closeLocationPanel.addEventListener("click", () => setLocationPanelCollapsed(
 ui.ownLocationButton.addEventListener("click", locateUser);
 ui.locationGoButton.addEventListener("click", jumpToLocation);
 ui.weatherButton.addEventListener("click", toggleWeather);
+ui.helpToggle.addEventListener("click", () => setHelpPanelCollapsed(!ui.helpPanel.classList.contains("is-collapsed")));
+ui.closeHelpPanel.addEventListener("click", () => setHelpPanelCollapsed(true));
+ui.allowLocationButton.addEventListener("click", () => {
+  setLocationConsentVisible(false);
+  locateUser({ initial: true });
+});
+ui.skipLocationButton.addEventListener("click", () => setLocationConsentVisible(false));
 ui.locationInput.addEventListener("keydown", (event) => {
   if (event.key === "Enter") jumpToLocation();
 });
@@ -151,11 +164,15 @@ ui.locationModes.forEach((input) => {
 
 map.on("moveend zoomend resize", scheduleRender);
 scheduleRender();
+window.setTimeout(requestInitialLocation, 300);
 
 function setPanelCollapsed(collapsed) {
   state.collapsed = collapsed;
   ui.panel.classList.toggle("is-collapsed", collapsed);
   ui.panelToggle.setAttribute("aria-expanded", String(!collapsed));
+  if (!collapsed) {
+    setHelpPanelCollapsed(true);
+  }
 }
 
 function setLocationPanelCollapsed(collapsed) {
@@ -163,6 +180,26 @@ function setLocationPanelCollapsed(collapsed) {
   ui.locationPanel.classList.toggle("is-collapsed", collapsed);
   ui.locationPanelToggle.classList.toggle("is-visible", collapsed);
   ui.locationPanelToggle.setAttribute("aria-expanded", String(!collapsed));
+}
+
+function setHelpPanelCollapsed(collapsed) {
+  ui.helpPanel.classList.toggle("is-collapsed", collapsed);
+  ui.helpToggle.setAttribute("aria-expanded", String(!collapsed));
+  if (!collapsed && !state.collapsed) {
+    setPanelCollapsed(true);
+  }
+}
+
+function setLocationConsentVisible(visible) {
+  ui.locationConsent.classList.toggle("is-hidden", !visible);
+}
+
+function requestInitialLocation() {
+  if (!navigator.geolocation) {
+    setLocationConsentVisible(false);
+    return;
+  }
+  setLocationConsentVisible(true);
 }
 
 function scheduleRender() {
@@ -472,7 +509,7 @@ function uvToSt(u) {
   return u >= 0 ? 0.5 * Math.sqrt(1 + 3 * u) : 1 - 0.5 * Math.sqrt(1 - 3 * u);
 }
 
-function locateUser() {
+function locateUser(options = {}) {
   if (!navigator.geolocation) {
     ui.locationStatus.textContent = "Standort wird nicht unterstützt";
     return;
@@ -480,7 +517,10 @@ function locateUser() {
   ui.locationStatus.textContent = "Suche eigene Location ...";
   navigator.geolocation.getCurrentPosition(
     (position) => {
-      moveToLocation(position.coords.latitude, position.coords.longitude, "Eigene Location", Math.max(map.getZoom(), 15));
+      moveToLocation(position.coords.latitude, position.coords.longitude, "Eigene Location");
+      if (options.initial) {
+        setLocationPanelCollapsed(true);
+      }
     },
     () => {
       ui.locationStatus.textContent = "Standort konnte nicht gelesen werden";
@@ -521,7 +561,7 @@ async function jumpToPlace() {
     }
 
     const label = [result.name, result.admin1, result.country].filter(Boolean).join(", ");
-    moveToLocation(result.latitude, result.longitude, label, Math.max(map.getZoom(), 13));
+    moveToLocation(result.latitude, result.longitude, label);
   } catch (error) {
     ui.locationStatus.textContent = "Ortssuche konnte nicht geladen werden";
   }
@@ -539,11 +579,11 @@ function jumpToCoordinates() {
     ui.locationStatus.textContent = "Koordinaten außerhalb des gültigen Bereichs";
     return;
   }
-  moveToLocation(lat, lng, `${lat.toFixed(5)}, ${lng.toFixed(5)}`, Math.max(map.getZoom(), 15));
+  moveToLocation(lat, lng, `${lat.toFixed(5)}, ${lng.toFixed(5)}`);
 }
 
-function moveToLocation(lat, lng, label, zoom) {
-  map.setView([lat, lng], zoom);
+function moveToLocation(lat, lng, label) {
+  fitWeatherCellForLocation(lat, lng);
   ui.locationStatus.textContent = label;
   if (!state.locationMarker) {
     state.locationMarker = L.circleMarker([lat, lng], {
@@ -557,6 +597,18 @@ function moveToLocation(lat, lng, label, zoom) {
     state.locationMarker.setLatLng([lat, lng]);
   }
   state.locationMarker.bindTooltip(label, { permanent: false, direction: "top" });
+}
+
+function fitWeatherCellForLocation(lat, lng) {
+  const cell = latLngToCell(lat, lng, 10);
+  const polygon = cellPolygon(cell.face, cell.i, cell.j, cell.level);
+  const bounds = L.latLngBounds(polygon);
+  map.fitBounds(bounds.pad(0.04), {
+    animate: true,
+    maxZoom: 12,
+    paddingTopLeft: [18, 86],
+    paddingBottomRight: [18, 92],
+  });
 }
 
 function degreesToRadians(value) {

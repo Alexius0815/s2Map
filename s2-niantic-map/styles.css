@@ -330,6 +330,54 @@ button {
   line-height: 1;
 }
 
+.location-consent {
+  position: absolute;
+  z-index: 530;
+  top: max(74px, calc(env(safe-area-inset-top) + 74px));
+  left: 50%;
+  width: min(320px, calc(100vw - 24px));
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  transform: translateX(-50%);
+  backdrop-filter: blur(18px);
+}
+
+.location-consent.is-hidden {
+  display: none;
+}
+
+.location-consent p {
+  margin: 0;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.location-consent div {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.location-consent button {
+  min-height: 40px;
+  border-radius: 8px;
+  color: #fff;
+  background: var(--accent);
+  font-weight: 800;
+}
+
+.location-consent button + button {
+  color: var(--accent-strong);
+  background: #e6f5f1;
+}
+
 .location-panel {
   position: absolute;
   z-index: 505;
@@ -466,6 +514,50 @@ button {
   color: #fff;
   background: var(--accent);
   box-shadow: var(--shadow);
+}
+
+.help-toggle {
+  position: absolute;
+  z-index: 520;
+  right: 108px;
+  bottom: max(18px, env(safe-area-inset-bottom));
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  color: var(--accent-strong);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  font-size: 20px;
+  font-weight: 900;
+}
+
+.help-panel {
+  position: absolute;
+  z-index: 515;
+  right: 12px;
+  bottom: 78px;
+  width: min(372px, calc(100vw - 24px));
+  max-height: min(64vh, 540px);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(18px);
+  transition:
+    opacity 160ms ease,
+    transform 160ms ease,
+    visibility 160ms ease;
+}
+
+.help-panel.is-collapsed {
+  visibility: hidden;
+  opacity: 0;
+  transform: translateY(16px);
+  pointer-events: none;
 }
 
 .control-panel {
@@ -636,6 +728,12 @@ button {
   border-top: 1px solid var(--line);
 }
 
+.help-panel .boost-list {
+  overflow: auto;
+  padding-top: 0;
+  border-top: 0;
+}
+
 .boost-list h2,
 .boost-list dl,
 .boost-list dt,
@@ -745,5 +843,12 @@ button {
     bottom: 74px;
     width: auto;
     max-height: 56vh;
+  }
+
+  .help-panel {
+    left: 10px;
+    right: 10px;
+    bottom: 74px;
+    width: auto;
   }
 }

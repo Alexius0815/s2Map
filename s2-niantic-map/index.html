@@ -30,6 +30,14 @@
           </div>
         </div>
 
+        <div id="locationConsent" class="location-consent is-hidden" role="dialog" aria-label="Standortfreigabe">
+          <p>Aktuellen Standort nutzen?</p>
+          <div>
+            <button id="allowLocationButton" type="button">Ja</button>
+            <button id="skipLocationButton" type="button">Nein</button>
+          </div>
+        </div>
+
         <aside class="location-panel" aria-label="Standort auswählen">
           <div class="location-panel-header">
             <span>Standort</span>
@@ -63,6 +71,31 @@
           Layer
         </button>
 
+        <button id="helpToggle" class="help-toggle" type="button" aria-expanded="false" aria-controls="helpPanel" aria-label="Boost-Hilfe öffnen">
+          ?
+        </button>
+
+        <aside id="helpPanel" class="help-panel is-collapsed" aria-label="Boost-Hilfe">
+          <div class="panel-header">
+            <div>
+              <h2>Boosts</h2>
+              <p>Wetter, Typen und typische Funde</p>
+            </div>
+            <button id="closeHelpPanel" class="panel-close-button" type="button" aria-label="Boost-Hilfe schließen">×</button>
+          </div>
+          <div class="boost-list" aria-label="Pokémon-GO-Wetterboosts">
+            <dl>
+              <div><dt>Sonnig / Klar</dt><dd><b>Pflanze, Feuer, Boden</b><span>Glurak, Groudon, Vulpix</span></dd></div>
+              <div><dt>Regen</dt><dd><b>Wasser, Elektro, Käfer</b><span>Kyogre, Karpador, Pikachu</span></dd></div>
+              <div><dt>Schnee</dt><dd><b>Eis, Stahl</b><span>Arktos, Frosdedje, Panzaeron</span></dd></div>
+              <div><dt>Windig</dt><dd><b>Flug, Drache, Psycho</b><span>Rayquaza, Dratini, Abra</span></dd></div>
+              <div><dt>Bewölkt</dt><dd><b>Fee, Kampf, Gift</b><span>Machollo, Piepi, Sleima</span></dd></div>
+              <div><dt>Teilweise bewölkt</dt><dd><b>Normal, Gestein</b><span>Relaxo, Kleinstein</span></dd></div>
+              <div><dt>Nebel</dt><dd><b>Unlicht, Geist</b><span>Gengar, Absol</span></dd></div>
+            </dl>
+          </div>
+        </aside>
+
         <aside id="controlPanel" class="control-panel" aria-label="S2-Layer auswählen">
           <div class="panel-header">
             <div>
@@ -80,19 +113,6 @@
               <p id="weatherStatus">Open-Meteo-Daten sind aus</p>
             </div>
             <button id="weatherButton" type="button">Laden</button>
-          </div>
-
-          <div class="boost-list" aria-label="Pokémon-GO-Wetterboosts">
-            <h2>Boosts</h2>
-            <dl>
-              <div><dt>Sonnig / Klar</dt><dd><b>Pflanze, Feuer, Boden</b><span>Glurak, Groudon, Vulpix</span></dd></div>
-              <div><dt>Regen</dt><dd><b>Wasser, Elektro, Käfer</b><span>Kyogre, Karpador, Pikachu</span></dd></div>
-              <div><dt>Schnee</dt><dd><b>Eis, Stahl</b><span>Arktos, Frosdedje, Panzaeron</span></dd></div>
-              <div><dt>Windig</dt><dd><b>Flug, Drache, Psycho</b><span>Rayquaza, Dratini, Abra</span></dd></div>
-              <div><dt>Bewölkt</dt><dd><b>Fee, Kampf, Gift</b><span>Machollo, Piepi, Sleima</span></dd></div>
-              <div><dt>Teilweise bewölkt</dt><dd><b>Normal, Gestein</b><span>Relaxo, Kleinstein</span></dd></div>
-              <div><dt>Nebel</dt><dd><b>Unlicht, Geist</b><span>Gengar, Absol</span></dd></div>
-            </dl>
           </div>
 
           <div class="legend">
