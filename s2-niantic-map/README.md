@@ -41,3 +41,9 @@ Diese App ist eine inoffizielle Orientierungshilfe und nicht mit Niantic, Pokemo
 - Wetterdaten: Open-Meteo, siehe https://open-meteo.com/
 - Kartenbibliothek: Leaflet, BSD-2-Clause
 - Externe Typ-Links fuehren zu PokéWiki. PokéWiki-Inhalte werden nicht in diese App uebernommen.
+
+## Vor oeffentlicher Nutzung in Deutschland
+
+- `impressum.html`: Anschrift und Kontaktmoeglichkeit ergaenzen.
+- `datenschutz.html`: Verantwortlichen-Kontakt, Hosting-Tarif und externe Dienste pruefen.
+- Bei Werbung, Analytics oder zusaetzlichen Drittanbietern die Datenschutzerklaerung und Einwilligungen aktualisieren.

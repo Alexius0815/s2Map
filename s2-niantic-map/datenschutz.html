@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#0f766e" />
+    <title>Datenschutz · S2 Maps für Niantic Spiele</title>
+    <link rel="icon" href="icon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="legal-page">
+    <main class="legal-document">
+      <a class="legal-back" href="index.html">Zur Karte</a>
+      <article class="legal-card">
+        <h1>Datenschutzerklärung</h1>
+        <p>Diese Erklärung beschreibt die Verarbeitung personenbezogener Daten in dieser Web-App.</p>
+
+        <section>
+          <h2>Verantwortlicher</h2>
+          <p>Alex Hofmann</p>
+          <p class="legal-placeholder">Bitte vor Veröffentlichung ergänzen: Anschrift und Kontakt-E-Mail wie im Impressum.</p>
+        </section>
+
+        <section>
+          <h2>Hosting und Server-Logs</h2>
+          <p>Die App ist für Hosting über Vercel vorbereitet. Beim Aufruf der Website verarbeitet der Hosting-Anbieter technisch notwendige Zugriffsdaten, insbesondere IP-Adresse, Datum und Uhrzeit, angeforderte URL, Referrer, User-Agent und Statuscodes. Diese Verarbeitung ist für Auslieferung, Sicherheit und Betrieb der Website erforderlich.</p>
+          <p>Bitte vor Veröffentlichung prüfen, welcher Hosting-Tarif und welche Datenschutzvereinbarungen mit dem Hoster gelten.</p>
+        </section>
+
+        <section>
+          <h2>Standortfunktion</h2>
+          <p>Die Standortabfrage erfolgt nur nach aktiver Bestätigung im Browser. Der Standort wird verwendet, um die Karte auf die aktuelle Position zu setzen. Die App speichert keine Standort-Historie und legt keine Standortdaten in Local Storage, Session Storage oder Cookies ab.</p>
+          <p>Wenn Wetterdaten geladen werden, sendet der Browser die Koordinate des jeweiligen S2-Zellmittelpunkts an die eigene API-Funktion dieser App. Die API rundet Koordinaten für einen kurzen Zwischenspeicher und ruft Wetterdaten beim Wetteranbieter ab.</p>
+        </section>
+
+        <section>
+          <h2>Wetterdaten</h2>
+          <p>Der Wetterbutton nutzt Open-Meteo über eine serverseitige API-Funktion. Dabei werden Koordinaten von sichtbaren S2-Zellmittelpunkten verarbeitet, um aktuelle Wetterinformationen zu laden. Open-Meteo erhält dabei die abgefragten Koordinaten und technische Verbindungsdaten der serverseitigen Anfrage.</p>
+        </section>
+
+        <section>
+          <h2>Karten</h2>
+          <p>Die Karte lädt Kartendaten von OpenStreetMap-Tile-Servern. Dabei können IP-Adresse, Browserdaten und die angeforderten Kartenausschnitte an OpenStreetMap bzw. die jeweiligen Tile-Server übertragen werden.</p>
+        </section>
+
+        <section>
+          <h2>Externe Links</h2>
+          <p>Links zu PokéWiki, OpenStreetMap, Open-Meteo, Leaflet und GitHub öffnen externe Websites. Für deren Datenverarbeitung sind die jeweiligen Anbieter verantwortlich.</p>
+        </section>
+
+        <section>
+          <h2>Cookies und Tracking</h2>
+          <p>Diese App setzt selbst keine Cookies und verwendet kein eigenes Tracking. Falls später Werbung, Analytics oder eingebettete Drittanbieter ergänzt werden, muss diese Datenschutzerklärung vorher angepasst und gegebenenfalls eine Einwilligung eingeholt werden.</p>
+        </section>
+
+        <section>
+          <h2>Rechtsgrundlagen</h2>
+          <p>Die Standortabfrage erfolgt auf Grundlage deiner Einwilligung. Der technische Betrieb der App und die Bereitstellung der Karte erfolgen auf Grundlage berechtigter Interessen am sicheren und funktionsfähigen Betrieb der Website.</p>
+        </section>
+
+        <section>
+          <h2>Deine Rechte</h2>
+          <p>Du hast nach der DSGVO insbesondere Rechte auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung, Datenübertragbarkeit und Beschwerde bei einer Datenschutzaufsichtsbehörde. Für Anfragen nutze bitte die im Impressum angegebene Kontaktmöglichkeit.</p>
+        </section>
+
+        <section>
+          <h2>Stand</h2>
+          <p>28.05.2026</p>
+        </section>
+      </article>
+    </main>
+  </body>
+</html>

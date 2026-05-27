@@ -30,6 +30,11 @@
           </button>
         </div>
 
+        <nav class="legal-links" aria-label="Rechtliches">
+          <a href="impressum.html">Impressum</a>
+          <a href="datenschutz.html">Datenschutz</a>
+        </nav>
+
         <aside id="aboutPanel" class="about-panel is-collapsed" aria-label="App-Info">
           <div class="panel-header">
             <div>
@@ -45,12 +50,14 @@
             <div><dt>Projekt</dt><dd><a href="https://github.com/Alexius0815/s2Map" target="_blank" rel="noreferrer">github.com/Alexius0815/s2Map</a></dd></div>
             <div><dt>Daten</dt><dd>OpenStreetMap, S2-Geometrie und Open-Meteo-Näherung</dd></div>
             <div><dt>Lizenzen</dt><dd>Karten © OpenStreetMap-Mitwirkende · Wetterdaten by Open-Meteo.com · Leaflet BSD-2-Clause</dd></div>
+            <div><dt>Rechtliches</dt><dd><a href="impressum.html">Impressum</a> · <a href="datenschutz.html">Datenschutz</a></dd></div>
             <div><dt>Hinweis</dt><dd>Inoffizielle Orientierungshilfe, nicht verbunden mit Niantic, Pokémon GO, The Pokémon Company oder PokéWiki.</dd></div>
           </dl>
         </aside>
 
         <div id="locationConsent" class="location-consent" role="dialog" aria-label="Standortfreigabe">
           <p>Aktuellen Standort nutzen?</p>
+          <span>Dein Standort wird nur im Browser zur Kartenpositionierung verwendet.</span>
           <div>
             <button id="allowLocationButton" type="button">Ja</button>
             <button id="skipLocationButton" type="button">Nein</button>
