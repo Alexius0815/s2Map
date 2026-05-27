@@ -21,7 +21,7 @@ module.exports = async function handler(req, res) {
 
   const lat = Number(req.query.lat);
   const lng = Number(req.query.lng);
-  if (!Number.isFinite(lat) || Math.abs(lat) > 90 || !Number.isFinite(lng) || Math.abs(lng) > 180) {
+  if (!Number.isFinite(lat) || !Number.isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) {
     res.status(400).json({ error: "invalid_coordinates" });
     return;
   }
@@ -177,7 +177,7 @@ function mapOpenMeteoToPokemon(current) {
     return pokemonWeather("snow", "Schnee", "#6db7d8");
   }
   if ([51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82, 95, 96, 99].includes(code)) {
-    return pokemonWeather("rain", "Regnerisch", "#2563eb");
+    return pokemonWeather("rain", "Regen", "#2563eb");
   }
   if ([45, 48].includes(code)) {
     return pokemonWeather("fog", "Nebel", "#64748b");
@@ -186,12 +186,12 @@ function mapOpenMeteoToPokemon(current) {
     return pokemonWeather("wind", "Windig", "#0891b2");
   }
   if (code === 3 || cloudCover >= 80) {
-    return pokemonWeather("cloudy", "Wolkig", "#6b7280");
+    return pokemonWeather("cloudy", "Bewölkt", "#6b7280");
   }
   if (code === 2 || cloudCover >= 30) {
-    return pokemonWeather("partly-cloudy", "Teils bewölkt", "#8b5cf6");
+    return pokemonWeather("partly-cloudy", "Teilweise bewölkt", "#8b5cf6");
   }
-  return pokemonWeather("clear", "Sonnig/klar", "#d97706");
+  return pokemonWeather("clear", "Sonnig / Klar", "#d97706");
 }
 
 function openMeteoWeatherText(code) {
@@ -239,7 +239,7 @@ function mapAccuWeatherToPokemon(current) {
     return pokemonWeather("snow", "Schnee", "#6db7d8");
   }
   if (current.HasPrecipitation || [12, 13, 14, 15, 16, 17, 18, 39, 40, 41, 42].includes(icon)) {
-    return pokemonWeather("rain", "Regnerisch", "#2563eb");
+    return pokemonWeather("rain", "Regen", "#2563eb");
   }
   if (icon === 11 || text.includes("nebel") || text.includes("fog")) {
     return pokemonWeather("fog", "Nebel", "#64748b");
@@ -248,16 +248,34 @@ function mapAccuWeatherToPokemon(current) {
     return pokemonWeather("wind", "Windig", "#0891b2");
   }
   if ([7, 8, 38].includes(icon) || cloudCover >= 80) {
-    return pokemonWeather("cloudy", "Wolkig", "#6b7280");
+    return pokemonWeather("cloudy", "Bewölkt", "#6b7280");
   }
   if ([3, 4, 5, 6, 35, 36, 37].includes(icon) || cloudCover >= 30) {
-    return pokemonWeather("partly-cloudy", "Teils bewölkt", "#8b5cf6");
+    return pokemonWeather("partly-cloudy", "Teilweise bewölkt", "#8b5cf6");
   }
-  return pokemonWeather("clear", "Sonnig/klar", "#d97706");
+  return pokemonWeather("clear", "Sonnig / Klar", "#d97706");
 }
 
 function pokemonWeather(id, label, color) {
-  return { id, label, color };
+  const boosts = {
+    clear: ["Pflanze", "Feuer", "Boden"],
+    rain: ["Wasser", "Elektro", "Käfer"],
+    "partly-cloudy": ["Normal", "Gestein"],
+    cloudy: ["Fee", "Kampf", "Gift"],
+    wind: ["Flug", "Drache", "Psycho"],
+    snow: ["Eis", "Stahl"],
+    fog: ["Unlicht", "Geist"],
+  };
+  const examples = {
+    clear: ["Glurak", "Groudon", "Vulpix"],
+    rain: ["Kyogre", "Karpador", "Pikachu"],
+    snow: ["Arktos", "Frosdedje", "Panzaeron"],
+    wind: ["Rayquaza", "Dratini", "Abra"],
+    cloudy: ["Machollo", "Piepi", "Sleima"],
+    "partly-cloudy": ["Relaxo", "Kleinstein"],
+    fog: ["Gengar", "Absol"],
+  };
+  return { id, label, color, boostedTypes: boosts[id] || [], examples: examples[id] || [] };
 }
 
 function getCached(cache, key) {
