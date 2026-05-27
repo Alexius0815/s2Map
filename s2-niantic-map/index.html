@@ -31,6 +31,10 @@
         </div>
 
         <aside class="location-panel" aria-label="Standort auswählen">
+          <div class="location-panel-header">
+            <span>Standort</span>
+            <button id="closeLocationPanel" class="panel-close-button" type="button" aria-label="Standortpanel einklappen">×</button>
+          </div>
           <div class="mode-switch" role="group" aria-label="Standortmodus">
             <label>
               <input type="radio" name="locationMode" value="place" checked />
@@ -51,6 +55,10 @@
           <p id="locationStatus">Ort oder PLZ suchen</p>
         </aside>
 
+        <button id="locationPanelToggle" class="location-panel-toggle" type="button" aria-expanded="true" aria-label="Standortpanel öffnen">
+          ⌕
+        </button>
+
         <button id="panelToggle" class="panel-toggle" type="button" aria-expanded="true" aria-controls="controlPanel">
           Layer
         </button>
@@ -61,7 +69,7 @@
               <h2>Zellen</h2>
               <p id="renderStatus">Bereit</p>
             </div>
-            <button id="closePanel" class="icon-button ghost" type="button" aria-label="Panel einklappen">×</button>
+            <button id="closePanel" class="panel-close-button" type="button" aria-label="Panel einklappen">×</button>
           </div>
 
           <div class="layer-list" id="layerList"></div>
