@@ -222,8 +222,8 @@ function toggleWeather() {
   ui.weatherButton.textContent = state.weatherEnabled ? "Aus" : "Laden";
   ui.weatherButton.classList.toggle("is-active", state.weatherEnabled);
   ui.weatherStatus.textContent = state.weatherEnabled
-    ? "Lade AccuWeather fuer sichtbare L10-Zellen ..."
-    : "AccuWeather-Daten sind aus";
+    ? "Lade Open-Meteo fuer sichtbare L10-Zellen ..."
+    : "Open-Meteo-Daten sind aus";
   scheduleRender();
 }
 
