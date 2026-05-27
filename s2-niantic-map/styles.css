@@ -477,6 +477,45 @@ button {
   font-weight: 700;
 }
 
+.weather-controls {
+  display: grid;
+  grid-template-columns: 1fr 88px;
+  gap: 10px;
+  align-items: center;
+  padding: 11px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.weather-controls h2,
+.weather-controls p {
+  margin: 0;
+}
+
+.weather-controls h2 {
+  font-size: 14px;
+}
+
+.weather-controls p {
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.weather-controls button {
+  min-height: 40px;
+  border-radius: 8px;
+  color: #fff;
+  background: var(--accent);
+  font-weight: 700;
+}
+
+.weather-controls button.is-active {
+  background: var(--danger);
+}
+
 .legend {
   padding-top: 12px;
   border-top: 1px solid var(--line);
@@ -499,6 +538,12 @@ button {
   font-size: 10px;
   font-weight: 800;
   white-space: nowrap;
+}
+
+.s2-label.is-weather {
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.92);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.22);
 }
 
 .leaflet-control-attribution {
