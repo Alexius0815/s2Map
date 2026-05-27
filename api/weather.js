@@ -19,15 +19,6 @@ module.exports = async function handler(req, res) {
     return;
   }
 
-  const apiKey = process.env.ACCUWEATHER_API_KEY;
-  if (!apiKey) {
-    res.status(503).json({
-      error: "missing_api_key",
-      message: "ACCUWEATHER_API_KEY ist nicht gesetzt.",
-    });
-    return;
-  }
-
   const lat = Number(req.query.lat);
   const lng = Number(req.query.lng);
   if (!Number.isFinite(lat) || !Number.isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) {
@@ -35,7 +26,8 @@ module.exports = async function handler(req, res) {
     return;
   }
 
-  const cacheKey = `${lat.toFixed(4)},${lng.toFixed(4)}`;
+  const provider = req.query.provider === "accuweather" ? "accuweather" : "openmeteo";
+  const cacheKey = `${provider}:${lat.toFixed(4)},${lng.toFixed(4)}`;
   const cachedWeather = getCached(weatherCache, cacheKey);
   if (cachedWeather) {
     res.setHeader("Cache-Control", "s-maxage=900, stale-while-revalidate=1800");
@@ -44,9 +36,10 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    const location = await resolveLocation(apiKey, lat, lng, cacheKey);
-    const current = await fetchCurrentConditions(apiKey, location.key);
-    const payload = normalizeWeather(current, location, lat, lng);
+    const payload =
+      provider === "accuweather"
+        ? await fetchAccuWeather(lat, lng, cacheKey)
+        : await fetchOpenMeteoWeather(lat, lng);
 
     weatherCache.set(cacheKey, {
       expires: Date.now() + WEATHER_CACHE_MS,
@@ -62,6 +55,44 @@ module.exports = async function handler(req, res) {
     });
   }
 };
+
+async function fetchOpenMeteoWeather(lat, lng) {
+  const url = new URL("https://api.open-meteo.com/v1/forecast");
+  url.searchParams.set("latitude", String(lat));
+  url.searchParams.set("longitude", String(lng));
+  url.searchParams.set("current", "weather_code,temperature_2m,precipitation,cloud_cover,wind_speed_10m,is_day");
+  url.searchParams.set("timezone", "auto");
+
+  const response = await fetchJson(url);
+  const current = response.current || {};
+  const weather = mapOpenMeteoToPokemon(current);
+
+  return {
+    provider: "Open-Meteo",
+    location: { name: "Zellmittelpunkt", country: "" },
+    coordinates: { lat, lng },
+    observedAt: current.time || new Date().toISOString(),
+    weatherText: openMeteoWeatherText(current.weather_code),
+    weatherIcon: current.weather_code,
+    hasPrecipitation: Number(current.precipitation) > 0,
+    precipitationType: Number(current.precipitation) > 0 ? "rain" : null,
+    temperatureC: Number.isFinite(current.temperature_2m) ? current.temperature_2m : null,
+    windKmh: Number.isFinite(current.wind_speed_10m) ? current.wind_speed_10m : null,
+    cloudCover: Number.isFinite(current.cloud_cover) ? current.cloud_cover : null,
+    pokemonWeather: weather,
+  };
+}
+
+async function fetchAccuWeather(lat, lng, cacheKey) {
+  const apiKey = process.env.ACCUWEATHER_API_KEY;
+  if (!apiKey) {
+    throw makeError(503, "missing_api_key", "ACCUWEATHER_API_KEY ist nicht gesetzt.");
+  }
+
+  const location = await resolveLocation(apiKey, lat, lng, cacheKey);
+  const current = await fetchCurrentConditions(apiKey, location.key);
+  return normalizeAccuWeather(current, location, lat, lng);
+}
 
 async function resolveLocation(apiKey, lat, lng, cacheKey) {
   const cachedLocation = getCached(locationCache, cacheKey);
@@ -116,7 +147,7 @@ async function fetchJson(url) {
   return data;
 }
 
-function normalizeWeather(current, location, lat, lng) {
+function normalizeAccuWeather(current, location, lat, lng) {
   const weather = mapAccuWeatherToPokemon(current);
   const temperature = current.Temperature && current.Temperature.Metric ? current.Temperature.Metric.Value : null;
   const windSpeed = current.Wind && current.Wind.Speed && current.Wind.Speed.Metric ? current.Wind.Speed.Metric.Value : null;
@@ -135,6 +166,66 @@ function normalizeWeather(current, location, lat, lng) {
     cloudCover: Number.isFinite(current.CloudCover) ? current.CloudCover : null,
     pokemonWeather: weather,
   };
+}
+
+function mapOpenMeteoToPokemon(current) {
+  const code = Number(current.weather_code);
+  const windKmh = Number(current.wind_speed_10m) || 0;
+  const cloudCover = Number(current.cloud_cover) || 0;
+
+  if ([71, 73, 75, 77, 85, 86].includes(code)) {
+    return pokemonWeather("snow", "Schnee", "#6db7d8");
+  }
+  if ([51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82, 95, 96, 99].includes(code)) {
+    return pokemonWeather("rain", "Regen", "#2563eb");
+  }
+  if ([45, 48].includes(code)) {
+    return pokemonWeather("fog", "Nebel", "#64748b");
+  }
+  if (windKmh >= 29) {
+    return pokemonWeather("wind", "Windig", "#0891b2");
+  }
+  if (code === 3 || cloudCover >= 80) {
+    return pokemonWeather("cloudy", "Bewölkt", "#6b7280");
+  }
+  if (code === 2 || cloudCover >= 30) {
+    return pokemonWeather("partly-cloudy", "Teilweise bewölkt", "#8b5cf6");
+  }
+  return pokemonWeather("clear", "Klar", "#d97706");
+}
+
+function openMeteoWeatherText(code) {
+  const labels = {
+    0: "Klar",
+    1: "Überwiegend klar",
+    2: "Teilweise bewölkt",
+    3: "Bewölkt",
+    45: "Nebel",
+    48: "Reifnebel",
+    51: "Leichter Nieselregen",
+    53: "Nieselregen",
+    55: "Starker Nieselregen",
+    56: "Gefrierender Nieselregen",
+    57: "Starker gefrierender Nieselregen",
+    61: "Leichter Regen",
+    63: "Regen",
+    65: "Starker Regen",
+    66: "Gefrierender Regen",
+    67: "Starker gefrierender Regen",
+    71: "Leichter Schneefall",
+    73: "Schneefall",
+    75: "Starker Schneefall",
+    77: "Schneegriesel",
+    80: "Leichte Regenschauer",
+    81: "Regenschauer",
+    82: "Starke Regenschauer",
+    85: "Leichte Schneeschauer",
+    86: "Starke Schneeschauer",
+    95: "Gewitter",
+    96: "Gewitter mit Hagel",
+    99: "Starkes Gewitter mit Hagel",
+  };
+  return labels[code] || "Unbekannt";
 }
 
 function mapAccuWeatherToPokemon(current) {
