@@ -54,6 +54,8 @@ const state = {
   weatherEnabled: false,
   renderTimer: 0,
   collapsed: false,
+  locationMode: "place",
+  locationMarker: null,
 };
 
 const map = L.map("map", {
@@ -83,9 +85,11 @@ const ui = {
   panel: document.querySelector("#controlPanel"),
   panelToggle: document.querySelector("#panelToggle"),
   closePanel: document.querySelector("#closePanel"),
-  locateButton: document.querySelector("#locateButton"),
-  coordinateInput: document.querySelector("#coordinateInput"),
-  goButton: document.querySelector("#goButton"),
+  locationInput: document.querySelector("#locationInput"),
+  locationGoButton: document.querySelector("#locationGoButton"),
+  locationStatus: document.querySelector("#locationStatus"),
+  locationModes: document.querySelectorAll("input[name='locationMode']"),
+  ownLocationButton: document.querySelector("#ownLocationButton"),
   weatherButton: document.querySelector("#weatherButton"),
   weatherStatus: document.querySelector("#weatherStatus"),
 };
@@ -123,11 +127,20 @@ layers.forEach((layer) => {
 
 ui.panelToggle.addEventListener("click", () => setPanelCollapsed(!state.collapsed));
 ui.closePanel.addEventListener("click", () => setPanelCollapsed(true));
-ui.locateButton.addEventListener("click", locateUser);
-ui.goButton.addEventListener("click", jumpToCoordinates);
+ui.ownLocationButton.addEventListener("click", locateUser);
+ui.locationGoButton.addEventListener("click", jumpToLocation);
 ui.weatherButton.addEventListener("click", toggleWeather);
-ui.coordinateInput.addEventListener("keydown", (event) => {
-  if (event.key === "Enter") jumpToCoordinates();
+ui.locationInput.addEventListener("keydown", (event) => {
+  if (event.key === "Enter") jumpToLocation();
+});
+ui.locationModes.forEach((input) => {
+  input.addEventListener("change", () => {
+    if (!input.checked) return;
+    state.locationMode = input.value;
+    ui.locationInput.placeholder = input.value === "place" ? "München, Berlin, Köln ..." : "48.137, 11.575";
+    ui.locationStatus.textContent = input.value === "place" ? "Ort oder PLZ suchen" : "Koordinaten eingeben";
+    ui.locationInput.focus();
+  });
 });
 
 map.on("moveend zoomend resize", scheduleRender);
@@ -177,7 +190,7 @@ function renderCells() {
       const polygon = cellPolygon(cell.face, cell.i, cell.j, cell.level);
       const leafletPolygon = L.polygon(polygon, {
         color: weatherColor,
-        weight: zoom >= 16 ? 2 : 1.4,
+        weight: gridWeight(layer.level, zoom),
         opacity: 0.9,
         fillColor: weatherColor,
         fillOpacity: weather ? 0.18 : layer.level >= 17 ? 0.04 : 0.07,
@@ -303,6 +316,18 @@ function cellKey(cell) {
   return `${cell.face}:${cell.i}:${cell.j}:${cell.level}`;
 }
 
+function gridWeight(level, zoom) {
+  const levelWeight = {
+    10: 4.2,
+    12: 3.1,
+    14: 2.1,
+    17: 1.1,
+  };
+  const base = levelWeight[level] || Math.max(0.9, 4.4 - (level - 10) * 0.32);
+  const zoomBoost = Math.max(0, Math.min(1.1, (zoom - 10) * 0.12));
+  return base + zoomBoost;
+}
+
 function collectVisibleCells(level) {
   const bounds = map.getBounds().pad(0.08);
   const zoom = map.getZoom();
@@ -339,7 +364,7 @@ function shouldLabelCell(cell, level) {
 }
 
 function polygonTouchesBounds(polygon, bounds) {
-  return polygon.some((point) => bounds.contains(point));
+  return L.latLngBounds(polygon).intersects(bounds);
 }
 
 function latLngToCell(lat, lng, level) {
@@ -420,36 +445,89 @@ function uvToSt(u) {
 
 function locateUser() {
   if (!navigator.geolocation) {
-    ui.renderStatus.textContent = "Standort wird nicht unterstützt";
+    ui.locationStatus.textContent = "Standort wird nicht unterstützt";
     return;
   }
-  ui.renderStatus.textContent = "Suche Standort ...";
+  ui.locationStatus.textContent = "Suche eigene Location ...";
   navigator.geolocation.getCurrentPosition(
     (position) => {
-      map.setView([position.coords.latitude, position.coords.longitude], Math.max(map.getZoom(), 15));
-      ui.renderStatus.textContent = "Standort gefunden";
+      moveToLocation(position.coords.latitude, position.coords.longitude, "Eigene Location", Math.max(map.getZoom(), 15));
     },
     () => {
-      ui.renderStatus.textContent = "Standort konnte nicht gelesen werden";
+      ui.locationStatus.textContent = "Standort konnte nicht gelesen werden";
     },
     { enableHighAccuracy: true, timeout: 8000 },
   );
 }
 
+function jumpToLocation() {
+  if (state.locationMode === "coordinates") {
+    jumpToCoordinates();
+  } else {
+    jumpToPlace();
+  }
+}
+
+async function jumpToPlace() {
+  const query = ui.locationInput.value.trim();
+  if (query.length < 2) {
+    ui.locationStatus.textContent = "Bitte Ort oder PLZ eingeben";
+    return;
+  }
+
+  ui.locationStatus.textContent = "Suche Ort ...";
+  try {
+    const url = new URL("https://geocoding-api.open-meteo.com/v1/search");
+    url.searchParams.set("name", query);
+    url.searchParams.set("count", "1");
+    url.searchParams.set("language", "de");
+    url.searchParams.set("format", "json");
+
+    const response = await fetch(url);
+    const data = await response.json();
+    const result = data.results && data.results[0];
+    if (!response.ok || !result) {
+      ui.locationStatus.textContent = "Ort nicht gefunden";
+      return;
+    }
+
+    const label = [result.name, result.admin1, result.country].filter(Boolean).join(", ");
+    moveToLocation(result.latitude, result.longitude, label, Math.max(map.getZoom(), 13));
+  } catch (error) {
+    ui.locationStatus.textContent = "Ortssuche konnte nicht geladen werden";
+  }
+}
+
 function jumpToCoordinates() {
-  const match = ui.coordinateInput.value.trim().match(/(-?\d+(?:[.,]\d+)?)\s*[,;\s]\s*(-?\d+(?:[.,]\d+)?)/);
+  const match = ui.locationInput.value.trim().match(/(-?\d+(?:[.,]\d+)?)\s*[,;\s]\s*(-?\d+(?:[.,]\d+)?)/);
   if (!match) {
-    ui.renderStatus.textContent = "Koordinatenformat: 48.137, 11.575";
+    ui.locationStatus.textContent = "Koordinatenformat: 48.137, 11.575";
     return;
   }
   const lat = Number(match[1].replace(",", "."));
   const lng = Number(match[2].replace(",", "."));
   if (!Number.isFinite(lat) || !Number.isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) {
-    ui.renderStatus.textContent = "Koordinaten außerhalb des gültigen Bereichs";
+    ui.locationStatus.textContent = "Koordinaten außerhalb des gültigen Bereichs";
     return;
   }
-  map.setView([lat, lng], Math.max(map.getZoom(), 15));
-  setPanelCollapsed(true);
+  moveToLocation(lat, lng, `${lat.toFixed(5)}, ${lng.toFixed(5)}`, Math.max(map.getZoom(), 15));
+}
+
+function moveToLocation(lat, lng, label, zoom) {
+  map.setView([lat, lng], zoom);
+  ui.locationStatus.textContent = label;
+  if (!state.locationMarker) {
+    state.locationMarker = L.circleMarker([lat, lng], {
+      radius: 7,
+      color: "#ffffff",
+      weight: 3,
+      fillColor: "#0f766e",
+      fillOpacity: 1,
+    }).addTo(map);
+  } else {
+    state.locationMarker.setLatLng([lat, lng]);
+  }
+  state.locationMarker.bindTooltip(label, { permanent: false, direction: "top" });
 }
 
 function degreesToRadians(value) {
