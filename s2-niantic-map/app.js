@@ -309,6 +309,8 @@ function buildTooltip(layer, cell, weather) {
     lines.push(
       `${weather.provider}: ${weather.weatherText}`,
       `PGO-Naeherung: ${weather.pokemonWeather.label}`,
+      `Boost: ${formatBoostedTypes(weather)}`,
+      `Typische Funde: ${formatExamples(weather)}`,
       `Temp: ${formatValue(weather.temperatureC, "°C")} · Wind: ${formatValue(weather.windKmh, "km/h")}`,
       `Ort: ${weather.location.name}`,
     );
@@ -319,6 +321,20 @@ function buildTooltip(layer, cell, weather) {
 function buildLabel(layer, weather) {
   if (!weather) return `<span class="s2-label">L${layer.level}</span>`;
   return `<span class="s2-label is-weather" style="background:${weather.pokemonWeather.color}">${weather.pokemonWeather.label}</span>`;
+}
+
+function formatBoostedTypes(weather) {
+  const types = weather && weather.pokemonWeather && Array.isArray(weather.pokemonWeather.boostedTypes)
+    ? weather.pokemonWeather.boostedTypes
+    : [];
+  return types.length ? types.join(", ") : "-";
+}
+
+function formatExamples(weather) {
+  const examples = weather && weather.pokemonWeather && Array.isArray(weather.pokemonWeather.examples)
+    ? weather.pokemonWeather.examples
+    : [];
+  return examples.length ? examples.join(", ") : "-";
 }
 
 function formatValue(value, unit) {
