@@ -28,10 +28,28 @@
               <p>Wetterboost, Waypoints und Zellgrenzen im Blick</p>
             </div>
           </div>
-          <button id="locateButton" class="icon-button" type="button" title="Eigenen Standort anzeigen" aria-label="Eigenen Standort anzeigen">
-            <span aria-hidden="true">⌖</span>
-          </button>
         </div>
+
+        <aside class="location-panel" aria-label="Standort auswählen">
+          <div class="mode-switch" role="group" aria-label="Standortmodus">
+            <label>
+              <input type="radio" name="locationMode" value="place" checked />
+              <span>Ort</span>
+            </label>
+            <label>
+              <input type="radio" name="locationMode" value="coordinates" />
+              <span>Koordinaten</span>
+            </label>
+          </div>
+          <div class="location-row">
+            <input id="locationInput" type="text" placeholder="München, Berlin, Köln ..." autocomplete="off" />
+            <button id="locationGoButton" type="button">Los</button>
+            <button id="ownLocationButton" class="icon-button compact" type="button" title="Eigene Location" aria-label="Eigene Location">
+              <span aria-hidden="true">⌖</span>
+            </button>
+          </div>
+          <p id="locationStatus">Ort oder PLZ suchen</p>
+        </aside>
 
         <button id="panelToggle" class="panel-toggle" type="button" aria-expanded="true" aria-controls="controlPanel">
           Layer
@@ -47,14 +65,6 @@
           </div>
 
           <div class="layer-list" id="layerList"></div>
-
-          <div class="coordinate-jump">
-            <label for="coordinateInput">Koordinaten</label>
-            <div class="coordinate-row">
-              <input id="coordinateInput" type="text" inputmode="decimal" placeholder="48.137, 11.575" autocomplete="off" />
-              <button id="goButton" type="button">Los</button>
-            </div>
-          </div>
 
           <div class="weather-controls">
             <div>
