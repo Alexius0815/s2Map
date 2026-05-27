@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#0f766e" />
+    <title>S2 Niantic Map</title>
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="icon" href="icon.svg" type="image/svg+xml" />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIINfQ3p5SMYk9g3Wg5p0p2mIPlQGLrC6r0="
+      crossorigin=""
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="map-stage" aria-label="Karte mit S2-Zellen">
+        <div id="map"></div>
+
+        <div class="topbar">
+          <div class="brand">
+            <span class="brand-mark" aria-hidden="true"></span>
+            <div>
+              <h1>S2 Niantic Map</h1>
+              <p>Wetterboost, Waypoints und Zellgrenzen im Blick</p>
+            </div>
+          </div>
+          <button id="locateButton" class="icon-button" type="button" title="Eigenen Standort anzeigen" aria-label="Eigenen Standort anzeigen">
+            <span aria-hidden="true">⌖</span>
+          </button>
+        </div>
+
+        <button id="panelToggle" class="panel-toggle" type="button" aria-expanded="true" aria-controls="controlPanel">
+          Layer
+        </button>
+
+        <aside id="controlPanel" class="control-panel" aria-label="S2-Layer auswählen">
+          <div class="panel-header">
+            <div>
+              <h2>Zellen</h2>
+              <p id="renderStatus">Bereit</p>
+            </div>
+            <button id="closePanel" class="icon-button ghost" type="button" aria-label="Panel einklappen">×</button>
+          </div>
+
+          <div class="layer-list" id="layerList"></div>
+
+          <div class="coordinate-jump">
+            <label for="coordinateInput">Koordinaten</label>
+            <div class="coordinate-row">
+              <input id="coordinateInput" type="text" inputmode="decimal" placeholder="48.137, 11.575" autocomplete="off" />
+              <button id="goButton" type="button">Los</button>
+            </div>
+          </div>
+
+          <div class="legend">
+            <h2>Hinweise</h2>
+            <p>
+              Die Layer dienen der Orientierung für Ingress und Pokémon GO. Niantic kann Regeln ändern; prüfe wichtige
+              Platzierungen zusätzlich im Spiel.
+            </p>
+          </div>
+        </aside>
+      </section>
+    </main>
+
+    <template id="layerTemplate">
+      <article class="layer-card">
+        <label class="layer-toggle">
+          <input type="checkbox" />
+          <span class="swatch"></span>
+          <span class="layer-title"></span>
+        </label>
+        <button class="info-button" type="button" aria-label="Erklärung anzeigen">i</button>
+        <p class="layer-description"></p>
+      </article>
+    </template>
+
+    <script
+      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+      crossorigin=""
+    ></script>
+    <script src="app.js"></script>
+  </body>
+</html>
