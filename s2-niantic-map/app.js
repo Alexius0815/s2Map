@@ -54,6 +54,7 @@ const state = {
   weatherEnabled: false,
   renderTimer: 0,
   collapsed: false,
+  locationCollapsed: false,
   locationMode: "place",
   locationMarker: null,
 };
@@ -85,6 +86,9 @@ const ui = {
   panel: document.querySelector("#controlPanel"),
   panelToggle: document.querySelector("#panelToggle"),
   closePanel: document.querySelector("#closePanel"),
+  locationPanel: document.querySelector(".location-panel"),
+  locationPanelToggle: document.querySelector("#locationPanelToggle"),
+  closeLocationPanel: document.querySelector("#closeLocationPanel"),
   locationInput: document.querySelector("#locationInput"),
   locationGoButton: document.querySelector("#locationGoButton"),
   locationStatus: document.querySelector("#locationStatus"),
@@ -127,6 +131,8 @@ layers.forEach((layer) => {
 
 ui.panelToggle.addEventListener("click", () => setPanelCollapsed(!state.collapsed));
 ui.closePanel.addEventListener("click", () => setPanelCollapsed(true));
+ui.locationPanelToggle.addEventListener("click", () => setLocationPanelCollapsed(!state.locationCollapsed));
+ui.closeLocationPanel.addEventListener("click", () => setLocationPanelCollapsed(true));
 ui.ownLocationButton.addEventListener("click", locateUser);
 ui.locationGoButton.addEventListener("click", jumpToLocation);
 ui.weatherButton.addEventListener("click", toggleWeather);
@@ -150,6 +156,13 @@ function setPanelCollapsed(collapsed) {
   state.collapsed = collapsed;
   ui.panel.classList.toggle("is-collapsed", collapsed);
   ui.panelToggle.setAttribute("aria-expanded", String(!collapsed));
+}
+
+function setLocationPanelCollapsed(collapsed) {
+  state.locationCollapsed = collapsed;
+  ui.locationPanel.classList.toggle("is-collapsed", collapsed);
+  ui.locationPanelToggle.classList.toggle("is-visible", collapsed);
+  ui.locationPanelToggle.setAttribute("aria-expanded", String(!collapsed));
 }
 
 function scheduleRender() {
