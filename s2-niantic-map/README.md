@@ -38,6 +38,7 @@ Die Regeln sind nicht offiziell dokumentiert und koennen sich aendern. Die App i
 Diese App ist eine inoffizielle Orientierungshilfe und nicht mit Niantic, Pokemon GO, The Pokemon Company oder PokéWiki verbunden.
 
 - Karten: OpenStreetMap-Mitwirkende, siehe https://www.openstreetmap.org/copyright
+- S2 Geometry: https://s2geometry.io/ und https://github.com/google/s2geometry
 - Wetterdaten: Open-Meteo, siehe https://open-meteo.com/
 - Kartenbibliothek: Leaflet, BSD-2-Clause
 - Externe Typ-Links fuehren zu PokéWiki. PokéWiki-Inhalte werden nicht in diese App uebernommen.
