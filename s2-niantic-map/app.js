@@ -49,6 +49,9 @@ const state = {
   active: new Set(layers.filter((layer) => layer.checked).map((layer) => layer.id)),
   groups: new Map(),
   labels: new Map(),
+  weather: new Map(),
+  weatherPending: new Set(),
+  weatherEnabled: false,
   renderTimer: 0,
   collapsed: false,
 };
@@ -83,6 +86,8 @@ const ui = {
   locateButton: document.querySelector("#locateButton"),
   coordinateInput: document.querySelector("#coordinateInput"),
   goButton: document.querySelector("#goButton"),
+  weatherButton: document.querySelector("#weatherButton"),
+  weatherStatus: document.querySelector("#weatherStatus"),
 };
 
 layers.forEach((layer) => {
@@ -120,6 +125,7 @@ ui.panelToggle.addEventListener("click", () => setPanelCollapsed(!state.collapse
 ui.closePanel.addEventListener("click", () => setPanelCollapsed(true));
 ui.locateButton.addEventListener("click", locateUser);
 ui.goButton.addEventListener("click", jumpToCoordinates);
+ui.weatherButton.addEventListener("click", toggleWeather);
 ui.coordinateInput.addEventListener("keydown", (event) => {
   if (event.key === "Enter") jumpToCoordinates();
 });
@@ -141,6 +147,7 @@ function scheduleRender() {
 function renderCells() {
   const zoom = map.getZoom();
   let totalCells = 0;
+  let visibleWeatherCells = [];
   const activeLayers = layers.filter((layer) => state.active.has(layer.id));
 
   layers.forEach((layer) => {
@@ -160,17 +167,22 @@ function renderCells() {
 
     const cells = collectVisibleCells(layer.level);
     totalCells += cells.length;
+    if (layer.id === "weather") {
+      visibleWeatherCells = cells;
+    }
 
     cells.forEach((cell) => {
+      const weather = layer.id === "weather" ? state.weather.get(cellKey(cell)) : null;
+      const weatherColor = weather && weather.pokemonWeather ? weather.pokemonWeather.color : layer.color;
       const polygon = cellPolygon(cell.face, cell.i, cell.j, cell.level);
       const leafletPolygon = L.polygon(polygon, {
-        color: layer.color,
+        color: weatherColor,
         weight: zoom >= 16 ? 2 : 1.4,
         opacity: 0.9,
-        fillColor: layer.color,
-        fillOpacity: layer.level >= 17 ? 0.04 : 0.07,
+        fillColor: weatherColor,
+        fillOpacity: weather ? 0.18 : layer.level >= 17 ? 0.04 : 0.07,
         interactive: true,
-      }).bindTooltip(`${layer.title}<br>Face ${cell.face}, i ${cell.i}, j ${cell.j}`, {
+      }).bindTooltip(buildTooltip(layer, cell, weather), {
         sticky: true,
         direction: "top",
       });
@@ -182,9 +194,9 @@ function renderCells() {
           interactive: false,
           icon: L.divIcon({
             className: "",
-            html: `<span class="s2-label">L${layer.level}</span>`,
-            iconSize: [34, 18],
-            iconAnchor: [17, 9],
+            html: buildLabel(layer, weather),
+            iconSize: weather ? [74, 18] : [34, 18],
+            iconAnchor: weather ? [37, 9] : [17, 9],
           }),
         }).addTo(state.labels.get(layer.id));
       }
@@ -199,6 +211,96 @@ function renderCells() {
   } else {
     ui.renderStatus.textContent = `${totalCells} Zellen sichtbar`;
   }
+
+  if (state.weatherEnabled && state.active.has("weather") && zoom >= 10) {
+    fetchWeatherForCells(visibleWeatherCells);
+  }
+}
+
+function toggleWeather() {
+  state.weatherEnabled = !state.weatherEnabled;
+  ui.weatherButton.textContent = state.weatherEnabled ? "Aus" : "Laden";
+  ui.weatherButton.classList.toggle("is-active", state.weatherEnabled);
+  ui.weatherStatus.textContent = state.weatherEnabled
+    ? "Lade AccuWeather fuer sichtbare L10-Zellen ..."
+    : "AccuWeather-Daten sind aus";
+  scheduleRender();
+}
+
+function fetchWeatherForCells(cells) {
+  const missing = cells
+    .filter((cell) => !state.weather.has(cellKey(cell)) && !state.weatherPending.has(cellKey(cell)))
+    .slice(0, 18);
+
+  const loaded = cells.filter((cell) => state.weather.has(cellKey(cell))).length;
+  const pending = state.weatherPending.size;
+
+  if (!missing.length) {
+    ui.weatherStatus.textContent = loaded
+      ? `${loaded} Wetterzellen geladen`
+      : pending
+        ? `${pending} Wetterzellen werden geladen ...`
+        : "Keine neuen Wetterzellen sichtbar";
+    return;
+  }
+
+  ui.weatherStatus.textContent = `${loaded} geladen, ${missing.length} neue Abfragen ...`;
+  missing.forEach((cell) => fetchWeatherForCell(cell));
+}
+
+async function fetchWeatherForCell(cell) {
+  const key = cellKey(cell);
+  state.weatherPending.add(key);
+
+  try {
+    const [lat, lng] = cellCenter(cell.face, cell.i, cell.j, cell.level);
+    const response = await fetch(`/api/weather?lat=${lat.toFixed(5)}&lng=${lng.toFixed(5)}`);
+    const text = await response.text();
+    let data = null;
+    try {
+      data = JSON.parse(text);
+    } catch (parseError) {
+      data = { message: "Wetter-API ist lokal nicht aktiv oder noch nicht deployed." };
+    }
+
+    if (!response.ok) {
+      throw new Error(data.message || "Wetterdaten konnten nicht geladen werden.");
+    }
+
+    state.weather.set(key, data);
+    ui.weatherStatus.textContent = `${state.weather.size} Wetterzellen geladen`;
+  } catch (error) {
+    ui.weatherStatus.textContent = error.message;
+  } finally {
+    state.weatherPending.delete(key);
+    scheduleRender();
+  }
+}
+
+function buildTooltip(layer, cell, weather) {
+  const lines = [`${layer.title}`, `Face ${cell.face}, i ${cell.i}, j ${cell.j}`];
+  if (weather) {
+    lines.push(
+      `${weather.provider}: ${weather.weatherText}`,
+      `PGO-Naeherung: ${weather.pokemonWeather.label}`,
+      `Temp: ${formatValue(weather.temperatureC, "°C")} · Wind: ${formatValue(weather.windKmh, "km/h")}`,
+      `Ort: ${weather.location.name}`,
+    );
+  }
+  return lines.join("<br>");
+}
+
+function buildLabel(layer, weather) {
+  if (!weather) return `<span class="s2-label">L${layer.level}</span>`;
+  return `<span class="s2-label is-weather" style="background:${weather.pokemonWeather.color}">${weather.pokemonWeather.label}</span>`;
+}
+
+function formatValue(value, unit) {
+  return Number.isFinite(value) ? `${Math.round(value)} ${unit}` : "-";
+}
+
+function cellKey(cell) {
+  return `${cell.face}:${cell.i}:${cell.j}:${cell.level}`;
 }
 
 function collectVisibleCells(level) {
