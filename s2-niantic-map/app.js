@@ -50,6 +50,8 @@ const state = {
 
 const map = L.map("map", {
   zoomControl: false,
+  zoomSnap: 0.25,
+  zoomDelta: 0.5,
   preferCanvas: false,
   worldCopyJump: true,
   attributionControl: false,
@@ -642,11 +644,11 @@ function fitWeatherCellForLocation(lat, lng) {
   const cell = latLngToCell(lat, lng, 10);
   const polygon = cellPolygon(cell.face, cell.i, cell.j, cell.level);
   const bounds = L.latLngBounds(polygon);
-  map.fitBounds(bounds.pad(0.04), {
+  const baseZoom = map.getBoundsZoom(bounds.pad(0.04), false, [36, 120]);
+  const targetZoom = Math.min(12.5, baseZoom + 0.25);
+
+  map.setView([lat, lng], targetZoom, {
     animate: true,
-    maxZoom: 12,
-    paddingTopLeft: [18, 86],
-    paddingBottomRight: [18, 92],
   });
 }
 
