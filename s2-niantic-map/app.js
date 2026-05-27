@@ -256,7 +256,7 @@ function renderCells() {
     }
 
     cells.forEach((cell) => {
-      const weather = layer.id === "weather" ? state.weather.get(cellKey(cell)) : null;
+      const weather = layer.id === "weather" && state.weatherEnabled ? state.weather.get(cellKey(cell)) : null;
       const weatherColor = weather && weather.pokemonWeather ? weather.pokemonWeather.color : layer.color;
       const polygon = cellPolygon(cell.face, cell.i, cell.j, cell.level);
       const leafletPolygon = L.polygon(polygon, {
@@ -264,7 +264,7 @@ function renderCells() {
         weight: gridWeight(layer.level, zoom),
         opacity: 0.9,
         fillColor: weatherColor,
-        fillOpacity: 0,
+        fillOpacity: layer.id === "weather" ? 0.04 : 0,
         interactive: true,
       }).bindTooltip(buildTooltip(layer, cell, weather), {
         sticky: true,
