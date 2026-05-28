@@ -232,10 +232,12 @@ button {
 .awaiting-location .topbar,
 .awaiting-location .location-panel,
 .awaiting-location .location-panel-toggle,
+.awaiting-location .cell-panel-toggle,
 .awaiting-location .panel-toggle,
 .awaiting-location .help-toggle,
 .awaiting-location .help-panel,
 .awaiting-location .about-panel,
+.awaiting-location .cell-panel,
 .awaiting-location .control-panel,
 .awaiting-location .leaflet-control-container {
   visibility: hidden;
@@ -681,10 +683,10 @@ button {
   line-height: 1.35;
 }
 
+.cell-panel-toggle,
 .panel-toggle {
   position: absolute;
   z-index: 520;
-  right: 14px;
   bottom: max(18px, env(safe-area-inset-bottom));
   min-width: 84px;
   min-height: 44px;
@@ -693,6 +695,17 @@ button {
   background: #1d8cf8;
   box-shadow: 0 5px 0 #0956b6, 0 14px 28px rgba(12, 47, 92, 0.2);
   font-weight: 900;
+}
+
+.panel-toggle {
+  right: 14px;
+}
+
+.cell-panel-toggle {
+  right: 202px;
+  color: #102033;
+  background: #92e0ff;
+  box-shadow: 0 5px 0 #16a3d7, 0 14px 28px rgba(12, 47, 92, 0.2);
 }
 
 .help-toggle {
@@ -720,6 +733,7 @@ button {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  overflow: auto;
   padding: 14px;
   border: 2px solid rgba(255, 255, 255, 0.9);
   border-radius: 8px;
@@ -739,6 +753,7 @@ button {
   pointer-events: none;
 }
 
+.cell-panel,
 .control-panel {
   position: absolute;
   z-index: 510;
@@ -762,6 +777,12 @@ button {
     visibility 160ms ease;
 }
 
+.cell-panel {
+  z-index: 512;
+  max-height: min(54vh, 390px);
+}
+
+.cell-panel.is-collapsed,
 .control-panel.is-collapsed {
   visibility: hidden;
   opacity: 0;
@@ -912,7 +933,7 @@ button {
 
 .waypoint-header {
   display: grid;
-  grid-template-columns: 1fr 68px 68px;
+  grid-template-columns: 1fr repeat(3, 64px);
   gap: 10px;
   align-items: center;
 }
@@ -995,6 +1016,15 @@ button {
   box-shadow: 0 3px 0 #0956b6;
   font-size: 12px;
   font-weight: 900;
+}
+
+.sr-only-file {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
 }
 
 #clearWaypointsButton {
@@ -1143,6 +1173,27 @@ button {
   overflow: auto;
   padding-top: 0;
   border-top: 0;
+}
+
+.help-section {
+  padding: 10px;
+  border: 1px solid rgba(29, 140, 248, 0.16);
+  border-radius: 8px;
+  background: #f8fbff;
+}
+
+.help-section summary {
+  cursor: pointer;
+  color: #0956b6;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.help-section p {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
 }
 
 .boost-list h2,
@@ -1398,10 +1449,22 @@ button {
     max-height: 56vh;
   }
 
+  .cell-panel {
+    left: 10px;
+    right: 10px;
+    bottom: 74px;
+    width: auto;
+  }
+
   .help-panel {
     left: 10px;
     right: 10px;
     bottom: 74px;
     width: auto;
+  }
+
+  .cell-panel-toggle {
+    right: auto;
+    left: 10px;
   }
 }

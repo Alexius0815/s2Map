@@ -101,7 +101,12 @@ const ui = {
   addWaypointButton: document.querySelector("#addWaypointButton"),
   addWaypointHereButton: document.querySelector("#addWaypointHereButton"),
   exportWaypointsButton: document.querySelector("#exportWaypointsButton"),
+  importWaypointsButton: document.querySelector("#importWaypointsButton"),
+  waypointImportInput: document.querySelector("#waypointImportInput"),
   clearWaypointsButton: document.querySelector("#clearWaypointsButton"),
+  cellPanel: document.querySelector("#cellPanel"),
+  cellPanelToggle: document.querySelector("#cellPanelToggle"),
+  closeCellPanel: document.querySelector("#closeCellPanel"),
   helpToggle: document.querySelector("#helpToggle"),
   helpPanel: document.querySelector("#helpPanel"),
   closeHelpPanel: document.querySelector("#closeHelpPanel"),
@@ -159,7 +164,11 @@ ui.weatherButton.addEventListener("click", toggleWeather);
 ui.addWaypointButton.addEventListener("click", addWaypointFromForm);
 ui.addWaypointHereButton.addEventListener("click", addWaypointAtCenter);
 ui.exportWaypointsButton.addEventListener("click", exportWaypoints);
+ui.importWaypointsButton.addEventListener("click", () => ui.waypointImportInput.click());
+ui.waypointImportInput.addEventListener("change", importWaypointsFromFile);
 ui.clearWaypointsButton.addEventListener("click", clearWaypoints);
+ui.cellPanelToggle.addEventListener("click", () => setCellPanelCollapsed(!ui.cellPanel.classList.contains("is-collapsed")));
+ui.closeCellPanel.addEventListener("click", () => setCellPanelCollapsed(true));
 ui.helpToggle.addEventListener("click", () => setHelpPanelCollapsed(!ui.helpPanel.classList.contains("is-collapsed")));
 ui.closeHelpPanel.addEventListener("click", () => setHelpPanelCollapsed(true));
 ui.brandButton.addEventListener("click", () => setAboutPanelCollapsed(!ui.aboutPanel.classList.contains("is-collapsed")));
@@ -168,6 +177,7 @@ ui.closeAboutPanel.addEventListener("click", () => setAboutPanelCollapsed(true))
 ui.installButton.addEventListener("click", installApp);
 ui.allowLocationButton.addEventListener("click", () => {
   setLocationConsentVisible(false);
+  setCellPanelCollapsed(true);
   setPanelCollapsed(true);
   setHelpPanelCollapsed(true);
   setAboutPanelCollapsed(true);
@@ -175,6 +185,7 @@ ui.allowLocationButton.addEventListener("click", () => {
 });
 ui.skipLocationButton.addEventListener("click", () => {
   setLocationConsentVisible(false);
+  setCellPanelCollapsed(true);
   setPanelCollapsed(true);
   setHelpPanelCollapsed(true);
   setAboutPanelCollapsed(true);
@@ -213,6 +224,17 @@ function setPanelCollapsed(collapsed) {
   ui.panel.classList.toggle("is-collapsed", collapsed);
   ui.panelToggle.setAttribute("aria-expanded", String(!collapsed));
   if (!collapsed) {
+    setCellPanelCollapsed(true);
+    setHelpPanelCollapsed(true);
+    setAboutPanelCollapsed(true);
+  }
+}
+
+function setCellPanelCollapsed(collapsed) {
+  ui.cellPanel.classList.toggle("is-collapsed", collapsed);
+  ui.cellPanelToggle.setAttribute("aria-expanded", String(!collapsed));
+  if (!collapsed) {
+    setPanelCollapsed(true);
     setHelpPanelCollapsed(true);
     setAboutPanelCollapsed(true);
   }
@@ -232,6 +254,7 @@ function setHelpPanelCollapsed(collapsed) {
     setPanelCollapsed(true);
   }
   if (!collapsed) {
+    setCellPanelCollapsed(true);
     setAboutPanelCollapsed(true);
   }
 }
@@ -240,6 +263,7 @@ function setAboutPanelCollapsed(collapsed) {
   ui.aboutPanel.classList.toggle("is-collapsed", collapsed);
   ui.brandButton.setAttribute("aria-expanded", String(!collapsed));
   if (!collapsed) {
+    setCellPanelCollapsed(true);
     setPanelCollapsed(true);
     setHelpPanelCollapsed(true);
   }
@@ -782,6 +806,178 @@ function exportWaypoints() {
   link.click();
   URL.revokeObjectURL(url);
   ui.waypointStatus.textContent = `${state.waypoints.length} Waypoints exportiert`;
+}
+
+async function importWaypointsFromFile(event) {
+  const [file] = Array.from(event.target.files || []);
+  if (!file) return;
+
+  try {
+    const text = await file.text();
+    const imported = parseWaypointImport(text, file.name);
+    if (!imported.length) {
+      ui.waypointStatus.textContent = "Import: keine gültigen Waypoints gefunden.";
+      return;
+    }
+
+    const known = new Set(state.waypoints.map(waypointIdentity));
+    const additions = imported.filter((waypoint) => {
+      const identity = waypointIdentity(waypoint);
+      if (known.has(identity)) return false;
+      known.add(identity);
+      return true;
+    });
+
+    if (!additions.length) {
+      ui.waypointStatus.textContent = "Import: alle Waypoints waren bereits vorhanden.";
+      return;
+    }
+
+    state.waypoints.push(...additions);
+    enforceActiveWaypoints();
+    saveWaypoints();
+    renderWaypoints();
+    focusActiveS14Cell();
+    ui.waypointStatus.textContent = `${additions.length} Waypoints importiert`;
+  } catch {
+    ui.waypointStatus.textContent = "Import konnte nicht gelesen werden.";
+  } finally {
+    event.target.value = "";
+  }
+}
+
+function parseWaypointImport(text, fileName = "") {
+  const trimmed = String(text || "").trim();
+  if (!trimmed) return [];
+
+  if (fileName.toLowerCase().endsWith(".json") || trimmed.startsWith("[") || trimmed.startsWith("{")) {
+    return parseJsonWaypoints(trimmed);
+  }
+
+  const firstLine = trimmed.split(/\r?\n/, 1)[0].toLowerCase();
+  if (firstLine.includes("lat") && firstLine.includes("lng")) {
+    return parseCsvWaypoints(trimmed);
+  }
+
+  return parseTextWaypoints(trimmed);
+}
+
+function parseJsonWaypoints(text) {
+  const parsed = JSON.parse(text);
+  const entries = Array.isArray(parsed) ? parsed : Array.isArray(parsed.waypoints) ? parsed.waypoints : [];
+  return entries.map(importedWaypointFromObject).filter(Boolean);
+}
+
+function parseCsvWaypoints(text) {
+  const rows = parseCsvRows(text);
+  const header = rows.shift() || [];
+  const indexes = new Map(header.map((name, index) => [String(name).trim().toLowerCase(), index]));
+
+  return rows
+    .map((row, index) => importedWaypointFromObject({
+      name: cellValue(row, indexes, "name") || `Import ${index + 1}`,
+      type: cellValue(row, indexes, "type"),
+      areaKind: cellValue(row, indexes, "area") || cellValue(row, indexes, "areakind"),
+      active: cellValue(row, indexes, "active"),
+      lat: cellValue(row, indexes, "lat"),
+      lng: cellValue(row, indexes, "lng"),
+    }))
+    .filter(Boolean);
+}
+
+function parseTextWaypoints(text) {
+  return text
+    .split(/\r?\n/)
+    .map((line, index) => {
+      const coordinates = parseCoordinates(line);
+      if (!coordinates) return null;
+      const name = line
+        .replace(/@?-?\d+(?:[\.,]\d+)?[^\d-]+-?\d+(?:[\.,]\d+)?.*$/, "")
+        .replace(/[;,|]+$/, "")
+        .trim();
+      return importedWaypointFromObject({
+        name: name || `Import ${index + 1}`,
+        lat: coordinates.lat,
+        lng: coordinates.lng,
+      });
+    })
+    .filter(Boolean);
+}
+
+function importedWaypointFromObject(entry) {
+  if (!entry) return null;
+  const latValue = entry.lat !== undefined ? entry.lat : entry.latitude;
+  const lngValue = entry.lng !== undefined ? entry.lng : entry.lon !== undefined ? entry.lon : entry.longitude;
+  const lat = parseCoordinateNumber(latValue);
+  const lng = parseCoordinateNumber(lngValue);
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+  if (Math.abs(lat) > 90 || Math.abs(lng) > 180) return null;
+
+  return normalizeWaypoint({
+    id: entry.id,
+    name: String(entry.name || entry.title || "Importierter Waypoint").trim(),
+    lat,
+    lng,
+    type: String(entry.type || "").toLowerCase() === "arena" ? "arena" : "stop",
+    areaKind: entry.areaKind || entry.area || "normal",
+    active: parseImportedActive(entry.active),
+    createdAt: entry.createdAt || new Date().toISOString(),
+  });
+}
+
+function parseCoordinateNumber(value) {
+  if (typeof value === "number") return value;
+  if (typeof value !== "string") return Number.NaN;
+  return Number(value.trim().replace(",", "."));
+}
+
+function parseImportedActive(value) {
+  if (typeof value === "boolean") return value;
+  const text = String(value === undefined || value === null ? "yes" : value).trim().toLowerCase();
+  return !["false", "0", "no", "nein", "inactive", "inaktiv"].includes(text);
+}
+
+function parseCsvRows(text) {
+  const rows = [];
+  let row = [];
+  let value = "";
+  let quoted = false;
+
+  for (let index = 0; index < text.length; index += 1) {
+    const char = text[index];
+    const next = text[index + 1];
+
+    if (char === '"' && quoted && next === '"') {
+      value += '"';
+      index += 1;
+    } else if (char === '"') {
+      quoted = !quoted;
+    } else if (char === "," && !quoted) {
+      row.push(value);
+      value = "";
+    } else if ((char === "\n" || char === "\r") && !quoted) {
+      if (char === "\r" && next === "\n") index += 1;
+      row.push(value);
+      if (row.some((cell) => cell.trim())) rows.push(row);
+      row = [];
+      value = "";
+    } else {
+      value += char;
+    }
+  }
+
+  row.push(value);
+  if (row.some((cell) => cell.trim())) rows.push(row);
+  return rows;
+}
+
+function cellValue(row, indexes, key) {
+  const index = indexes.get(key);
+  return typeof index === "number" ? row[index] : "";
+}
+
+function waypointIdentity(waypoint) {
+  return `${waypoint.name.trim().toLowerCase()}|${waypoint.lat.toFixed(6)}|${waypoint.lng.toFixed(6)}`;
 }
 
 function csvValue(value) {

@@ -17,7 +17,7 @@
       integrity="sha256-p4NxAoJBhIINfQ3p5SMYk9g3Wg5p0p2mIPlQGLrC6r0="
       crossorigin=""
     />
-    <link rel="stylesheet" href="styles.css?v=waypoints-3" />
+    <link rel="stylesheet" href="styles.css?v=waypoints-4" />
   </head>
   <body class="awaiting-location">
     <main class="app-shell">
@@ -105,8 +105,12 @@
           ⌕
         </button>
 
+        <button id="cellPanelToggle" class="cell-panel-toggle" type="button" aria-expanded="false" aria-controls="cellPanel">
+          Zellen
+        </button>
+
         <button id="panelToggle" class="panel-toggle" type="button" aria-expanded="false" aria-controls="controlPanel">
-          Layer
+          Planung
         </button>
 
         <button id="helpToggle" class="help-toggle" type="button" aria-expanded="false" aria-controls="helpPanel" aria-label="Boost-Hilfe öffnen">
@@ -116,35 +120,58 @@
         <aside id="helpPanel" class="help-panel is-collapsed" aria-label="Boost-Hilfe">
           <div class="panel-header">
             <div>
-              <h2>Boosts</h2>
-              <p>Wetter und verlinkte Typen</p>
+              <h2>Hilfe</h2>
+              <p>Zellen, Wetter und Waypoints</p>
             </div>
             <button id="closeHelpPanel" class="panel-close-button" type="button" aria-label="Boost-Hilfe schließen">×</button>
           </div>
-          <div class="boost-list" aria-label="Wetterboost-Typen">
-            <dl>
-              <div><dt>Sonnig / Klar</dt><dd><span class="type-links"><a href="https://www.pokewiki.de/Pflanze" target="_blank" rel="noreferrer">Pflanze</a><a href="https://www.pokewiki.de/Feuer" target="_blank" rel="noreferrer">Feuer</a><a href="https://www.pokewiki.de/Boden" target="_blank" rel="noreferrer">Boden</a></span></dd></div>
-              <div><dt>Regen</dt><dd><span class="type-links"><a href="https://www.pokewiki.de/Wasser" target="_blank" rel="noreferrer">Wasser</a><a href="https://www.pokewiki.de/Elektro" target="_blank" rel="noreferrer">Elektro</a><a href="https://www.pokewiki.de/K%C3%A4fer" target="_blank" rel="noreferrer">Käfer</a></span></dd></div>
-              <div><dt>Schnee</dt><dd><span class="type-links"><a href="https://www.pokewiki.de/Eis" target="_blank" rel="noreferrer">Eis</a><a href="https://www.pokewiki.de/Stahl" target="_blank" rel="noreferrer">Stahl</a></span></dd></div>
-              <div><dt>Windig</dt><dd><span class="type-links"><a href="https://www.pokewiki.de/Flug" target="_blank" rel="noreferrer">Flug</a><a href="https://www.pokewiki.de/Drache" target="_blank" rel="noreferrer">Drache</a><a href="https://www.pokewiki.de/Psycho" target="_blank" rel="noreferrer">Psycho</a></span></dd></div>
-              <div><dt>Bewölkt</dt><dd><span class="type-links"><a href="https://www.pokewiki.de/Fee" target="_blank" rel="noreferrer">Fee</a><a href="https://www.pokewiki.de/Kampf" target="_blank" rel="noreferrer">Kampf</a><a href="https://www.pokewiki.de/Gift" target="_blank" rel="noreferrer">Gift</a></span></dd></div>
-              <div><dt>Teilweise bewölkt</dt><dd><span class="type-links"><a href="https://www.pokewiki.de/Normal" target="_blank" rel="noreferrer">Normal</a><a href="https://www.pokewiki.de/Gestein" target="_blank" rel="noreferrer">Gestein</a></span></dd></div>
-              <div><dt>Nebel</dt><dd><span class="type-links"><a href="https://www.pokewiki.de/Unlicht" target="_blank" rel="noreferrer">Unlicht</a><a href="https://www.pokewiki.de/Geist" target="_blank" rel="noreferrer">Geist</a></span></dd></div>
-            </dl>
-            <p class="source-note">Externe Typ-Links führen zu PokéWiki. Es werden keine PokéWiki-Inhalte in diese App übernommen.</p>
-          </div>
+          <details class="help-section" open>
+            <summary>Zellen</summary>
+            <p><strong>S10</strong> dient als grobe Wetterzelle. <strong>S14</strong> hilft bei Arena-/POI-Planung. <strong>S17</strong> ist die feine Orientierung für einzelne Stop- oder Waypoint-Positionen.</p>
+            <p>Die Sichtbarkeit der Zellen schaltest du getrennt im Menü <strong>Zellen</strong>.</p>
+          </details>
+          <details class="help-section">
+            <summary>Wetter</summary>
+            <div class="boost-list" aria-label="Wetterboost-Typen">
+              <dl>
+                <div><dt>Sonnig / Klar</dt><dd><span class="type-links"><a href="https://www.pokewiki.de/Pflanze" target="_blank" rel="noreferrer">Pflanze</a><a href="https://www.pokewiki.de/Feuer" target="_blank" rel="noreferrer">Feuer</a><a href="https://www.pokewiki.de/Boden" target="_blank" rel="noreferrer">Boden</a></span></dd></div>
+                <div><dt>Regen</dt><dd><span class="type-links"><a href="https://www.pokewiki.de/Wasser" target="_blank" rel="noreferrer">Wasser</a><a href="https://www.pokewiki.de/Elektro" target="_blank" rel="noreferrer">Elektro</a><a href="https://www.pokewiki.de/K%C3%A4fer" target="_blank" rel="noreferrer">Käfer</a></span></dd></div>
+                <div><dt>Schnee</dt><dd><span class="type-links"><a href="https://www.pokewiki.de/Eis" target="_blank" rel="noreferrer">Eis</a><a href="https://www.pokewiki.de/Stahl" target="_blank" rel="noreferrer">Stahl</a></span></dd></div>
+                <div><dt>Windig</dt><dd><span class="type-links"><a href="https://www.pokewiki.de/Flug" target="_blank" rel="noreferrer">Flug</a><a href="https://www.pokewiki.de/Drache" target="_blank" rel="noreferrer">Drache</a><a href="https://www.pokewiki.de/Psycho" target="_blank" rel="noreferrer">Psycho</a></span></dd></div>
+                <div><dt>Bewölkt</dt><dd><span class="type-links"><a href="https://www.pokewiki.de/Fee" target="_blank" rel="noreferrer">Fee</a><a href="https://www.pokewiki.de/Kampf" target="_blank" rel="noreferrer">Kampf</a><a href="https://www.pokewiki.de/Gift" target="_blank" rel="noreferrer">Gift</a></span></dd></div>
+                <div><dt>Teilweise bewölkt</dt><dd><span class="type-links"><a href="https://www.pokewiki.de/Normal" target="_blank" rel="noreferrer">Normal</a><a href="https://www.pokewiki.de/Gestein" target="_blank" rel="noreferrer">Gestein</a></span></dd></div>
+                <div><dt>Nebel</dt><dd><span class="type-links"><a href="https://www.pokewiki.de/Unlicht" target="_blank" rel="noreferrer">Unlicht</a><a href="https://www.pokewiki.de/Geist" target="_blank" rel="noreferrer">Geist</a></span></dd></div>
+              </dl>
+              <p class="source-note">Externe Typ-Links führen zu PokéWiki. Es werden keine PokéWiki-Inhalte in diese App übernommen.</p>
+            </div>
+          </details>
+          <details class="help-section">
+            <summary>Waypoints</summary>
+            <p>Waypoints speichert die App nur lokal auf deinem Gerät. In einer S17-Zelle bleibt ein Eintrag aktiv; weitere Einträge werden ausgegraut und können gezielt aktiviert werden.</p>
+            <p>Import unterstützt CSV aus dieser App, einfache JSON-Listen und Koordinaten-Textzeilen.</p>
+          </details>
         </aside>
 
-        <aside id="controlPanel" class="control-panel is-collapsed" aria-label="S2-Layer auswählen">
+        <aside id="cellPanel" class="cell-panel is-collapsed" aria-label="S2-Zellen auswählen">
           <div class="panel-header">
             <div>
               <h2>Zellen</h2>
               <p id="renderStatus">Bereit</p>
             </div>
-            <button id="closePanel" class="panel-close-button" type="button" aria-label="Panel einklappen">×</button>
+            <button id="closeCellPanel" class="panel-close-button" type="button" aria-label="Zellmenü einklappen">×</button>
           </div>
 
           <div class="layer-list" id="layerList"></div>
+        </aside>
+
+        <aside id="controlPanel" class="control-panel is-collapsed" aria-label="Planung und Waypoints">
+          <div class="panel-header">
+            <div>
+              <h2>Planung</h2>
+              <p>Wetter und Waypoints</p>
+            </div>
+            <button id="closePanel" class="panel-close-button" type="button" aria-label="Panel einklappen">×</button>
+          </div>
 
           <div class="weather-controls">
             <div>
@@ -161,8 +188,10 @@
                 <p id="waypointStatus">Noch keine eigenen Waypoints</p>
               </div>
               <button id="exportWaypointsButton" type="button">Export</button>
+              <button id="importWaypointsButton" type="button">Import</button>
               <button id="clearWaypointsButton" type="button">Leeren</button>
             </div>
+            <input id="waypointImportInput" class="sr-only-file" type="file" accept=".csv,.json,.txt,text/csv,application/json,text/plain" />
             <input id="waypointNameInput" type="text" placeholder="Name, z.B. Rad- und Wanderweg Wegweiser" autocomplete="off" />
             <div class="waypoint-selects">
               <label>
@@ -219,6 +248,6 @@
       integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
       crossorigin=""
     ></script>
-    <script src="app.js?v=waypoints-3"></script>
+    <script src="app.js?v=waypoints-4"></script>
   </body>
 </html>
