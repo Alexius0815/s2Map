@@ -17,7 +17,7 @@
       integrity="sha256-p4NxAoJBhIINfQ3p5SMYk9g3Wg5p0p2mIPlQGLrC6r0="
       crossorigin=""
     />
-    <link rel="stylesheet" href="styles.css?v=waypoints-1" />
+    <link rel="stylesheet" href="styles.css?v=waypoints-2" />
   </head>
   <body class="awaiting-location">
     <main class="app-shell">
@@ -160,14 +160,34 @@
                 <h2>Waypoints</h2>
                 <p id="waypointStatus">Noch keine eigenen Waypoints</p>
               </div>
+              <button id="exportWaypointsButton" type="button">Export</button>
               <button id="clearWaypointsButton" type="button">Leeren</button>
             </div>
             <input id="waypointNameInput" type="text" placeholder="Name, z.B. Rad- und Wanderweg Wegweiser" autocomplete="off" />
+            <div class="waypoint-selects">
+              <label>
+                <span>Typ</span>
+                <select id="waypointTypeInput">
+                  <option value="stop">Stop</option>
+                  <option value="arena">Arena</option>
+                </select>
+              </label>
+              <label>
+                <span>Umfeld</span>
+                <select id="waypointAreaInput">
+                  <option value="normal">Normal</option>
+                  <option value="park">Park / Grünfläche</option>
+                  <option value="sponsor">Sponsor / Geschäft</option>
+                  <option value="unclear">Unklar</option>
+                </select>
+              </label>
+            </div>
             <textarea id="waypointPasteInput" rows="3" placeholder="Koordinaten, Maps-Text oder Link einfügen, z.B. 50,04079° N, 8,43239° O"></textarea>
             <div class="waypoint-actions">
               <button id="addWaypointButton" type="button">Waypoint hinzufügen</button>
               <button id="addWaypointHereButton" type="button">Kartenmitte nehmen</button>
             </div>
+            <p class="waypoint-note">Arena-Plausibilität nutzt die Community-Heuristik 2/6/20 aktive POI pro S14-Zelle. Das ist keine offizielle Zusage.</p>
             <div id="waypointList" class="waypoint-list" aria-label="Eigene Waypoints"></div>
           </div>
 
@@ -199,6 +219,6 @@
       integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
       crossorigin=""
     ></script>
-    <script src="app.js?v=waypoints-1"></script>
+    <script src="app.js?v=waypoints-2"></script>
   </body>
 </html>

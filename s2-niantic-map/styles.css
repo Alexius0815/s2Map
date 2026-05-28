@@ -912,7 +912,7 @@ button {
 
 .waypoint-header {
   display: grid;
-  grid-template-columns: 1fr 74px;
+  grid-template-columns: 1fr 68px 68px;
   gap: 10px;
   align-items: center;
 }
@@ -934,8 +934,14 @@ button {
   line-height: 1.35;
 }
 
+.waypoint-controls .waypoint-note {
+  margin: 0;
+  font-size: 11px;
+}
+
 .waypoint-controls input,
-.waypoint-controls textarea {
+.waypoint-controls textarea,
+.waypoint-controls select {
   width: 100%;
   min-width: 0;
   border: 1px solid rgba(29, 140, 248, 0.2);
@@ -944,9 +950,28 @@ button {
   background: #fff;
 }
 
-.waypoint-controls input {
+.waypoint-controls input,
+.waypoint-controls select {
   min-height: 40px;
   padding: 0 10px;
+}
+
+.waypoint-selects {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.waypoint-selects label {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.waypoint-selects span {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 900;
 }
 
 .waypoint-controls textarea {
@@ -1001,6 +1026,16 @@ button {
   background: #fff7f7;
 }
 
+.waypoint-item.is-arena {
+  border-color: rgba(239, 59, 120, 0.28);
+}
+
+.waypoint-item.is-inactive {
+  filter: grayscale(0.85);
+  opacity: 0.56;
+  background: #f1f5f9;
+}
+
 .waypoint-item div {
   display: grid;
   min-width: 0;
@@ -1039,7 +1074,9 @@ button {
 
 .waypoint-item div + div {
   display: flex;
+  flex-wrap: wrap;
   gap: 6px;
+  justify-content: end;
 }
 
 .waypoint-item button {

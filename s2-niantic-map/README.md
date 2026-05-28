@@ -21,7 +21,7 @@ Die App registriert einen Service Worker fuer die App-Shell. API- und Wetterdate
 
 ## Eigene Waypoints
 
-Nutzer koennen Waypoints manuell hinzufuegen, indem sie Name und Koordinaten oder einen Maps-Text einfuegen. Die Daten werden nur lokal im Browser-Speicher gespeichert und nicht an einen Server uebertragen.
+Nutzer koennen Waypoints manuell hinzufuegen, indem sie Name und Koordinaten oder einen Maps-Text einfuegen. Waypoints koennen als Stop oder Arena markiert, pro S17-Zelle aktiv/inaktiv gesetzt und als CSV exportiert werden. Die Daten werden nur lokal im Browser-Speicher gespeichert und nicht an einen Server uebertragen.
 
 ## Hosting mit Vercel
 

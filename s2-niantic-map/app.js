@@ -93,11 +93,14 @@ const ui = {
   weatherButton: document.querySelector("#weatherButton"),
   weatherStatus: document.querySelector("#weatherStatus"),
   waypointNameInput: document.querySelector("#waypointNameInput"),
+  waypointTypeInput: document.querySelector("#waypointTypeInput"),
+  waypointAreaInput: document.querySelector("#waypointAreaInput"),
   waypointPasteInput: document.querySelector("#waypointPasteInput"),
   waypointStatus: document.querySelector("#waypointStatus"),
   waypointList: document.querySelector("#waypointList"),
   addWaypointButton: document.querySelector("#addWaypointButton"),
   addWaypointHereButton: document.querySelector("#addWaypointHereButton"),
+  exportWaypointsButton: document.querySelector("#exportWaypointsButton"),
   clearWaypointsButton: document.querySelector("#clearWaypointsButton"),
   helpToggle: document.querySelector("#helpToggle"),
   helpPanel: document.querySelector("#helpPanel"),
@@ -155,6 +158,7 @@ ui.locationGoButton.addEventListener("click", jumpToLocation);
 ui.weatherButton.addEventListener("click", toggleWeather);
 ui.addWaypointButton.addEventListener("click", addWaypointFromForm);
 ui.addWaypointHereButton.addEventListener("click", addWaypointAtCenter);
+ui.exportWaypointsButton.addEventListener("click", exportWaypoints);
 ui.clearWaypointsButton.addEventListener("click", clearWaypoints);
 ui.helpToggle.addEventListener("click", () => setHelpPanelCollapsed(!ui.helpPanel.classList.contains("is-collapsed")));
 ui.closeHelpPanel.addEventListener("click", () => setHelpPanelCollapsed(true));
@@ -202,6 +206,7 @@ registerServiceWorker();
 updateInstallHelp();
 scheduleRender();
 window.setTimeout(requestInitialLocation, 300);
+window.setTimeout(focusActiveS14Cell, 700);
 
 function setPanelCollapsed(collapsed) {
   state.collapsed = collapsed;
@@ -426,10 +431,11 @@ function loadWaypoints() {
   try {
     const raw = localStorage.getItem(WAYPOINT_STORAGE_KEY);
     const parsed = raw ? JSON.parse(raw) : [];
-    state.waypoints = Array.isArray(parsed) ? parsed.filter(isValidWaypoint) : [];
+    state.waypoints = Array.isArray(parsed) ? parsed.filter(isValidWaypoint).map(normalizeWaypoint) : [];
   } catch {
     state.waypoints = [];
   }
+  enforceActiveWaypoints();
   renderWaypoints();
 }
 
@@ -445,6 +451,19 @@ function isValidWaypoint(waypoint) {
   return waypoint && typeof waypoint.name === "string" && Number.isFinite(waypoint.lat) && Number.isFinite(waypoint.lng);
 }
 
+function normalizeWaypoint(waypoint) {
+  return {
+    id: waypoint.id || `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    name: waypoint.name,
+    lat: waypoint.lat,
+    lng: waypoint.lng,
+    type: waypoint.type === "arena" ? "arena" : "stop",
+    areaKind: ["park", "sponsor", "unclear"].includes(waypoint.areaKind) ? waypoint.areaKind : "normal",
+    active: waypoint.active !== false,
+    createdAt: waypoint.createdAt || new Date().toISOString(),
+  };
+}
+
 function addWaypointFromForm() {
   const coordinates = parseCoordinates(ui.waypointPasteInput.value);
   if (!coordinates) {
@@ -453,7 +472,7 @@ function addWaypointFromForm() {
     return;
   }
   const name = ui.waypointNameInput.value.trim() || "Eigener Waypoint";
-  addWaypoint(name, coordinates.lat, coordinates.lng);
+  addWaypoint(name, coordinates.lat, coordinates.lng, waypointFormMeta());
   ui.waypointNameInput.value = "";
   ui.waypointPasteInput.value = "";
 }
@@ -461,19 +480,32 @@ function addWaypointFromForm() {
 function addWaypointAtCenter() {
   const center = map.getCenter();
   const name = ui.waypointNameInput.value.trim() || "Waypoint Kartenmitte";
-  addWaypoint(name, center.lat, center.lng);
+  addWaypoint(name, center.lat, center.lng, waypointFormMeta());
   ui.waypointNameInput.value = "";
 }
 
-function addWaypoint(name, lat, lng) {
+function waypointFormMeta() {
+  return {
+    type: ui.waypointTypeInput.value === "arena" ? "arena" : "stop",
+    areaKind: ui.waypointAreaInput.value,
+  };
+}
+
+function addWaypoint(name, lat, lng, meta = {}) {
+  const s17Key = cellKey(latLngToCell(lat, lng, 17));
+  const hasActiveInCell = state.waypoints.some((waypoint) => waypoint.active && cellKey(latLngToCell(waypoint.lat, waypoint.lng, 17)) === s17Key);
   const waypoint = {
     id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     name,
     lat,
     lng,
+    type: meta.type === "arena" ? "arena" : "stop",
+    areaKind: ["park", "sponsor", "unclear"].includes(meta.areaKind) ? meta.areaKind : "normal",
+    active: !hasActiveInCell,
     createdAt: new Date().toISOString(),
   };
   state.waypoints.push(waypoint);
+  enforceActiveWaypoints();
   saveWaypoints();
   renderWaypoints();
   moveToLocation(lat, lng, name);
@@ -482,6 +514,7 @@ function addWaypoint(name, lat, lng) {
 
 function removeWaypoint(id) {
   state.waypoints = state.waypoints.filter((waypoint) => waypoint.id !== id);
+  enforceActiveWaypoints();
   saveWaypoints();
   renderWaypoints();
 }
@@ -494,6 +527,7 @@ function clearWaypoints() {
 
 function renderWaypoints() {
   if (!state.waypointGroup) return;
+  enforceActiveWaypoints();
   state.waypointGroup.clearLayers();
   ui.waypointList.textContent = "";
 
@@ -502,54 +536,75 @@ function renderWaypoints() {
     return;
   }
 
-  const s17Counts = countCellsForWaypoints(17);
-  ui.waypointStatus.textContent = `${state.waypoints.length} eigene Waypoints gespeichert`;
+  const s17Groups = groupWaypointsByCell(17);
+  const activeWaypoints = state.waypoints.filter((waypoint) => waypoint.active);
+  ui.waypointStatus.textContent = `${activeWaypoints.length}/${state.waypoints.length} aktive Waypoints`;
 
   state.waypoints.forEach((waypoint) => {
     const s14 = latLngToCell(waypoint.lat, waypoint.lng, 14);
     const s17 = latLngToCell(waypoint.lat, waypoint.lng, 17);
     const s14Key = cellKey(s14);
     const s17Key = cellKey(s17);
-    const conflict = (s17Counts.get(s17Key) || 0) > 1;
+    const hasS17Duplicates = (s17Groups.get(s17Key) || []).length > 1;
+    const inactive = hasS17Duplicates && !waypoint.active;
+    const plausibility = gymPlausibilityForWaypoint(waypoint);
 
     L.circleMarker([waypoint.lat, waypoint.lng], {
-      radius: 8,
+      radius: waypoint.type === "arena" ? 10 : 8,
       color: "#ffffff",
       weight: 3,
-      fillColor: conflict ? "#ef4444" : "#ffcb05",
-      fillOpacity: 1,
+      fillColor: waypointMarkerColor(waypoint, inactive),
+      fillOpacity: inactive ? 0.42 : 1,
+      opacity: inactive ? 0.55 : 1,
     })
       .bindTooltip(
         [
           waypoint.name,
+          waypoint.type === "arena" ? "Arena" : "Stop",
           `${waypoint.lat.toFixed(5)}, ${waypoint.lng.toFixed(5)}`,
           `S14: ${s14Key}`,
           `S17: ${s17Key}`,
-          conflict ? "Hinweis: mehrere Waypoints in dieser S17-Zelle" : "S17-Zelle ist in deiner Liste frei",
+          hasS17Duplicates
+            ? waypoint.active
+              ? "Aktiver Eintrag in dieser S17-Zelle"
+              : "Inaktiv: anderer Eintrag in dieser S17-Zelle ist aktiv"
+            : "S17-Zelle ist in deiner Liste frei",
+          plausibility,
         ].join("<br>"),
         { sticky: true, direction: "top" },
       )
       .addTo(state.waypointGroup);
 
-    ui.waypointList.appendChild(createWaypointListItem(waypoint, s17Key, conflict));
+    ui.waypointList.appendChild(createWaypointListItem(waypoint, s17Key, hasS17Duplicates, inactive, plausibility));
   });
 }
 
-function createWaypointListItem(waypoint, s17Key, conflict) {
+function createWaypointListItem(waypoint, s17Key, hasS17Duplicates, inactive, plausibility) {
   const item = document.createElement("article");
   item.className = "waypoint-item";
-  if (conflict) item.classList.add("has-conflict");
+  if (hasS17Duplicates) item.classList.add("has-conflict");
+  if (inactive) item.classList.add("is-inactive");
+  if (waypoint.type === "arena") item.classList.add("is-arena");
 
   const text = document.createElement("div");
   const title = document.createElement("strong");
-  title.textContent = waypoint.name;
+  title.textContent = `${waypoint.name} · ${waypoint.type === "arena" ? "Arena" : "Stop"}`;
   const meta = document.createElement("span");
   meta.textContent = `${waypoint.lat.toFixed(5)}, ${waypoint.lng.toFixed(5)} · S17 ${shortCellKey(s17Key)}`;
   const note = document.createElement("em");
-  note.textContent = conflict ? "Doppelt in S17" : "S17 frei";
-  text.append(title, meta, note);
+  note.textContent = inactive ? "Inaktiv in S17" : hasS17Duplicates ? "Aktiv in S17" : "S17 frei";
+  const plausibilityText = document.createElement("span");
+  plausibilityText.textContent = plausibility;
+  text.append(title, meta, note, plausibilityText);
 
   const actions = document.createElement("div");
+  if (hasS17Duplicates && !waypoint.active) {
+    const active = document.createElement("button");
+    active.type = "button";
+    active.textContent = "Aktiv";
+    active.addEventListener("click", () => setActiveWaypoint(waypoint.id));
+    actions.append(active);
+  }
   const focus = document.createElement("button");
   focus.type = "button";
   focus.textContent = "Fokus";
@@ -565,13 +620,127 @@ function createWaypointListItem(waypoint, s17Key, conflict) {
   return item;
 }
 
-function countCellsForWaypoints(level) {
-  const counts = new Map();
+function setActiveWaypoint(id) {
+  const selected = state.waypoints.find((waypoint) => waypoint.id === id);
+  if (!selected) return;
+  const selectedS17 = cellKey(latLngToCell(selected.lat, selected.lng, 17));
   state.waypoints.forEach((waypoint) => {
-    const key = cellKey(latLngToCell(waypoint.lat, waypoint.lng, level));
-    counts.set(key, (counts.get(key) || 0) + 1);
+    if (cellKey(latLngToCell(waypoint.lat, waypoint.lng, 17)) === selectedS17) {
+      waypoint.active = waypoint.id === id;
+    }
   });
-  return counts;
+  saveWaypoints();
+  renderWaypoints();
+}
+
+function enforceActiveWaypoints() {
+  const groups = groupWaypointsByCell(17);
+  groups.forEach((waypoints) => {
+    if (waypoints.length === 1) {
+      waypoints[0].active = true;
+      return;
+    }
+    const active = waypoints.find((waypoint) => waypoint.active) || waypoints[0];
+    waypoints.forEach((waypoint) => {
+      waypoint.active = waypoint.id === active.id;
+    });
+  });
+}
+
+function groupWaypointsByCell(level, onlyActive = false) {
+  const groups = new Map();
+  state.waypoints
+    .filter((waypoint) => !onlyActive || waypoint.active)
+    .forEach((waypoint) => {
+      const key = cellKey(latLngToCell(waypoint.lat, waypoint.lng, level));
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(waypoint);
+    });
+  return groups;
+}
+
+function waypointMarkerColor(waypoint, inactive) {
+  if (inactive) return "#94a3b8";
+  return waypoint.type === "arena" ? "#ef3b78" : "#1d8cf8";
+}
+
+function gymPlausibilityForWaypoint(waypoint) {
+  const s14Key = cellKey(latLngToCell(waypoint.lat, waypoint.lng, 14));
+  const s14Waypoints = groupWaypointsByCell(14, true).get(s14Key) || [];
+  const activeCount = s14Waypoints.length;
+  const arenaCount = s14Waypoints.filter((entry) => entry.type === "arena").length;
+  const expected = expectedGymCount(activeCount);
+  const parkHint = waypoint.areaKind === "park" ? " · Park: Top-Arena-Kandidat" : "";
+
+  if (waypoint.type === "arena") {
+    if (arenaCount <= expected) return `Arena plausibel: ${arenaCount}/${expected} bei ${activeCount} aktiven POI${parkHint}`;
+    return `Arena über Schwellenheuristik: ${arenaCount}/${expected} bei ${activeCount} aktiven POI${parkHint}`;
+  }
+
+  const next = nextGymThreshold(activeCount);
+  if (!next) return `S14 wirkt voll: ${activeCount} aktive POI, bis zu ${expected} Arenen plausibel`;
+  return `S14: ${activeCount} aktive POI · nächste Arena-Heuristik bei ${next}`;
+}
+
+function expectedGymCount(activeCount) {
+  if (activeCount >= 20) return 3;
+  if (activeCount >= 6) return 2;
+  if (activeCount >= 2) return 1;
+  return 0;
+}
+
+function nextGymThreshold(activeCount) {
+  if (activeCount < 2) return 2;
+  if (activeCount < 6) return 6;
+  if (activeCount < 20) return 20;
+  return null;
+}
+
+function exportWaypoints() {
+  if (!state.waypoints.length) {
+    ui.waypointStatus.textContent = "Keine Waypoints zum Exportieren.";
+    return;
+  }
+  enforceActiveWaypoints();
+  const rows = [
+    ["name", "type", "area", "active", "lat", "lng", "s14", "s17", "plausibility"],
+    ...state.waypoints.map((waypoint) => [
+      waypoint.name,
+      waypoint.type,
+      waypoint.areaKind,
+      waypoint.active ? "yes" : "no",
+      waypoint.lat.toFixed(6),
+      waypoint.lng.toFixed(6),
+      cellKey(latLngToCell(waypoint.lat, waypoint.lng, 14)),
+      cellKey(latLngToCell(waypoint.lat, waypoint.lng, 17)),
+      gymPlausibilityForWaypoint(waypoint),
+    ]),
+  ];
+  const csv = rows.map((row) => row.map(csvValue).join(",")).join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `s2-waypoints-${new Date().toISOString().slice(0, 10)}.csv`;
+  link.click();
+  URL.revokeObjectURL(url);
+  ui.waypointStatus.textContent = `${state.waypoints.length} Waypoints exportiert`;
+}
+
+function csvValue(value) {
+  return `"${String(value).replaceAll('"', '""')}"`;
+}
+
+function focusActiveS14Cell() {
+  const waypoint = state.waypoints.find((entry) => entry.active) || state.waypoints[0];
+  if (!waypoint) return;
+  const cell = latLngToCell(waypoint.lat, waypoint.lng, 14);
+  const bounds = L.latLngBounds(cellPolygon(cell.face, cell.i, cell.j, cell.level));
+  map.fitBounds(bounds.pad(0.08), {
+    animate: true,
+    maxZoom: 14,
+    padding: [30, 120],
+  });
 }
 
 function shortCellKey(key) {
