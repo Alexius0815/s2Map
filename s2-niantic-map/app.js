@@ -77,7 +77,7 @@ L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
 }).addTo(map);
 
 map.createPane("waypointPane");
-map.getPane("waypointPane").style.zIndex = 625;
+map.getPane("waypointPane").style.zIndex = 680;
 map.getPane("waypointPane").style.pointerEvents = "auto";
 
 const ui = {
@@ -112,6 +112,9 @@ const ui = {
   cellPanel: document.querySelector("#cellPanel"),
   cellPanelToggle: document.querySelector("#cellPanelToggle"),
   closeCellPanel: document.querySelector("#closeCellPanel"),
+  weatherPanel: document.querySelector("#weatherPanel"),
+  weatherPanelToggle: document.querySelector("#weatherPanelToggle"),
+  closeWeatherPanel: document.querySelector("#closeWeatherPanel"),
   helpToggle: document.querySelector("#helpToggle"),
   helpPanel: document.querySelector("#helpPanel"),
   closeHelpPanel: document.querySelector("#closeHelpPanel"),
@@ -174,6 +177,8 @@ ui.waypointImportInput.addEventListener("change", importWaypointsFromFile);
 ui.clearWaypointsButton.addEventListener("click", clearWaypoints);
 ui.cellPanelToggle.addEventListener("click", () => setCellPanelCollapsed(!ui.cellPanel.classList.contains("is-collapsed")));
 ui.closeCellPanel.addEventListener("click", () => setCellPanelCollapsed(true));
+ui.weatherPanelToggle.addEventListener("click", () => setWeatherPanelCollapsed(!ui.weatherPanel.classList.contains("is-collapsed")));
+ui.closeWeatherPanel.addEventListener("click", () => setWeatherPanelCollapsed(true));
 ui.helpToggle.addEventListener("click", () => setHelpPanelCollapsed(!ui.helpPanel.classList.contains("is-collapsed")));
 ui.closeHelpPanel.addEventListener("click", () => setHelpPanelCollapsed(true));
 ui.brandButton.addEventListener("click", () => setAboutPanelCollapsed(!ui.aboutPanel.classList.contains("is-collapsed")));
@@ -183,6 +188,7 @@ ui.installButton.addEventListener("click", installApp);
 ui.allowLocationButton.addEventListener("click", () => {
   setLocationConsentVisible(false);
   setCellPanelCollapsed(true);
+  setWeatherPanelCollapsed(true);
   setPanelCollapsed(true);
   setHelpPanelCollapsed(true);
   setAboutPanelCollapsed(true);
@@ -191,6 +197,7 @@ ui.allowLocationButton.addEventListener("click", () => {
 ui.skipLocationButton.addEventListener("click", () => {
   setLocationConsentVisible(false);
   setCellPanelCollapsed(true);
+  setWeatherPanelCollapsed(true);
   setPanelCollapsed(true);
   setHelpPanelCollapsed(true);
   setAboutPanelCollapsed(true);
@@ -230,6 +237,7 @@ function setPanelCollapsed(collapsed) {
   ui.panelToggle.setAttribute("aria-expanded", String(!collapsed));
   if (!collapsed) {
     setCellPanelCollapsed(true);
+    setWeatherPanelCollapsed(true);
     setHelpPanelCollapsed(true);
     setAboutPanelCollapsed(true);
   }
@@ -239,6 +247,18 @@ function setCellPanelCollapsed(collapsed) {
   ui.cellPanel.classList.toggle("is-collapsed", collapsed);
   ui.cellPanelToggle.setAttribute("aria-expanded", String(!collapsed));
   if (!collapsed) {
+    setWeatherPanelCollapsed(true);
+    setPanelCollapsed(true);
+    setHelpPanelCollapsed(true);
+    setAboutPanelCollapsed(true);
+  }
+}
+
+function setWeatherPanelCollapsed(collapsed) {
+  ui.weatherPanel.classList.toggle("is-collapsed", collapsed);
+  ui.weatherPanelToggle.setAttribute("aria-expanded", String(!collapsed));
+  if (!collapsed) {
+    setCellPanelCollapsed(true);
     setPanelCollapsed(true);
     setHelpPanelCollapsed(true);
     setAboutPanelCollapsed(true);
@@ -260,6 +280,7 @@ function setHelpPanelCollapsed(collapsed) {
   }
   if (!collapsed) {
     setCellPanelCollapsed(true);
+    setWeatherPanelCollapsed(true);
     setAboutPanelCollapsed(true);
   }
 }
@@ -269,6 +290,7 @@ function setAboutPanelCollapsed(collapsed) {
   ui.brandButton.setAttribute("aria-expanded", String(!collapsed));
   if (!collapsed) {
     setCellPanelCollapsed(true);
+    setWeatherPanelCollapsed(true);
     setPanelCollapsed(true);
     setHelpPanelCollapsed(true);
   }
@@ -590,18 +612,17 @@ function renderWaypoints() {
     const inactive = hasS17Duplicates && !waypoint.active;
     const plausibility = gymPlausibilityForWaypoint(waypoint);
 
-    const marker = L.circleMarker([waypoint.lat, waypoint.lng], {
+    const markerTitle = `${waypoint.name} · ${waypoint.type === "arena" ? "Arena" : "Stop"}`;
+    const marker = L.marker([waypoint.lat, waypoint.lng], {
       pane: "waypointPane",
+      icon: waypointIcon(waypoint, inactive),
       interactive: true,
-      radius: waypoint.type === "arena" ? 10 : 8,
-      color: "#ffffff",
-      weight: 3,
-      fillColor: waypointMarkerColor(waypoint, inactive),
-      fillOpacity: inactive ? 0.42 : 1,
-      opacity: inactive ? 0.55 : 1,
+      title: markerTitle,
+      alt: markerTitle,
+      keyboard: true,
     });
     marker
-      .bindTooltip(`${waypoint.name} · ${waypoint.type === "arena" ? "Arena" : "Stop"}`, {
+      .bindTooltip(markerTitle, {
         sticky: true,
         direction: "top",
         className: "waypoint-tooltip",
@@ -614,6 +635,20 @@ function renderWaypoints() {
       .addTo(state.waypointGroup);
 
     ui.waypointList.appendChild(createWaypointListItem(waypoint, s17Key, hasS17Duplicates, inactive, plausibility));
+  });
+}
+
+function waypointIcon(waypoint, inactive) {
+  const typeClass = waypoint.type === "arena" ? "is-arena" : "is-stop";
+  const inactiveClass = inactive ? " is-inactive" : "";
+  const label = waypoint.type === "arena" ? "A" : "S";
+  return L.divIcon({
+    className: "",
+    html: `<span class="waypoint-marker ${typeClass}${inactiveClass}" aria-hidden="true">${label}</span>`,
+    iconSize: [34, 34],
+    iconAnchor: [17, 17],
+    popupAnchor: [0, -18],
+    tooltipAnchor: [0, -18],
   });
 }
 
