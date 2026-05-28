@@ -904,10 +904,15 @@ async function importWaypointsFromFile(event) {
   if (!file) return;
 
   try {
-    const text = await file.text();
+    ui.waypointStatus.textContent = file.type.startsWith("image/")
+      ? "Screenshot wird gelesen ..."
+      : "Import wird gelesen ...";
+    const text = file.type.startsWith("image/") ? await textFromImageFile(file) : await file.text();
     const imported = parseWaypointImport(text, file.name);
     if (!imported.length) {
-      ui.waypointStatus.textContent = "Import: keine gültigen Waypoints gefunden.";
+      ui.waypointStatus.textContent = file.type.startsWith("image/")
+        ? "Bildimport: Name und Koordinaten wurden nicht sicher erkannt."
+        : "Import: keine gültigen Waypoints gefunden.";
       return;
     }
 
@@ -930,10 +935,35 @@ async function importWaypointsFromFile(event) {
     renderWaypoints();
     focusActiveS14Cell();
     ui.waypointStatus.textContent = `${additions.length} Waypoints importiert`;
-  } catch {
-    ui.waypointStatus.textContent = "Import konnte nicht gelesen werden.";
+  } catch (error) {
+    ui.waypointStatus.textContent = error.message || "Import konnte nicht gelesen werden.";
   } finally {
     event.target.value = "";
+  }
+}
+
+async function textFromImageFile(file) {
+  if (window.TextDetector && window.createImageBitmap) {
+    try {
+      const bitmap = await createImageBitmap(file);
+      const detector = new TextDetector();
+      const blocks = await detector.detect(bitmap);
+      bitmap.close();
+      const nativeText = blocks.map((block) => block.rawValue).filter(Boolean).join("\n");
+      if (nativeText.trim()) return nativeText;
+    } catch (error) {
+      // Fall through to Tesseract.js. Some browsers expose TextDetector but disable it.
+    }
+  }
+
+  ui.waypointStatus.textContent = "Screenshot-OCR wird geladen ...";
+  const { createWorker } = await import("https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.esm.min.js");
+  const worker = await createWorker("deu");
+  try {
+    const result = await worker.recognize(file);
+    return result && result.data ? result.data.text : "";
+  } finally {
+    await worker.terminate();
   }
 }
 
@@ -949,6 +979,9 @@ function parseWaypointImport(text, fileName = "") {
   if (firstLine.includes("lat") && firstLine.includes("lng")) {
     return parseCsvWaypoints(trimmed);
   }
+
+  const screenshotWaypoints = parseScreenshotWaypoints(trimmed);
+  if (screenshotWaypoints.length) return screenshotWaypoints;
 
   return parseTextWaypoints(trimmed);
 }
@@ -993,6 +1026,61 @@ function parseTextWaypoints(text) {
       });
     })
     .filter(Boolean);
+}
+
+function parseScreenshotWaypoints(text) {
+  const coordinates = parseCoordinates(text);
+  if (!coordinates) return [];
+
+  const name = nameFromScreenshotText(text);
+  if (!name) return [];
+
+  return [importedWaypointFromObject({
+    name,
+    lat: coordinates.lat,
+    lng: coordinates.lng,
+  })].filter(Boolean);
+}
+
+function nameFromScreenshotText(text) {
+  const lines = String(text || "")
+    .split(/\r?\n/)
+    .map((line) => line.replace(/\s+/g, " ").trim())
+    .filter(Boolean);
+
+  const coordinateIndex = lines.findIndex((line) => parseCoordinates(line));
+  const detailsIndex = lines.findIndex((line) => /^(details|adresse|koordinaten)$/i.test(line));
+  const candidates = lines
+    .map((line, index) => ({ line: cleanScreenshotNameLine(line), index }))
+    .filter(({ line }) => isLikelyWaypointName(line));
+
+  const titleCandidates = candidates.filter(({ index }) => detailsIndex > 0 && index < detailsIndex);
+  if (titleCandidates.length) return titleCandidates[titleCandidates.length - 1].line;
+
+  const beforeCoordinates = candidates
+    .filter(({ index }) => coordinateIndex < 0 || index < coordinateIndex)
+    .pop();
+
+  return (beforeCoordinates || candidates[0] || {}).line || "";
+}
+
+function cleanScreenshotNameLine(line) {
+  return String(line || "")
+    .replace(/^[^a-zäöüß]+/i, "")
+    .replace(/\s+[x×✕]$/i, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function isLikelyWaypointName(line) {
+  if (line.length < 3 || line.length > 70) return false;
+  if (parseCoordinates(line)) return false;
+  if (/^\d{5}\b/.test(line)) return false;
+  if (/^\d+[:.,]\d+$/.test(line)) return false;
+  if (/^\d+\s*°?$/.test(line)) return false;
+  if (/^(adresse|details|koordinaten|deutschland|anpinnen|problem melden|pokémon go|pokemon go|min\.?|karte|auf karte ansehen)$/i.test(line)) return false;
+  if (/^(straße|strasse|weg|platz)$/i.test(line)) return false;
+  return /[a-zäöüß]/i.test(line);
 }
 
 async function parseWaypointInput(value) {
