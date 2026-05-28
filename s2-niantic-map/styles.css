@@ -664,12 +664,22 @@ button {
   color: #0956b6;
   background: #fff;
   box-shadow: 0 12px 28px rgba(12, 47, 92, 0.2);
-  font-size: 29px;
 }
 
 .location-panel-toggle.is-visible {
   display: grid;
   place-items: center;
+}
+
+.location-panel-toggle::before {
+  content: "";
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-bottom: 20px solid #0956b6;
+  transform: rotate(42deg) translate(1px, -1px);
+  filter: drop-shadow(0 2px 0 rgba(12, 47, 92, 0.18));
 }
 
 .mode-switch {
