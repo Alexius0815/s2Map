@@ -223,9 +223,42 @@ button {
   isolation: isolate;
 }
 
+.map-stage::before,
+.map-stage::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: none;
+  pointer-events: none;
+}
+
 #map {
   z-index: 1;
   background: #cfe7fb;
+}
+
+.awaiting-location .map-stage {
+  background:
+    repeating-linear-gradient(36deg, rgba(9, 86, 182, 0.12) 0 1px, transparent 1px 74px),
+    repeating-linear-gradient(126deg, rgba(15, 118, 110, 0.1) 0 1px, transparent 1px 86px),
+    linear-gradient(145deg, #dff4ff 0%, #f8fcff 42%, #e8fff3 100%);
+}
+
+.awaiting-location .map-stage::before {
+  display: block;
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.48), transparent 42%, rgba(255, 255, 255, 0.52)),
+    repeating-linear-gradient(0deg, transparent 0 56px, rgba(29, 140, 248, 0.09) 57px 58px),
+    repeating-linear-gradient(90deg, transparent 0 56px, rgba(29, 140, 248, 0.09) 57px 58px);
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.78), rgba(0, 0, 0, 0.22));
+}
+
+.awaiting-location .map-stage::after {
+  display: block;
+  inset: auto 0 0;
+  height: 38%;
+  background: linear-gradient(to top, rgba(29, 140, 248, 0.14), transparent);
 }
 
 .awaiting-location #map,
@@ -1586,17 +1619,23 @@ button {
 
   .cell-panel-toggle {
     right: auto;
-    left: 10px;
-    min-width: 78px;
+    left: 64px;
+    min-width: 70px;
   }
 
   .weather-panel-toggle {
     right: auto;
-    left: 96px;
-    min-width: 82px;
+    left: 142px;
+    min-width: 74px;
+  }
+
+  .panel-toggle {
+    min-width: 78px;
   }
 
   .help-toggle {
-    right: 104px;
+    right: 100px;
+    width: 40px;
+    height: 44px;
   }
 }
