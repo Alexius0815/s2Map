@@ -381,9 +381,10 @@ function renderCells() {
       const hasStop = layer.id === "stop" && occupiedStopS17Keys.has(key);
       const weatherColor = weather && weather.pokemonWeather ? weather.pokemonWeather.color : layer.color;
       const polygon = cellPolygon(cell.face, cell.i, cell.j, cell.level);
+      const lineWeight = gridWeight(layer.level, zoom);
       const leafletPolygon = L.polygon(polygon, {
         color: weatherColor,
-        weight: gridWeight(layer.level, zoom),
+        weight: lineWeight,
         opacity: 0.9,
         fillColor: hasStop ? "#475569" : weatherColor,
         fillOpacity: hasStop ? 0.2 : layer.id === "weather" ? 0.04 : 0,
@@ -392,6 +393,9 @@ function renderCells() {
         sticky: true,
         direction: "top",
       });
+      if (layer.id === "gym") {
+        wireS14CellPopup(leafletPolygon, cell, lineWeight);
+      }
       leafletPolygon.addTo(state.groups.get(layer.id));
 
       if ((zoom >= layer.labelZoom || weather) && shouldLabelCell(cell, layer.level)) {
@@ -429,6 +433,25 @@ function occupiedS17StopKeys() {
       .filter((waypoint) => waypoint.active && waypoint.type === "stop")
       .map((waypoint) => cellKey(latLngToCell(waypoint.lat, waypoint.lng, 17))),
   );
+}
+
+function wireS14CellPopup(polygon, cell, lineWeight) {
+  const openInfo = () => {
+    polygon.setPopupContent(s14CellPopupHtml(cell));
+    polygon.openPopup();
+  };
+
+  polygon.bindPopup(s14CellPopupHtml(cell), {
+    className: "s14-cell-popup-wrapper",
+    closeButton: true,
+    autoPanPadding: [18, 18],
+  });
+  polygon.on("mouseover", () => polygon.setStyle({ weight: lineWeight + 2.4, opacity: 1 }));
+  polygon.on("mouseout", () => polygon.setStyle({ weight: lineWeight, opacity: 0.9 }));
+  polygon.on("touchstart", () => polygon.setStyle({ weight: lineWeight + 2.4, opacity: 1 }));
+  polygon.on("click", openInfo);
+  polygon.on("dblclick", openInfo);
+  polygon.on("popupclose", () => polygon.setStyle({ weight: lineWeight, opacity: 0.9 }));
 }
 
 function toggleWeather() {
@@ -658,7 +681,6 @@ function renderWaypoints() {
     const s17Key = cellKey(s17);
     const hasS17Duplicates = (s17Groups.get(s17Key) || []).length > 1;
     const inactive = hasS17Duplicates && !waypoint.active;
-    const plausibility = s14GymValidationForWaypoint(waypoint);
 
     const markerTitle = waypoint.name;
     const marker = L.marker([waypoint.lat, waypoint.lng], {
@@ -687,7 +709,7 @@ function renderWaypoints() {
       })
       .addTo(state.waypointGroup);
 
-    ui.waypointList.appendChild(createWaypointListItem(waypoint, s17Key, hasS17Duplicates, inactive, plausibility));
+    ui.waypointList.appendChild(createWaypointListItem(waypoint, s17Key, hasS17Duplicates, inactive));
   });
 }
 
@@ -705,13 +727,12 @@ function waypointIcon(waypoint, inactive) {
   });
 }
 
-function createWaypointListItem(waypoint, s17Key, hasS17Duplicates, inactive, plausibility) {
+function createWaypointListItem(waypoint, s17Key, hasS17Duplicates, inactive) {
   const item = document.createElement("article");
   item.className = "waypoint-item";
   if (hasS17Duplicates) item.classList.add("has-conflict");
   if (inactive) item.classList.add("is-inactive");
   if (waypoint.type === "arena") item.classList.add("is-arena");
-  item.classList.add(`is-gym-${plausibility.status}`);
 
   const text = document.createElement("div");
   const title = document.createElement("strong");
@@ -720,9 +741,7 @@ function createWaypointListItem(waypoint, s17Key, hasS17Duplicates, inactive, pl
   meta.textContent = `${waypoint.lat.toFixed(5)}, ${waypoint.lng.toFixed(5)} · S17 ${shortCellKey(s17Key)}`;
   const note = document.createElement("em");
   note.textContent = inactive ? "Inaktiv in S17" : hasS17Duplicates ? "Aktiv in S17" : "S17 frei";
-  const plausibilityText = document.createElement("span");
-  plausibilityText.textContent = plausibility.text;
-  text.append(title, meta, note, plausibilityText);
+  text.append(title, meta, note);
 
   const actions = document.createElement("div");
   if (hasS17Duplicates && !waypoint.active) {
@@ -895,14 +914,105 @@ function waypointMarkerColor(waypoint, inactive) {
   return waypoint.type === "arena" ? "#ef3b78" : "#1d8cf8";
 }
 
-function s14GymValidationForWaypoint(waypoint) {
-  const s14Key = cellKey(latLngToCell(waypoint.lat, waypoint.lng, 14));
+function s14CellPopupHtml(cell) {
+  const key = cellKey(cell);
+  const validation = s14GymValidationForCell(key);
+  const statusLabel = {
+    empty: "Keine aktiven POI",
+    next: "Nächster Kipppunkt",
+    near: "Kipppunkt nah",
+    ok: "Plausibel",
+    full: "S14 voll",
+    over: "Zu viele Arenen",
+  }[validation.status] || "S14-Info";
+
+  return `
+    <div class="s14-cell-popup is-${escapeHtml(validation.status)}">
+      <div>
+        <strong>S14 ${escapeHtml(shortCellKey(key))}</strong>
+        <span>${escapeHtml(statusLabel)}</span>
+      </div>
+      <p>${escapeHtml(validation.text)}</p>
+      <dl>
+        <div><dt>Aktive POI</dt><dd>${validation.activeCount}</dd></div>
+        <div><dt>Arenen</dt><dd>${validation.arenaCount}/${validation.expected}</dd></div>
+        <div><dt>Nächste Arena</dt><dd>${validation.next ? `${validation.missing} bis ${validation.next}` : "-"}</dd></div>
+      </dl>
+    </div>
+  `;
+}
+
+function s14GymValidationForCell(s14Key) {
   const s14Waypoints = groupWaypointsByCell(14, true).get(s14Key) || [];
   const activeCount = s14Waypoints.length;
   const arenaCount = s14Waypoints.filter((entry) => entry.type === "arena").length;
   const expected = expectedGymCount(activeCount);
   const next = nextGymThreshold(activeCount);
   const missing = next ? Math.max(0, next - activeCount) : 0;
+
+  if (!activeCount) {
+    return {
+      status: "empty",
+      text: "In dieser S14-Zelle sind noch keine aktiven Waypoints erfasst.",
+      activeCount,
+      arenaCount,
+      expected,
+      next,
+      missing,
+    };
+  }
+
+  if (arenaCount > expected) {
+    return {
+      status: "over",
+      text: `Zu viele Arenen nach Heuristik: ${arenaCount}/${expected} bei ${activeCount} aktiven POI.`,
+      activeCount,
+      arenaCount,
+      expected,
+      next,
+      missing,
+    };
+  }
+
+  if (!next) {
+    return {
+      status: "full",
+      text: `S14 wirkt voll: ${activeCount} aktive POI, bis zu ${expected} Arenen plausibel.`,
+      activeCount,
+      arenaCount,
+      expected,
+      next,
+      missing,
+    };
+  }
+
+  if (missing === 1) {
+    return {
+      status: "near",
+      text: `Kipppunkt nah: 1 weiterer aktiver POI bis zur nächsten Arena-Schwelle bei ${next}.`,
+      activeCount,
+      arenaCount,
+      expected,
+      next,
+      missing,
+    };
+  }
+
+  return {
+    status: "next",
+    text: `Nächste Arena-Schwelle bei ${next} aktiven POI. Es fehlen noch ${missing}.`,
+    activeCount,
+    arenaCount,
+    expected,
+    next,
+    missing,
+  };
+}
+
+function s14GymValidationForWaypoint(waypoint) {
+  const s14Key = cellKey(latLngToCell(waypoint.lat, waypoint.lng, 14));
+  const validation = s14GymValidationForCell(s14Key);
+  const { activeCount, arenaCount, expected, next, missing } = validation;
   const parkHint = waypoint.areaKind === "park" ? " · Park: guter Kandidat" : "";
 
   if (arenaCount > expected) {
