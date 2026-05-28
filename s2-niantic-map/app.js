@@ -36,6 +36,9 @@ const layers = [
 
 const WAYPOINT_STORAGE_KEY = "s2MapsWaypoints";
 const LOCATION_CHOICE_STORAGE_KEY = "s2MapsLocationChoice";
+const OCR_SCRIPT_URL = "https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js";
+
+let tesseractLoader = null;
 
 const state = {
   active: new Set(layers.filter((layer) => layer.checked).map((layer) => layer.id)),
@@ -904,13 +907,16 @@ async function importWaypointsFromFile(event) {
   if (!file) return;
 
   try {
-    ui.waypointStatus.textContent = file.type.startsWith("image/")
+    const isImage = isImageImportFile(file);
+    ui.waypointStatus.textContent = isImage
       ? "Screenshot wird gelesen ..."
       : "Import wird gelesen ...";
-    const text = file.type.startsWith("image/") ? await textFromImageFile(file) : await file.text();
+    await yieldToBrowser();
+
+    const text = isImage ? await textFromImageFile(file) : await file.text();
     const imported = parseWaypointImport(text, file.name);
     if (!imported.length) {
-      ui.waypointStatus.textContent = file.type.startsWith("image/")
+      ui.waypointStatus.textContent = isImage
         ? "Bildimport: Name und Koordinaten wurden nicht sicher erkannt."
         : "Import: keine gültigen Waypoints gefunden.";
       return;
@@ -943,6 +949,10 @@ async function importWaypointsFromFile(event) {
 }
 
 async function textFromImageFile(file) {
+  if (isHeicFile(file)) {
+    throw new Error("HEIC-Bilder kann der Browser nicht sicher lesen. Bitte den Screenshot als PNG/JPEG importieren.");
+  }
+
   if (window.TextDetector && window.createImageBitmap) {
     try {
       const bitmap = await createImageBitmap(file);
@@ -956,15 +966,60 @@ async function textFromImageFile(file) {
     }
   }
 
-  ui.waypointStatus.textContent = "Screenshot-OCR wird geladen ...";
-  const { createWorker } = await import("https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.esm.min.js");
-  const worker = await createWorker("deu");
-  try {
-    const result = await worker.recognize(file);
-    return result && result.data ? result.data.text : "";
-  } finally {
-    await worker.terminate();
+  ui.waypointStatus.textContent = "OCR-Modul wird geladen ...";
+  await yieldToBrowser();
+  await loadTesseract();
+
+  ui.waypointStatus.textContent = "Screenshot wird erkannt ...";
+  await yieldToBrowser();
+  const imageUrl = await fileToDataUrl(file);
+  const result = await window.Tesseract.recognize(imageUrl, "deu+eng", {
+    logger: (progress) => {
+      if (progress.status !== "recognizing text" || !Number.isFinite(progress.progress)) return;
+      ui.waypointStatus.textContent = `Screenshot wird erkannt ... ${Math.round(progress.progress * 100)}%`;
+    },
+  });
+
+  return result && result.data ? result.data.text : "";
+}
+
+function isImageImportFile(file) {
+  const name = String(file.name || "").toLowerCase();
+  return String(file.type || "").startsWith("image/") || /\.(jpe?g|png|webp|heic|heif)$/i.test(name);
+}
+
+function isHeicFile(file) {
+  const name = String(file.name || "").toLowerCase();
+  const type = String(file.type || "").toLowerCase();
+  return type.includes("heic") || type.includes("heif") || /\.(heic|heif)$/i.test(name);
+}
+
+function loadTesseract() {
+  if (window.Tesseract) return Promise.resolve();
+  if (!tesseractLoader) {
+    tesseractLoader = new Promise((resolve, reject) => {
+      const script = document.createElement("script");
+      script.src = OCR_SCRIPT_URL;
+      script.async = true;
+      script.onload = () => (window.Tesseract ? resolve() : reject(new Error("OCR-Modul konnte nicht gestartet werden.")));
+      script.onerror = () => reject(new Error("OCR-Modul konnte nicht geladen werden. Bitte Internetverbindung prüfen."));
+      document.head.appendChild(script);
+    });
   }
+  return tesseractLoader;
+}
+
+function fileToDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(new Error("Screenshot konnte nicht gelesen werden."));
+    reader.readAsDataURL(file);
+  });
+}
+
+function yieldToBrowser() {
+  return new Promise((resolve) => requestAnimationFrame(() => setTimeout(resolve, 0)));
 }
 
 function parseWaypointImport(text, fileName = "") {
