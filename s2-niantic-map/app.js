@@ -351,7 +351,7 @@ function renderCells() {
   let totalCells = 0;
   let visibleWeatherCells = [];
   const activeLayers = layers.filter((layer) => state.active.has(layer.id));
-  const occupiedStopS17Keys = occupiedS17StopKeys();
+  const occupiedS17Keys = occupiedS17CellKeys();
   const occupiedS14Keys = occupiedS14CellKeys();
   const s14StatusColors = {
     next: "#7c3aed",
@@ -385,7 +385,7 @@ function renderCells() {
     cells.forEach((cell) => {
       const weather = layer.id === "weather" && state.weatherEnabled ? state.weather.get(cellKey(cell)) : null;
       const key = cellKey(cell);
-      const hasStop = layer.id === "stop" && occupiedStopS17Keys.has(key);
+      const hasWaypoint = layer.id === "stop" && occupiedS17Keys.has(key);
       const s14Validation = layer.id === "gym" && occupiedS14Keys.has(key) ? s14GymValidationForCell(key) : null;
       const weatherColor = weather && weather.pokemonWeather ? weather.pokemonWeather.color : layer.color;
       const s14StatusColor = s14Validation ? s14StatusColors[s14Validation.status] || layer.color : null;
@@ -395,8 +395,8 @@ function renderCells() {
         color: s14StatusColor || weatherColor,
         weight: lineWeight,
         opacity: 0.9,
-        fillColor: s14StatusColor || (hasStop ? "#475569" : weatherColor),
-        fillOpacity: s14StatusColor ? 0.18 : hasStop ? 0.2 : layer.id === "weather" ? 0.04 : 0,
+        fillColor: s14StatusColor || (hasWaypoint ? "#475569" : weatherColor),
+        fillOpacity: s14StatusColor ? 0.18 : hasWaypoint ? 0.2 : layer.id === "weather" ? 0.04 : 0,
         interactive: true,
       }).bindTooltip(buildTooltip(layer, cell, weather), {
         sticky: true,
@@ -444,10 +444,10 @@ function renderCells() {
   }
 }
 
-function occupiedS17StopKeys() {
+function occupiedS17CellKeys() {
   return new Set(
     state.waypoints
-      .filter((waypoint) => waypoint.active && waypoint.type === "stop")
+      .filter((waypoint) => waypoint.active)
       .map((waypoint) => cellKey(latLngToCell(waypoint.lat, waypoint.lng, 17))),
   );
 }
