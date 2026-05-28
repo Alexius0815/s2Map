@@ -927,7 +927,7 @@ function s14CellPopupHtml(cell) {
   return `
     <div class="s14-cell-popup is-${escapeHtml(validation.status)}">
       <div>
-        <strong>S14 ${escapeHtml(shortCellKey(key))}</strong>
+        <strong>S14</strong>
         <span>${escapeHtml(statusLabel)}</span>
       </div>
       <dl>
