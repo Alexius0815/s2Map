@@ -673,11 +673,10 @@ button {
 
 .location-panel-toggle::before {
   content: "";
-  width: 0;
-  height: 0;
-  border-left: 8px solid transparent;
-  border-right: 8px solid transparent;
-  border-bottom: 20px solid #0956b6;
+  width: 21px;
+  height: 21px;
+  background: #0956b6;
+  clip-path: polygon(50% 0, 87% 100%, 50% 78%, 13% 100%);
   transform: rotate(42deg) translate(1px, -1px);
   filter: drop-shadow(0 2px 0 rgba(12, 47, 92, 0.18));
 }
