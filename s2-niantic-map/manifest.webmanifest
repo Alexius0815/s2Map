@@ -1,7 +1,7 @@
 {
-  "name": "S2 Maps fuer Niantic-Spiele",
-  "short_name": "S2 Maps",
-  "description": "Mobile Karte mit S2-Zellen fuer Niantic-Spiele.",
+  "name": "S2 Map fuer Pokemon GO",
+  "short_name": "S2 Map",
+  "description": "Inoffizielle mobile Karte mit S2-Zellen fuer Pokemon GO.",
   "start_url": ".",
   "scope": ".",
   "display": "standalone",

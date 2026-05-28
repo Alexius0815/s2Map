@@ -1,6 +1,6 @@
-# S2 Maps fuer Niantic-Spiele
+# S2 Map fuer Pokemon GO
 
-Mobile Web-App zur Orientierung mit S2-Zellen fuer Niantic-Spiele.
+Inoffizielle mobile Web-App zur Orientierung mit S2-Zellen fuer Pokemon GO.
 
 ## Nutzung
 
@@ -21,9 +21,9 @@ Die App registriert einen Service Worker fuer die App-Shell. API- und Wetterdate
 
 ## Eigene Waypoints
 
-Nutzer koennen Waypoints manuell hinzufuegen, indem sie Name und Koordinaten oder einen Maps-Text einfuegen. Waypoints koennen als Stop oder Arena markiert, pro S17-Zelle aktiv/inaktiv gesetzt und als CSV exportiert werden.
+Nutzer koennen Waypoints manuell hinzufuegen, indem sie Name und Koordinaten, einen Maps-Link oder einen Screenshot importieren. Ohne Koordinaten startet ein Platzierungsmodus: danach wird der Waypoint per Klick/Tap auf die Karte gesetzt. Waypoints koennen als Stop oder Arena markiert, pro S17-Zelle aktiv/inaktiv gesetzt und als CSV exportiert werden.
 
-Der Import unterstuetzt die exportierte CSV der App, einfache JSON-Listen und Textdateien mit je einer Koordinate pro Zeile. Die Daten werden nur lokal im Browser-Speicher gespeichert und nicht an einen Server uebertragen.
+Der Import unterstuetzt die exportierte CSV der App, einfache JSON-Listen, Textdateien mit Koordinaten, Kartenlinks und Screenshots. Die Daten werden lokal im Browser-Speicher gespeichert und nicht an den Betreiber uebertragen.
 
 ## Hosting mit Vercel
 
@@ -39,12 +39,12 @@ ACCUWEATHER_API_KEY=dein_accuweather_key
 
 Der Key bleibt serverseitig und wird nicht im Browser sichtbar.
 
-## Layer
+## S2 Zellen
 
 - `Level 10`: Wetterzellen fuer Pokemon-GO-Wetterboosts.
-- `Level 14`: Orientierung fuer Gym- und POI-Dichte.
+- `Level 14`: Orientierung fuer Arena-Kipppunkte und POI-Dichte. Belegte S14-Zellen werden farblich nach Status markiert.
 - `Level 17`: feine Stop- und Waypoint-Zellen.
-Die Regeln sind nicht offiziell dokumentiert und koennen sich aendern. Die App ist als Planungs- und Orientierungshilfe gedacht.
+Die Regeln sind Community-Heuristiken, nicht offiziell dokumentiert, und koennen sich aendern. Die App ist als Planungs- und Orientierungshilfe gedacht.
 
 ## Hinweise zu Marken, Daten und Links
 

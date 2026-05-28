@@ -8,7 +8,7 @@ const layers = [
     minZoom: 10,
     labelZoom: 11,
     description:
-      "Orientierung für Pokémon-GO-Wetterboosts. Eine S2-L10-Zelle deckt einen größeren Stadtbereich ab; Wetter kann an Zellgrenzen sichtbar wechseln.",
+      "Orientierung für Pokémon-GO-Wetterboosts. Eine S2-L10-Zelle deckt einen größeren Bereich ab; Wetter kann an Zellgrenzen sichtbar wechseln.",
   },
   {
     id: "gym",
@@ -19,7 +19,7 @@ const layers = [
     minZoom: 13,
     labelZoom: 15,
     description:
-      "Nützlich, um POI-Dichte in Pokémon GO einzuschätzen. Viele Community-Planungen betrachten L14-Zellen für die Anzahl möglicher Arenen.",
+      "Nützlich, um POI-Dichte in Pokémon GO einzuschätzen. Community-Planungen nutzen oft L14-Zellen für mögliche Arena-Kipppunkte.",
   },
   {
     id: "stop",
@@ -30,7 +30,7 @@ const layers = [
     minZoom: 16,
     labelZoom: 17,
     description:
-      "Feine Zellen für PokéStop- und Waypoint-Orientierung. Meist zählt nur ein Wayspot pro L17-Zelle in Pokémon GO.",
+      "Feine Zellen für PokéStop- und Waypoint-Orientierung. Häufig gilt ein aktiver Wayspot pro L17-Zelle als sinnvolle Planungshilfe.",
   },
 ];
 
@@ -353,6 +353,13 @@ function renderCells() {
   const activeLayers = layers.filter((layer) => state.active.has(layer.id));
   const occupiedStopS17Keys = occupiedS17StopKeys();
   const occupiedS14Keys = occupiedS14CellKeys();
+  const s14StatusColors = {
+    next: "#7c3aed",
+    near: "#f59e0b",
+    ok: "#22c55e",
+    full: "#22c55e",
+    over: "#ef4444",
+  };
 
   layers.forEach((layer) => {
     state.groups.get(layer.id).clearLayers();
@@ -379,15 +386,17 @@ function renderCells() {
       const weather = layer.id === "weather" && state.weatherEnabled ? state.weather.get(cellKey(cell)) : null;
       const key = cellKey(cell);
       const hasStop = layer.id === "stop" && occupiedStopS17Keys.has(key);
+      const s14Validation = layer.id === "gym" && occupiedS14Keys.has(key) ? s14GymValidationForCell(key) : null;
       const weatherColor = weather && weather.pokemonWeather ? weather.pokemonWeather.color : layer.color;
+      const s14StatusColor = s14Validation ? s14StatusColors[s14Validation.status] || layer.color : null;
       const polygon = cellPolygon(cell.face, cell.i, cell.j, cell.level);
       const lineWeight = gridWeight(layer.level, zoom);
       const leafletPolygon = L.polygon(polygon, {
-        color: weatherColor,
+        color: s14StatusColor || weatherColor,
         weight: lineWeight,
         opacity: 0.9,
-        fillColor: hasStop ? "#475569" : weatherColor,
-        fillOpacity: hasStop ? 0.2 : layer.id === "weather" ? 0.04 : 0,
+        fillColor: s14StatusColor || (hasStop ? "#475569" : weatherColor),
+        fillOpacity: s14StatusColor ? 0.18 : hasStop ? 0.2 : layer.id === "weather" ? 0.04 : 0,
         interactive: true,
       }).bindTooltip(buildTooltip(layer, cell, weather), {
         sticky: true,
