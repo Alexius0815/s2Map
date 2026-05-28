@@ -681,7 +681,10 @@ function renderWaypoints() {
       .on("touchstart", () => marker.openTooltip())
       .on("dragend", (event) => moveWaypointToLatLng(waypoint.id, event.target.getLatLng()))
       .bindPopup(waypointPopupHtml(waypoint))
-      .on("popupopen", () => wireWaypointPopup(marker, waypoint.id))
+      .on("popupopen", () => {
+        marker.closeTooltip();
+        wireWaypointPopup(marker, waypoint.id);
+      })
       .addTo(state.waypointGroup);
 
     ui.waypointList.appendChild(createWaypointListItem(waypoint, s17Key, hasS17Duplicates, inactive, plausibility));
@@ -744,15 +747,24 @@ function createWaypointListItem(waypoint, s17Key, hasS17Duplicates, inactive, pl
 }
 
 function waypointPopupHtml(waypoint) {
+  const isStop = waypoint.type !== "arena";
   return `
     <div class="waypoint-popup">
-      <strong>${escapeHtml(waypoint.name)}</strong>
-      <label>
-        <span>Name</span>
+      <label class="waypoint-name-field">
         <input type="text" value="${escapeHtml(waypoint.name)}" data-waypoint-name data-original-name="${escapeHtml(waypoint.name)}" />
       </label>
+      <div class="waypoint-type-toggle" role="group" aria-label="Waypoint-Typ">
+        <label>
+          <input type="radio" name="waypoint-type-${escapeHtml(waypoint.id)}" value="stop" data-waypoint-type data-original-type="${escapeHtml(waypoint.type)}" ${isStop ? "checked" : ""} />
+          <span>Stop</span>
+        </label>
+        <label>
+          <input type="radio" name="waypoint-type-${escapeHtml(waypoint.id)}" value="arena" data-waypoint-type data-original-type="${escapeHtml(waypoint.type)}" ${!isStop ? "checked" : ""} />
+          <span>Arena</span>
+        </label>
+      </div>
       <div>
-        <button type="button" data-waypoint-action="rename" hidden>Speichern</button>
+        <button type="button" data-waypoint-action="save" hidden>Speichern</button>
         <button type="button" data-waypoint-action="focus">Fokus</button>
         <button type="button" data-waypoint-action="delete">Löschen</button>
       </div>
@@ -765,16 +777,21 @@ function wireWaypointPopup(marker, id) {
   const root = popup && popup.getElement();
   if (!root) return;
   const nameInput = root.querySelector("[data-waypoint-name]");
-  const saveButton = root.querySelector('[data-waypoint-action="rename"]');
-  if (nameInput && saveButton) {
-    nameInput.addEventListener("input", () => {
-      saveButton.hidden = nameInput.value.trim() === nameInput.getAttribute("data-original-name");
-    });
-  }
+  const typeInputs = Array.from(root.querySelectorAll("[data-waypoint-type]"));
+  const saveButton = root.querySelector('[data-waypoint-action="save"]');
+  const updateSaveButton = () => {
+    if (!nameInput || !saveButton) return;
+    const originalName = nameInput.getAttribute("data-original-name");
+    const originalType = typeInputs[0] ? typeInputs[0].getAttribute("data-original-type") : "";
+    const selectedType = selectedWaypointType(root);
+    saveButton.hidden = nameInput.value.trim() === originalName && selectedType === originalType;
+  };
+  if (nameInput) nameInput.addEventListener("input", updateSaveButton);
+  typeInputs.forEach((input) => input.addEventListener("change", updateSaveButton));
   root.querySelectorAll("[data-waypoint-action]").forEach((button) => {
     button.addEventListener("click", () => {
       const action = button.getAttribute("data-waypoint-action");
-      if (action === "rename") renameWaypointFromPopup(id, root);
+      if (action === "save") saveWaypointFromPopup(id, root);
       if (action === "focus") focusWaypoint(id);
       if (action === "delete") {
         removeWaypoint(id);
@@ -784,7 +801,12 @@ function wireWaypointPopup(marker, id) {
   });
 }
 
-function renameWaypointFromPopup(id, root) {
+function selectedWaypointType(root) {
+  const selected = root.querySelector("[data-waypoint-type]:checked");
+  return selected && selected.value === "arena" ? "arena" : "stop";
+}
+
+function saveWaypointFromPopup(id, root) {
   const input = root.querySelector("[data-waypoint-name]");
   const name = input ? input.value.trim() : "";
   if (!name) {
@@ -794,9 +816,11 @@ function renameWaypointFromPopup(id, root) {
   const waypoint = state.waypoints.find((entry) => entry.id === id);
   if (!waypoint) return;
   waypoint.name = name;
+  waypoint.type = selectedWaypointType(root);
+  enforceActiveWaypoints();
   saveWaypoints();
   renderWaypoints();
-  ui.waypointStatus.textContent = `Waypoint umbenannt: ${name}`;
+  ui.waypointStatus.textContent = `Waypoint gespeichert: ${name}`;
 }
 
 function focusWaypoint(id) {

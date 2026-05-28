@@ -1272,34 +1272,68 @@ button {
 
 .waypoint-popup {
   display: grid;
-  gap: 5px;
+  gap: 8px;
   min-width: 220px;
+  max-width: min(280px, 76vw);
 }
 
-.waypoint-popup strong {
-  color: var(--ink);
-  font-size: 14px;
-}
-
-.waypoint-popup label {
+.waypoint-name-field {
   display: grid;
-  gap: 4px;
-  color: var(--muted);
-  font-size: 11px;
-  font-weight: 900;
 }
 
-.waypoint-popup input {
+.waypoint-name-field input {
   width: 100%;
-  min-height: 34px;
+  min-height: 38px;
   border: 1px solid rgba(29, 140, 248, 0.24);
   border-radius: 8px;
-  padding: 7px 9px;
+  padding: 8px 10px;
   color: var(--ink);
   background: rgba(255, 255, 255, 0.94);
   font: inherit;
   font-size: 13px;
   font-weight: 800;
+}
+
+.waypoint-type-toggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  padding: 3px;
+  border: 1px solid rgba(29, 140, 248, 0.18);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.68);
+}
+
+.waypoint-type-toggle label {
+  display: grid;
+  min-width: 0;
+}
+
+.waypoint-type-toggle input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.waypoint-type-toggle span {
+  display: grid;
+  place-items: center;
+  min-height: 32px;
+  border-radius: 8px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 1000;
+}
+
+.waypoint-type-toggle input:checked + span {
+  color: #fff;
+  background: #1d8cf8;
+  box-shadow: 0 3px 0 #0956b6;
+}
+
+.waypoint-type-toggle input[value="arena"]:checked + span {
+  background: #ef3b78;
+  box-shadow: 0 3px 0 #bd1f55;
 }
 
 .waypoint-popup span,
@@ -1319,7 +1353,6 @@ button {
   display: grid;
   grid-template-columns: 1fr;
   gap: 6px;
-  margin-top: 5px;
 }
 
 .waypoint-popup button {
