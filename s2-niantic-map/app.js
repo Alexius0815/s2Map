@@ -556,15 +556,19 @@ function normalizeWaypoint(waypoint) {
   };
 }
 
-function addWaypointFromForm() {
-  const coordinates = parseCoordinates(ui.waypointPasteInput.value);
-  if (!coordinates) {
-    ui.waypointStatus.textContent = "Keine Koordinaten erkannt. Beispiel: 50,04079° N, 8,43239° O";
+async function addWaypointFromForm() {
+  const input = ui.waypointPasteInput.value;
+  ui.waypointStatus.textContent = "Waypoint wird gelesen ...";
+
+  const draft = await parseWaypointInput(input);
+  if (!draft) {
+    ui.waypointStatus.textContent = "Keine Koordinaten erkannt. Füge Koordinaten, einen Pokémon-GO-Link oder Apple-Maps-Link ein.";
     ui.waypointPasteInput.focus();
     return;
   }
-  const name = ui.waypointNameInput.value.trim() || "Eigener Waypoint";
-  addWaypoint(name, coordinates.lat, coordinates.lng, waypointFormMeta());
+
+  const name = ui.waypointNameInput.value.trim() || draft.name || "Eigener Waypoint";
+  addWaypoint(name, draft.coordinates.lat, draft.coordinates.lng, waypointFormMeta());
   ui.waypointNameInput.value = "";
   ui.waypointPasteInput.value = "";
 }
@@ -991,6 +995,37 @@ function parseTextWaypoints(text) {
     .filter(Boolean);
 }
 
+async function parseWaypointInput(value) {
+  const text = String(value || "").trim();
+  if (!text) return null;
+
+  const url = firstUrl(text);
+  const directCoordinates = parseCoordinates(text);
+  if (directCoordinates) {
+    return {
+      coordinates: directCoordinates,
+      name: nameFromWaypointText(text, url),
+    };
+  }
+
+  if (!url) return null;
+
+  try {
+    const response = await fetch(`/api/resolve-link?url=${encodeURIComponent(url)}`);
+    const data = await response.json().catch(() => null);
+    if (!response.ok || !data) throw new Error(data && data.message ? data.message : "Link konnte nicht aufgelöst werden.");
+    const coordinates = normalizeCoordinates(data.lat, data.lng);
+    if (!coordinates) return null;
+    return {
+      coordinates,
+      name: nameFromWaypointText(text, url) || data.name || "",
+    };
+  } catch (error) {
+    ui.waypointStatus.textContent = error.message;
+    return null;
+  }
+}
+
 function importedWaypointFromObject(entry) {
   if (!entry) return null;
   const lat = parseCoordinateNumber(entry.lat ?? entry.latitude);
@@ -1084,6 +1119,12 @@ function parseCoordinates(value) {
   const text = String(value || "").trim();
   if (!text) return null;
 
+  const appleCoordinateMatch = text.match(/[?&]coordinate=(-?\d+(?:[\.,]\d+)?),\s*(-?\d+(?:[\.,]\d+)?)/);
+  if (appleCoordinateMatch) return normalizeCoordinates(appleCoordinateMatch[1], appleCoordinateMatch[2]);
+
+  const latLngParams = parseLatLngUrlParams(text);
+  if (latLngParams) return latLngParams;
+
   const atMatch = text.match(/@(-?\d+(?:[\.,]\d+)?),\s*(-?\d+(?:[\.,]\d+)?)/);
   if (atMatch) return normalizeCoordinates(atMatch[1], atMatch[2]);
 
@@ -1105,6 +1146,33 @@ function parseCoordinates(value) {
     if (coordinates) return coordinates;
   }
   return null;
+}
+
+function parseLatLngUrlParams(text) {
+  const url = firstUrl(text);
+  if (!url) return null;
+
+  try {
+    const parsed = new URL(url);
+    const lat = parsed.searchParams.get("lat");
+    const lng = parsed.searchParams.get("lng") || parsed.searchParams.get("lon") || parsed.searchParams.get("longitude");
+    return lat && lng ? normalizeCoordinates(lat, lng) : null;
+  } catch (error) {
+    return null;
+  }
+}
+
+function firstUrl(text) {
+  const match = String(text || "").match(/https?:\/\/[^\s<>"']+/i);
+  return match ? match[0].replace(/[),.;]+$/, "") : "";
+}
+
+function nameFromWaypointText(text, url) {
+  return String(text || "")
+    .replace(url || "", "")
+    .replace(/https?:\/\/[^\s<>"']+/gi, "")
+    .replace(/[;,|]+$/, "")
+    .trim();
 }
 
 function normalizeCoordinates(latValue, lngValue) {
