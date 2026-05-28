@@ -654,7 +654,7 @@ button {
 .location-panel-toggle {
   position: absolute;
   z-index: 506;
-  top: max(82px, calc(env(safe-area-inset-top) + 82px));
+  top: max(90px, calc(env(safe-area-inset-top) + 90px));
   left: 12px;
   display: none;
   width: 38px;
@@ -1597,7 +1597,7 @@ button {
   }
 
   .location-panel-toggle {
-    top: max(114px, calc(env(safe-area-inset-top) + 114px));
+    top: max(122px, calc(env(safe-area-inset-top) + 122px));
     left: 10px;
   }
 
