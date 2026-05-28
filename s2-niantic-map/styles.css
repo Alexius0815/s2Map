@@ -1076,11 +1076,6 @@ button {
   line-height: 1.35;
 }
 
-.waypoint-controls .waypoint-note {
-  margin: 0;
-  font-size: 10.5px;
-}
-
 .waypoint-controls input,
 .waypoint-controls textarea,
 .waypoint-controls select {
@@ -1125,7 +1120,6 @@ button {
 
 .waypoint-actions {
   display: grid;
-  grid-template-columns: 1fr 1fr;
   gap: 8px;
 }
 
@@ -1152,88 +1146,6 @@ button {
   color: #102033;
   background: var(--spark);
   box-shadow: 0 3px 0 var(--spark-strong);
-}
-
-.waypoint-list {
-  display: grid;
-  gap: 7px;
-  max-height: 180px;
-  overflow: auto;
-}
-
-.waypoint-item {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 8px;
-  align-items: center;
-  padding: 8px;
-  border: 1px solid rgba(29, 140, 248, 0.14);
-  border-radius: 8px;
-  background: #fff;
-}
-
-.waypoint-item.has-conflict {
-  border-color: rgba(239, 68, 68, 0.28);
-  background: #fff7f7;
-}
-
-.waypoint-item.is-arena {
-  border-color: rgba(239, 59, 120, 0.28);
-}
-
-.waypoint-item.is-inactive {
-  filter: grayscale(0.85);
-  opacity: 0.56;
-  background: #f1f5f9;
-}
-
-.waypoint-item div {
-  display: grid;
-  min-width: 0;
-  gap: 2px;
-}
-
-.waypoint-item strong,
-.waypoint-item span,
-.waypoint-item em {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.waypoint-item strong {
-  color: var(--ink);
-  font-size: 11.5px;
-}
-
-.waypoint-item span,
-.waypoint-item em {
-  color: var(--muted);
-  font-size: 10.5px;
-}
-
-.waypoint-item em {
-  color: #0956b6;
-  font-style: normal;
-  font-weight: 900;
-}
-
-.waypoint-item.has-conflict em {
-  color: #b91c1c;
-}
-
-.waypoint-item div + div {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  justify-content: end;
-}
-
-.waypoint-item button {
-  min-height: 32px;
-  padding: 0 9px;
-  box-shadow: none;
 }
 
 .waypoint-marker {
@@ -1268,6 +1180,10 @@ button {
 .leaflet-marker-icon:focus .waypoint-marker {
   transform: scale(1.18);
   box-shadow: 0 10px 26px rgba(12, 47, 92, 0.34);
+}
+
+#map.is-placing-waypoint {
+  cursor: crosshair;
 }
 
 .waypoint-popup {

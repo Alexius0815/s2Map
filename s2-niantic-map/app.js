@@ -56,6 +56,7 @@ const state = {
   locationCollapsed: false,
   locationMode: "place",
   locationMarker: null,
+  waypointPlacement: false,
 };
 
 const map = L.map("map", {
@@ -106,9 +107,7 @@ const ui = {
   waypointAreaInput: document.querySelector("#waypointAreaInput"),
   waypointPasteInput: document.querySelector("#waypointPasteInput"),
   waypointStatus: document.querySelector("#waypointStatus"),
-  waypointList: document.querySelector("#waypointList"),
   addWaypointButton: document.querySelector("#addWaypointButton"),
-  addWaypointHereButton: document.querySelector("#addWaypointHereButton"),
   exportWaypointsButton: document.querySelector("#exportWaypointsButton"),
   importWaypointsButton: document.querySelector("#importWaypointsButton"),
   waypointImportInput: document.querySelector("#waypointImportInput"),
@@ -174,7 +173,6 @@ ui.ownLocationButton.addEventListener("click", locateUser);
 ui.locationGoButton.addEventListener("click", jumpToLocation);
 ui.weatherButton.addEventListener("change", toggleWeather);
 ui.addWaypointButton.addEventListener("click", addWaypointFromForm);
-ui.addWaypointHereButton.addEventListener("click", addWaypointAtCenter);
 ui.exportWaypointsButton.addEventListener("click", exportWaypoints);
 ui.importWaypointsButton.addEventListener("click", () => ui.waypointImportInput.click());
 ui.waypointImportInput.addEventListener("change", importWaypointsFromFile);
@@ -225,6 +223,7 @@ document.addEventListener("keydown", (event) => {
 });
 
 map.on("moveend zoomend resize", scheduleRender);
+map.on("click", addWaypointFromMapClick);
 window.addEventListener("beforeinstallprompt", handleInstallPrompt);
 window.addEventListener("appinstalled", () => {
   state.installPrompt = null;
@@ -599,8 +598,7 @@ async function addWaypointFromForm() {
 
   const draft = await parseWaypointInput(input);
   if (!draft) {
-    ui.waypointStatus.textContent = "Keine Koordinaten erkannt. Füge Koordinaten, einen Pokémon-GO-Link oder Apple-Maps-Link ein.";
-    ui.waypointPasteInput.focus();
+    startWaypointPlacement();
     return;
   }
 
@@ -610,11 +608,27 @@ async function addWaypointFromForm() {
   ui.waypointPasteInput.value = "";
 }
 
-function addWaypointAtCenter() {
-  const center = map.getCenter();
-  const name = ui.waypointNameInput.value.trim() || "Waypoint Kartenmitte";
-  addWaypoint(name, center.lat, center.lng, waypointFormMeta());
+function startWaypointPlacement() {
+  state.waypointPlacement = true;
+  map.getContainer().classList.add("is-placing-waypoint");
+  ui.addWaypointButton.textContent = "Auf Karte tippen";
+  ui.waypointStatus.textContent = "Tippe auf die Karte, um den Waypoint zu setzen.";
+}
+
+function stopWaypointPlacement() {
+  state.waypointPlacement = false;
+  map.getContainer().classList.remove("is-placing-waypoint");
+  ui.addWaypointButton.textContent = "Waypoint hinzufügen";
+}
+
+function addWaypointFromMapClick(event) {
+  if (!state.waypointPlacement) return;
+  L.DomEvent.stop(event);
+  const name = ui.waypointNameInput.value.trim() || "Eigener Waypoint";
+  stopWaypointPlacement();
+  addWaypoint(name, event.latlng.lat, event.latlng.lng, waypointFormMeta());
   ui.waypointNameInput.value = "";
+  ui.waypointPasteInput.value = "";
 }
 
 function waypointFormMeta() {
@@ -662,7 +676,6 @@ function renderWaypoints() {
   if (!state.waypointGroup) return;
   enforceActiveWaypoints();
   state.waypointGroup.clearLayers();
-  ui.waypointList.textContent = "";
   scheduleRender();
 
   if (!state.waypoints.length) {
@@ -708,8 +721,6 @@ function renderWaypoints() {
         wireWaypointPopup(marker, waypoint.id);
       })
       .addTo(state.waypointGroup);
-
-    ui.waypointList.appendChild(createWaypointListItem(waypoint, s17Key, hasS17Duplicates, inactive));
   });
 }
 
@@ -725,45 +736,6 @@ function waypointIcon(waypoint, inactive) {
     popupAnchor: [0, -18],
     tooltipAnchor: [0, -18],
   });
-}
-
-function createWaypointListItem(waypoint, s17Key, hasS17Duplicates, inactive) {
-  const item = document.createElement("article");
-  item.className = "waypoint-item";
-  if (hasS17Duplicates) item.classList.add("has-conflict");
-  if (inactive) item.classList.add("is-inactive");
-  if (waypoint.type === "arena") item.classList.add("is-arena");
-
-  const text = document.createElement("div");
-  const title = document.createElement("strong");
-  title.textContent = `${waypoint.name} · ${waypoint.type === "arena" ? "Arena" : "Stop"}`;
-  const meta = document.createElement("span");
-  meta.textContent = `${waypoint.lat.toFixed(5)}, ${waypoint.lng.toFixed(5)} · S17 ${shortCellKey(s17Key)}`;
-  const note = document.createElement("em");
-  note.textContent = inactive ? "Inaktiv in S17" : hasS17Duplicates ? "Aktiv in S17" : "S17 frei";
-  text.append(title, meta, note);
-
-  const actions = document.createElement("div");
-  if (hasS17Duplicates && !waypoint.active) {
-    const active = document.createElement("button");
-    active.type = "button";
-    active.textContent = "Aktiv";
-    active.addEventListener("click", () => setActiveWaypoint(waypoint.id));
-    actions.append(active);
-  }
-  const focus = document.createElement("button");
-  focus.type = "button";
-  focus.textContent = "Fokus";
-  focus.addEventListener("click", () => moveToLocation(waypoint.lat, waypoint.lng, waypoint.name));
-  const remove = document.createElement("button");
-  remove.type = "button";
-  remove.textContent = "×";
-  remove.setAttribute("aria-label", `${waypoint.name} löschen`);
-  remove.addEventListener("click", () => removeWaypoint(waypoint.id));
-  actions.append(focus, remove);
-
-  item.append(text, actions);
-  return item;
 }
 
 function waypointPopupHtml(waypoint) {
