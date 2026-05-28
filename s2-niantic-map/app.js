@@ -906,10 +906,8 @@ function parseTextWaypoints(text) {
 
 function importedWaypointFromObject(entry) {
   if (!entry) return null;
-  const latValue = entry.lat !== undefined ? entry.lat : entry.latitude;
-  const lngValue = entry.lng !== undefined ? entry.lng : entry.lon !== undefined ? entry.lon : entry.longitude;
-  const lat = parseCoordinateNumber(latValue);
-  const lng = parseCoordinateNumber(lngValue);
+  const lat = parseCoordinateNumber(entry.lat ?? entry.latitude);
+  const lng = parseCoordinateNumber(entry.lng ?? entry.lon ?? entry.longitude);
   if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
   if (Math.abs(lat) > 90 || Math.abs(lng) > 180) return null;
 
@@ -933,7 +931,7 @@ function parseCoordinateNumber(value) {
 
 function parseImportedActive(value) {
   if (typeof value === "boolean") return value;
-  const text = String(value === undefined || value === null ? "yes" : value).trim().toLowerCase();
+  const text = String(value ?? "yes").trim().toLowerCase();
   return !["false", "0", "no", "nein", "inactive", "inaktiv"].includes(text);
 }
 
