@@ -35,6 +35,7 @@ const layers = [
 ];
 
 const WAYPOINT_STORAGE_KEY = "s2MapsWaypoints";
+const LOCATION_CHOICE_STORAGE_KEY = "s2MapsLocationChoice";
 
 const state = {
   active: new Set(layers.filter((layer) => layer.checked).map((layer) => layer.id)),
@@ -186,6 +187,7 @@ ui.brandButton.addEventListener("mouseenter", () => setAboutPanelCollapsed(false
 ui.closeAboutPanel.addEventListener("click", () => setAboutPanelCollapsed(true));
 ui.installButton.addEventListener("click", installApp);
 ui.allowLocationButton.addEventListener("click", () => {
+  saveLocationChoice("use-location");
   setLocationConsentVisible(false);
   setCellPanelCollapsed(true);
   setWeatherPanelCollapsed(true);
@@ -195,6 +197,7 @@ ui.allowLocationButton.addEventListener("click", () => {
   locateUser({ initial: true });
 });
 ui.skipLocationButton.addEventListener("click", () => {
+  saveLocationChoice("skip-location");
   setLocationConsentVisible(false);
   setCellPanelCollapsed(true);
   setWeatherPanelCollapsed(true);
@@ -306,7 +309,33 @@ function requestInitialLocation() {
     setLocationConsentVisible(false);
     return;
   }
+  const locationChoice = loadLocationChoice();
+  if (locationChoice === "use-location") {
+    setLocationConsentVisible(false);
+    locateUser({ initial: true });
+    return;
+  }
+  if (locationChoice === "skip-location") {
+    setLocationConsentVisible(false);
+    return;
+  }
   setLocationConsentVisible(true);
+}
+
+function saveLocationChoice(choice) {
+  try {
+    localStorage.setItem(LOCATION_CHOICE_STORAGE_KEY, choice);
+  } catch {
+    // Standortwahl ist Komfortzustand; ohne Storage bleibt die App nutzbar.
+  }
+}
+
+function loadLocationChoice() {
+  try {
+    return localStorage.getItem(LOCATION_CHOICE_STORAGE_KEY);
+  } catch {
+    return null;
+  }
 }
 
 function scheduleRender() {

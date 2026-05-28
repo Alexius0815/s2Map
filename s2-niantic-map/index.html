@@ -17,7 +17,7 @@
       integrity="sha256-p4NxAoJBhIINfQ3p5SMYk9g3Wg5p0p2mIPlQGLrC6r0="
       crossorigin=""
     />
-    <link rel="stylesheet" href="styles.css?v=waypoints-6" />
+    <link rel="stylesheet" href="styles.css?v=waypoints-7" />
   </head>
   <body class="awaiting-location">
     <main class="app-shell">
@@ -68,8 +68,14 @@
         </aside>
 
         <div id="locationConsent" class="location-consent" role="dialog" aria-label="Standortfreigabe">
-          <p>Aktuellen Standort nutzen?</p>
-          <span>Dein Standort wird nur im Browser zur Kartenpositionierung verwendet.</span>
+          <span class="location-consent-logo" aria-hidden="true"></span>
+          <p>Direkt zu deiner S14-Zelle?</p>
+          <span>Dein Standort bleibt im Browser und wird nur zum Zentrieren der Karte genutzt.</span>
+          <ul aria-label="Startinfos">
+            <li>S10 Wetterzellen</li>
+            <li>S14 Arena-Planung</li>
+            <li>S17 Stop-Check</li>
+          </ul>
           <div>
             <button id="allowLocationButton" type="button">Ja</button>
             <button id="skipLocationButton" type="button">Nein</button>
@@ -265,6 +271,6 @@
       integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
       crossorigin=""
     ></script>
-    <script src="app.js?v=waypoints-6"></script>
+    <script src="app.js?v=waypoints-7"></script>
   </body>
 </html>
