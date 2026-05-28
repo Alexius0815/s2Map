@@ -352,6 +352,7 @@ function renderCells() {
   let visibleWeatherCells = [];
   const activeLayers = layers.filter((layer) => state.active.has(layer.id));
   const occupiedStopS17Keys = occupiedS17StopKeys();
+  const occupiedS14Keys = occupiedS14CellKeys();
 
   layers.forEach((layer) => {
     state.groups.get(layer.id).clearLayers();
@@ -397,17 +398,25 @@ function renderCells() {
       }
       leafletPolygon.addTo(state.groups.get(layer.id));
 
-      if ((zoom >= layer.labelZoom || weather) && shouldLabelCell(cell, layer.level)) {
+      const shouldShowS14Status = layer.id === "gym" && occupiedS14Keys.has(key);
+      const shouldShowLabel = shouldShowS14Status || ((zoom >= layer.labelZoom || weather) && shouldLabelCell(cell, layer.level));
+      if (shouldShowLabel) {
         const center = weather ? visibleLabelPosition(polygon, viewBounds) : cellCenter(cell.face, cell.i, cell.j, cell.level);
+        const labelHtml = buildLabel(layer, weather, cell, shouldShowS14Status);
         L.marker(center, {
-          interactive: false,
+          interactive: layer.id === "gym",
           icon: L.divIcon({
             className: "",
-            html: buildLabel(layer, weather),
-            iconSize: weather ? [74, 18] : [34, 18],
-            iconAnchor: weather ? [37, 9] : [17, 9],
+            html: labelHtml,
+            iconSize: layer.id === "gym" ? [92, 22] : weather ? [74, 18] : [34, 18],
+            iconAnchor: layer.id === "gym" ? [46, 11] : weather ? [37, 9] : [17, 9],
           }),
-        }).addTo(state.labels.get(layer.id));
+        })
+          .on("click", () => L.popup({ className: "s14-cell-popup-wrapper", autoPanPadding: [18, 18] })
+            .setLatLng(center)
+            .setContent(s14CellPopupHtml(cell))
+            .openOn(map))
+          .addTo(state.labels.get(layer.id));
       }
     });
   });
@@ -431,6 +440,14 @@ function occupiedS17StopKeys() {
     state.waypoints
       .filter((waypoint) => waypoint.active && waypoint.type === "stop")
       .map((waypoint) => cellKey(latLngToCell(waypoint.lat, waypoint.lng, 17))),
+  );
+}
+
+function occupiedS14CellKeys() {
+  return new Set(
+    state.waypoints
+      .filter((waypoint) => waypoint.active)
+      .map((waypoint) => cellKey(latLngToCell(waypoint.lat, waypoint.lng, 14))),
   );
 }
 
@@ -539,9 +556,18 @@ function buildTooltip(layer, cell, weather) {
   return lines.join("<br>");
 }
 
-function buildLabel(layer, weather) {
+function buildLabel(layer, weather, cell = null, showS14Status = false) {
+  if (layer.id === "gym" && cell && showS14Status) return buildS14StatusLabel(cell);
   if (!weather) return `<span class="s2-label">L${layer.level}</span>`;
   return `<span class="s2-label is-weather" style="background:${weather.pokemonWeather.color}">${weather.pokemonWeather.label}</span>`;
+}
+
+function buildS14StatusLabel(cell) {
+  const validation = s14GymValidationForCell(cellKey(cell));
+  const text = validation.activeCount
+    ? `${validation.arenaCount}/${validation.expected} Arena · ${validation.activeCount} POI`
+    : "0 POI";
+  return `<span class="s2-label is-s14-status is-${escapeHtml(validation.status)}">S14 · ${escapeHtml(text)}</span>`;
 }
 
 function formatBoostedTypes(weather) {

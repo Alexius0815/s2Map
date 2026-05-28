@@ -1543,6 +1543,39 @@ button {
   text-shadow: 0 1px 1px rgba(0, 0, 0, 0.28);
 }
 
+.s2-label.is-s14-status {
+  display: inline-flex;
+  min-width: 0;
+  max-width: 116px;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-color: rgba(124, 58, 237, 0.26);
+  color: #4c1d95;
+  background: rgba(255, 255, 255, 0.94);
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+
+.s2-label.is-s14-status.is-near {
+  color: #92400e;
+  border-color: rgba(245, 158, 11, 0.42);
+  background: rgba(255, 250, 240, 0.95);
+}
+
+.s2-label.is-s14-status.is-ok,
+.s2-label.is-s14-status.is-full {
+  color: #166534;
+  border-color: rgba(34, 197, 94, 0.34);
+  background: rgba(240, 253, 244, 0.95);
+}
+
+.s2-label.is-s14-status.is-over {
+  color: #991b1b;
+  border-color: rgba(239, 68, 68, 0.42);
+  background: rgba(255, 245, 245, 0.96);
+}
+
 .leaflet-control-attribution {
   font-size: 10px;
 }
