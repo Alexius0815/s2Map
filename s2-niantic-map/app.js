@@ -352,6 +352,7 @@ function renderCells() {
   let totalCells = 0;
   let visibleWeatherCells = [];
   const activeLayers = layers.filter((layer) => state.active.has(layer.id));
+  const occupiedStopS17Keys = occupiedS17StopKeys();
 
   layers.forEach((layer) => {
     state.groups.get(layer.id).clearLayers();
@@ -376,14 +377,16 @@ function renderCells() {
 
     cells.forEach((cell) => {
       const weather = layer.id === "weather" && state.weatherEnabled ? state.weather.get(cellKey(cell)) : null;
+      const key = cellKey(cell);
+      const hasStop = layer.id === "stop" && occupiedStopS17Keys.has(key);
       const weatherColor = weather && weather.pokemonWeather ? weather.pokemonWeather.color : layer.color;
       const polygon = cellPolygon(cell.face, cell.i, cell.j, cell.level);
       const leafletPolygon = L.polygon(polygon, {
         color: weatherColor,
         weight: gridWeight(layer.level, zoom),
         opacity: 0.9,
-        fillColor: weatherColor,
-        fillOpacity: layer.id === "weather" ? 0.04 : 0,
+        fillColor: hasStop ? "#475569" : weatherColor,
+        fillOpacity: hasStop ? 0.2 : layer.id === "weather" ? 0.04 : 0,
         interactive: true,
       }).bindTooltip(buildTooltip(layer, cell, weather), {
         sticky: true,
@@ -418,6 +421,14 @@ function renderCells() {
   if (state.weatherEnabled && state.active.has("weather") && zoom >= 10) {
     fetchWeatherForCells(visibleWeatherCells);
   }
+}
+
+function occupiedS17StopKeys() {
+  return new Set(
+    state.waypoints
+      .filter((waypoint) => waypoint.active && waypoint.type === "stop")
+      .map((waypoint) => cellKey(latLngToCell(waypoint.lat, waypoint.lng, 17))),
+  );
 }
 
 function toggleWeather() {
@@ -629,6 +640,7 @@ function renderWaypoints() {
   enforceActiveWaypoints();
   state.waypointGroup.clearLayers();
   ui.waypointList.textContent = "";
+  scheduleRender();
 
   if (!state.waypoints.length) {
     ui.waypointStatus.textContent = "Noch keine eigenen Waypoints";
@@ -648,7 +660,7 @@ function renderWaypoints() {
     const inactive = hasS17Duplicates && !waypoint.active;
     const plausibility = gymPlausibilityForWaypoint(waypoint);
 
-    const markerTitle = `${waypoint.name} · ${waypoint.type === "arena" ? "Arena" : "Stop"}`;
+    const markerTitle = waypoint.name;
     const marker = L.marker([waypoint.lat, waypoint.lng], {
       pane: "waypointPane",
       icon: waypointIcon(waypoint, inactive),
@@ -656,6 +668,7 @@ function renderWaypoints() {
       title: markerTitle,
       alt: markerTitle,
       keyboard: true,
+      draggable: true,
     });
     marker
       .bindTooltip(markerTitle, {
@@ -666,6 +679,7 @@ function renderWaypoints() {
       .on("mouseover", () => marker.openTooltip())
       .on("focus", () => marker.openTooltip())
       .on("touchstart", () => marker.openTooltip())
+      .on("dragend", (event) => moveWaypointToLatLng(waypoint.id, event.target.getLatLng()))
       .bindPopup(waypointPopupHtml(waypoint, s14Key, s17Key, hasS17Duplicates, inactive, plausibility))
       .on("popupopen", () => wireWaypointPopup(marker, waypoint.id))
       .addTo(state.waypointGroup);
@@ -738,12 +752,18 @@ function waypointPopupHtml(waypoint, s14Key, s17Key, hasS17Duplicates, inactive,
   return `
     <div class="waypoint-popup">
       <strong>${escapeHtml(waypoint.name)}</strong>
+      <label>
+        <span>Name</span>
+        <input type="text" value="${escapeHtml(waypoint.name)}" data-waypoint-name />
+      </label>
       <span>${waypoint.type === "arena" ? "Arena" : "Stop"} · ${waypoint.lat.toFixed(5)}, ${waypoint.lng.toFixed(5)}</span>
       <span>S14: ${escapeHtml(s14Key)}</span>
       <span>S17: ${escapeHtml(s17Key)}</span>
       <em>${escapeHtml(stateText)}</em>
       <span>${escapeHtml(plausibility)}</span>
+      <em>Zum Korrigieren den Marker auf der Karte ziehen.</em>
       <div>
+        <button type="button" data-waypoint-action="rename">Name speichern</button>
         <button type="button" data-waypoint-action="focus">Fokus</button>
         <button type="button" data-waypoint-action="move">Auf Kartenmitte verschieben</button>
         <button type="button" data-waypoint-action="delete">Löschen</button>
@@ -759,6 +779,7 @@ function wireWaypointPopup(marker, id) {
   root.querySelectorAll("[data-waypoint-action]").forEach((button) => {
     button.addEventListener("click", () => {
       const action = button.getAttribute("data-waypoint-action");
+      if (action === "rename") renameWaypointFromPopup(id, root);
       if (action === "focus") focusWaypoint(id);
       if (action === "move") moveWaypointToCenter(id);
       if (action === "delete") {
@@ -767,6 +788,21 @@ function wireWaypointPopup(marker, id) {
       }
     });
   });
+}
+
+function renameWaypointFromPopup(id, root) {
+  const input = root.querySelector("[data-waypoint-name]");
+  const name = input ? input.value.trim() : "";
+  if (!name) {
+    ui.waypointStatus.textContent = "Name darf nicht leer sein.";
+    return;
+  }
+  const waypoint = state.waypoints.find((entry) => entry.id === id);
+  if (!waypoint) return;
+  waypoint.name = name;
+  saveWaypoints();
+  renderWaypoints();
+  ui.waypointStatus.textContent = `Waypoint umbenannt: ${name}`;
 }
 
 function focusWaypoint(id) {
@@ -779,12 +815,20 @@ function moveWaypointToCenter(id) {
   const waypoint = state.waypoints.find((entry) => entry.id === id);
   if (!waypoint) return;
   const center = map.getCenter();
+  moveWaypointToLatLng(id, center, { focus: true });
+}
+
+function moveWaypointToLatLng(id, latLng, options = {}) {
+  const waypoint = state.waypoints.find((entry) => entry.id === id);
+  if (!waypoint) return;
+  const center = L.latLng(latLng);
   waypoint.lat = center.lat;
   waypoint.lng = center.lng;
   enforceActiveWaypoints();
   saveWaypoints();
   renderWaypoints();
-  moveToLocation(waypoint.lat, waypoint.lng, waypoint.name, { level: 14 });
+  if (options.focus) moveToLocation(waypoint.lat, waypoint.lng, waypoint.name, { level: 14 });
+  ui.waypointStatus.textContent = `${waypoint.name} verschoben`;
 }
 
 function escapeHtml(value) {

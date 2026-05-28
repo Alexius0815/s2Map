@@ -1281,6 +1281,27 @@ button {
   font-size: 14px;
 }
 
+.waypoint-popup label {
+  display: grid;
+  gap: 4px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.waypoint-popup input {
+  width: 100%;
+  min-height: 34px;
+  border: 1px solid rgba(29, 140, 248, 0.24);
+  border-radius: 8px;
+  padding: 7px 9px;
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.94);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+}
+
 .waypoint-popup span,
 .waypoint-popup em {
   color: var(--muted);
