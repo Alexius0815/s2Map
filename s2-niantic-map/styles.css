@@ -774,15 +774,15 @@ button {
 .help-toggle {
   position: absolute;
   z-index: 520;
-  right: 202px;
-  bottom: max(18px, env(safe-area-inset-bottom));
-  width: 44px;
-  height: 44px;
+  top: max(78px, calc(env(safe-area-inset-top) + 78px));
+  right: 14px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   color: #102033;
   background: var(--spark);
-  box-shadow: 0 5px 0 var(--spark-strong), 0 14px 28px rgba(12, 47, 92, 0.2);
-  font-size: 20px;
+  box-shadow: 0 4px 0 var(--spark-strong), 0 12px 24px rgba(12, 47, 92, 0.2);
+  font-size: 16px;
   font-weight: 900;
 }
 
@@ -1634,8 +1634,9 @@ button {
   }
 
   .help-toggle {
-    right: 100px;
-    width: 40px;
-    height: 44px;
+    top: max(114px, calc(env(safe-area-inset-top) + 114px));
+    right: 10px;
+    width: 36px;
+    height: 36px;
   }
 }
