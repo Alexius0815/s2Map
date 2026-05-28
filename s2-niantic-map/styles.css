@@ -1181,6 +1181,21 @@ button {
   border-color: rgba(239, 59, 120, 0.28);
 }
 
+.waypoint-item.is-gym-near {
+  border-color: rgba(245, 158, 11, 0.38);
+  background: #fffaf0;
+}
+
+.waypoint-item.is-gym-ok,
+.waypoint-item.is-gym-full {
+  border-color: rgba(34, 197, 94, 0.28);
+}
+
+.waypoint-item.is-gym-over {
+  border-color: rgba(239, 68, 68, 0.42);
+  background: #fff5f5;
+}
+
 .waypoint-item.is-inactive {
   filter: grayscale(0.85);
   opacity: 0.56;
@@ -1221,6 +1236,22 @@ button {
 
 .waypoint-item.has-conflict em {
   color: #b91c1c;
+}
+
+.waypoint-item.is-gym-near span:last-child {
+  color: #b45309;
+  font-weight: 900;
+}
+
+.waypoint-item.is-gym-ok span:last-child,
+.waypoint-item.is-gym-full span:last-child {
+  color: #15803d;
+  font-weight: 900;
+}
+
+.waypoint-item.is-gym-over span:last-child {
+  color: #b91c1c;
+  font-weight: 900;
 }
 
 .waypoint-item div + div {

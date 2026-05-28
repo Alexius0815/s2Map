@@ -658,7 +658,7 @@ function renderWaypoints() {
     const s17Key = cellKey(s17);
     const hasS17Duplicates = (s17Groups.get(s17Key) || []).length > 1;
     const inactive = hasS17Duplicates && !waypoint.active;
-    const plausibility = gymPlausibilityForWaypoint(waypoint);
+    const plausibility = s14GymValidationForWaypoint(waypoint);
 
     const markerTitle = waypoint.name;
     const marker = L.marker([waypoint.lat, waypoint.lng], {
@@ -711,6 +711,7 @@ function createWaypointListItem(waypoint, s17Key, hasS17Duplicates, inactive, pl
   if (hasS17Duplicates) item.classList.add("has-conflict");
   if (inactive) item.classList.add("is-inactive");
   if (waypoint.type === "arena") item.classList.add("is-arena");
+  item.classList.add(`is-gym-${plausibility.status}`);
 
   const text = document.createElement("div");
   const title = document.createElement("strong");
@@ -720,7 +721,7 @@ function createWaypointListItem(waypoint, s17Key, hasS17Duplicates, inactive, pl
   const note = document.createElement("em");
   note.textContent = inactive ? "Inaktiv in S17" : hasS17Duplicates ? "Aktiv in S17" : "S17 frei";
   const plausibilityText = document.createElement("span");
-  plausibilityText.textContent = plausibility;
+  plausibilityText.textContent = plausibility.text;
   text.append(title, meta, note, plausibilityText);
 
   const actions = document.createElement("div");
@@ -894,22 +895,52 @@ function waypointMarkerColor(waypoint, inactive) {
   return waypoint.type === "arena" ? "#ef3b78" : "#1d8cf8";
 }
 
-function gymPlausibilityForWaypoint(waypoint) {
+function s14GymValidationForWaypoint(waypoint) {
   const s14Key = cellKey(latLngToCell(waypoint.lat, waypoint.lng, 14));
   const s14Waypoints = groupWaypointsByCell(14, true).get(s14Key) || [];
   const activeCount = s14Waypoints.length;
   const arenaCount = s14Waypoints.filter((entry) => entry.type === "arena").length;
   const expected = expectedGymCount(activeCount);
-  const parkHint = waypoint.areaKind === "park" ? " · Park: Top-Arena-Kandidat" : "";
+  const next = nextGymThreshold(activeCount);
+  const missing = next ? Math.max(0, next - activeCount) : 0;
+  const parkHint = waypoint.areaKind === "park" ? " · Park: guter Kandidat" : "";
 
-  if (waypoint.type === "arena") {
-    if (arenaCount <= expected) return `Arena plausibel: ${arenaCount}/${expected} bei ${activeCount} aktiven POI${parkHint}`;
-    return `Arena über Schwellenheuristik: ${arenaCount}/${expected} bei ${activeCount} aktiven POI${parkHint}`;
+  if (arenaCount > expected) {
+    return {
+      status: "over",
+      text: `Zu viele Arenen: ${arenaCount}/${expected} bei ${activeCount} POI${parkHint}`,
+    };
   }
 
-  const next = nextGymThreshold(activeCount);
-  if (!next) return `S14 wirkt voll: ${activeCount} aktive POI, bis zu ${expected} Arenen plausibel`;
-  return `S14: ${activeCount} aktive POI · nächste Arena-Heuristik bei ${next}`;
+  if (waypoint.type === "arena") {
+    return {
+      status: "ok",
+      text: `Arena plausibel: ${arenaCount}/${expected} bei ${activeCount} POI${parkHint}`,
+    };
+  }
+
+  if (!next) {
+    return {
+      status: "full",
+      text: `S14 voll: ${activeCount} POI · bis ${expected} Arenen plausibel`,
+    };
+  }
+
+  if (missing === 1) {
+    return {
+      status: "near",
+      text: `Kipppunkt nah: 1 POI bis Arena ${expected + 1} (${activeCount}/${next})`,
+    };
+  }
+
+  return {
+    status: "next",
+    text: `Nächste Arena: noch ${missing} POI bis ${next} (${arenaCount}/${expected})`,
+  };
+}
+
+function gymPlausibilityForWaypoint(waypoint) {
+  return s14GymValidationForWaypoint(waypoint).text;
 }
 
 function expectedGymCount(activeCount) {
