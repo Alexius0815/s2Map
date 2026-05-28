@@ -763,7 +763,7 @@ function waypointPopupHtml(waypoint) {
           <span>Arena</span>
         </label>
       </div>
-      <div>
+      <div class="waypoint-popup-actions">
         <button type="button" data-waypoint-action="save" hidden>Speichern</button>
         <button type="button" data-waypoint-action="focus">Fokus</button>
         <button type="button" data-waypoint-action="delete">Löschen</button>

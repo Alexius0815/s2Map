@@ -1272,9 +1272,9 @@ button {
 
 .waypoint-popup {
   display: grid;
-  gap: 8px;
-  min-width: 220px;
-  max-width: min(280px, 76vw);
+  gap: 6px;
+  min-width: 206px;
+  max-width: min(244px, 72vw);
 }
 
 .waypoint-name-field {
@@ -1283,24 +1283,24 @@ button {
 
 .waypoint-name-field input {
   width: 100%;
-  min-height: 38px;
+  min-height: 34px;
   border: 1px solid rgba(29, 140, 248, 0.24);
   border-radius: 8px;
-  padding: 8px 10px;
+  padding: 7px 9px;
   color: var(--ink);
   background: rgba(255, 255, 255, 0.94);
   font: inherit;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 800;
 }
 
 .waypoint-type-toggle {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 6px;
-  padding: 3px;
+  gap: 3px;
+  padding: 2px;
   border: 1px solid rgba(29, 140, 248, 0.18);
-  border-radius: 10px;
+  border-radius: 8px;
   background: rgba(255, 255, 255, 0.68);
 }
 
@@ -1318,10 +1318,10 @@ button {
 .waypoint-type-toggle span {
   display: grid;
   place-items: center;
-  min-height: 32px;
-  border-radius: 8px;
+  min-height: 28px;
+  border-radius: 6px;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 1000;
 }
 
@@ -1349,19 +1349,24 @@ button {
   font-weight: 900;
 }
 
-.waypoint-popup div {
+.waypoint-popup-actions {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 6px;
+  grid-template-columns: 1fr 1fr;
+  gap: 5px;
 }
 
 .waypoint-popup button {
-  min-height: 34px;
+  min-height: 32px;
   border-radius: 8px;
   color: #fff;
   background: #1d8cf8;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 900;
+}
+
+.waypoint-popup button[data-waypoint-action="save"] {
+  grid-column: 1 / -1;
+  min-height: 30px;
 }
 
 .waypoint-popup button[data-waypoint-action="delete"] {
