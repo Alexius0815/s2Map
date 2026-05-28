@@ -19,6 +19,10 @@ Danach ist die App unter `http://127.0.0.1:4173/` erreichbar.
 
 Die App registriert einen Service Worker fuer die App-Shell. API- und Wetterdaten werden nicht offline gecacht.
 
+## Eigene Waypoints
+
+Nutzer koennen Waypoints manuell hinzufuegen, indem sie Name und Koordinaten oder einen Maps-Text einfuegen. Die Daten werden nur lokal im Browser-Speicher gespeichert und nicht an einen Server uebertragen.
+
 ## Hosting mit Vercel
 
 Das Repository ist fuer Vercel vorbereitet. Beim Import kann das Projekt ohne Build Command deployed werden; `vercel.json` leitet die Root-URL auf die statische App in `s2-niantic-map/`.

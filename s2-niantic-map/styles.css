@@ -901,6 +901,153 @@ button {
   box-shadow: 0 3px 0 #b91c1c;
 }
 
+.waypoint-controls {
+  display: grid;
+  gap: 9px;
+  padding: 11px;
+  border: 1px solid rgba(29, 140, 248, 0.16);
+  border-radius: 8px;
+  background: #f8fbff;
+}
+
+.waypoint-header {
+  display: grid;
+  grid-template-columns: 1fr 74px;
+  gap: 10px;
+  align-items: center;
+}
+
+.waypoint-controls h2,
+.waypoint-controls p {
+  margin: 0;
+}
+
+.waypoint-controls h2 {
+  color: #0956b6;
+  font-size: 14px;
+}
+
+.waypoint-controls p {
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.waypoint-controls input,
+.waypoint-controls textarea {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid rgba(29, 140, 248, 0.2);
+  border-radius: 8px;
+  color: var(--ink);
+  background: #fff;
+}
+
+.waypoint-controls input {
+  min-height: 40px;
+  padding: 0 10px;
+}
+
+.waypoint-controls textarea {
+  resize: vertical;
+  min-height: 68px;
+  padding: 9px 10px;
+  line-height: 1.35;
+}
+
+.waypoint-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.waypoint-controls button {
+  min-height: 38px;
+  border-radius: 8px;
+  color: #fff;
+  background: #1d8cf8;
+  box-shadow: 0 3px 0 #0956b6;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+#clearWaypointsButton {
+  color: #102033;
+  background: var(--spark);
+  box-shadow: 0 3px 0 var(--spark-strong);
+}
+
+.waypoint-list {
+  display: grid;
+  gap: 7px;
+  max-height: 180px;
+  overflow: auto;
+}
+
+.waypoint-item {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  align-items: center;
+  padding: 8px;
+  border: 1px solid rgba(29, 140, 248, 0.14);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.waypoint-item.has-conflict {
+  border-color: rgba(239, 68, 68, 0.28);
+  background: #fff7f7;
+}
+
+.waypoint-item div {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+.waypoint-item strong,
+.waypoint-item span,
+.waypoint-item em {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.waypoint-item strong {
+  color: var(--ink);
+  font-size: 12px;
+}
+
+.waypoint-item span,
+.waypoint-item em {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.waypoint-item em {
+  color: #0956b6;
+  font-style: normal;
+  font-weight: 900;
+}
+
+.waypoint-item.has-conflict em {
+  color: #b91c1c;
+}
+
+.waypoint-item div + div {
+  display: flex;
+  gap: 6px;
+}
+
+.waypoint-item button {
+  min-height: 32px;
+  padding: 0 9px;
+  box-shadow: none;
+}
+
 .legend {
   padding-top: 12px;
   border-top: 1px solid var(--line);

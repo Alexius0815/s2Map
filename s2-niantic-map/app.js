@@ -34,6 +34,8 @@ const layers = [
   },
 ];
 
+const WAYPOINT_STORAGE_KEY = "s2MapsWaypoints";
+
 const state = {
   active: new Set(layers.filter((layer) => layer.checked).map((layer) => layer.id)),
   groups: new Map(),
@@ -41,6 +43,8 @@ const state = {
   weather: new Map(),
   weatherPending: new Set(),
   weatherEnabled: false,
+  waypointGroup: null,
+  waypoints: [],
   installPrompt: null,
   renderTimer: 0,
   collapsed: true,
@@ -88,6 +92,13 @@ const ui = {
   ownLocationButton: document.querySelector("#ownLocationButton"),
   weatherButton: document.querySelector("#weatherButton"),
   weatherStatus: document.querySelector("#weatherStatus"),
+  waypointNameInput: document.querySelector("#waypointNameInput"),
+  waypointPasteInput: document.querySelector("#waypointPasteInput"),
+  waypointStatus: document.querySelector("#waypointStatus"),
+  waypointList: document.querySelector("#waypointList"),
+  addWaypointButton: document.querySelector("#addWaypointButton"),
+  addWaypointHereButton: document.querySelector("#addWaypointHereButton"),
+  clearWaypointsButton: document.querySelector("#clearWaypointsButton"),
   helpToggle: document.querySelector("#helpToggle"),
   helpPanel: document.querySelector("#helpPanel"),
   closeHelpPanel: document.querySelector("#closeHelpPanel"),
@@ -132,6 +143,9 @@ layers.forEach((layer) => {
   ui.layerList.appendChild(node);
 });
 
+state.waypointGroup = L.layerGroup().addTo(map);
+loadWaypoints();
+
 ui.panelToggle.addEventListener("click", () => setPanelCollapsed(!state.collapsed));
 ui.closePanel.addEventListener("click", () => setPanelCollapsed(true));
 ui.locationPanelToggle.addEventListener("click", () => setLocationPanelCollapsed(!state.locationCollapsed));
@@ -139,6 +153,9 @@ ui.closeLocationPanel.addEventListener("click", () => setLocationPanelCollapsed(
 ui.ownLocationButton.addEventListener("click", locateUser);
 ui.locationGoButton.addEventListener("click", jumpToLocation);
 ui.weatherButton.addEventListener("click", toggleWeather);
+ui.addWaypointButton.addEventListener("click", addWaypointFromForm);
+ui.addWaypointHereButton.addEventListener("click", addWaypointAtCenter);
+ui.clearWaypointsButton.addEventListener("click", clearWaypoints);
 ui.helpToggle.addEventListener("click", () => setHelpPanelCollapsed(!ui.helpPanel.classList.contains("is-collapsed")));
 ui.closeHelpPanel.addEventListener("click", () => setHelpPanelCollapsed(true));
 ui.brandButton.addEventListener("click", () => setAboutPanelCollapsed(!ui.aboutPanel.classList.contains("is-collapsed")));
@@ -403,6 +420,204 @@ function formatBoostedTypes(weather) {
 
 function formatValue(value, unit) {
   return Number.isFinite(value) ? `${Math.round(value)} ${unit}` : "-";
+}
+
+function loadWaypoints() {
+  try {
+    const raw = localStorage.getItem(WAYPOINT_STORAGE_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    state.waypoints = Array.isArray(parsed) ? parsed.filter(isValidWaypoint) : [];
+  } catch {
+    state.waypoints = [];
+  }
+  renderWaypoints();
+}
+
+function saveWaypoints() {
+  try {
+    localStorage.setItem(WAYPOINT_STORAGE_KEY, JSON.stringify(state.waypoints));
+  } catch {
+    ui.waypointStatus.textContent = "Waypoints konnten nicht lokal gespeichert werden.";
+  }
+}
+
+function isValidWaypoint(waypoint) {
+  return waypoint && typeof waypoint.name === "string" && Number.isFinite(waypoint.lat) && Number.isFinite(waypoint.lng);
+}
+
+function addWaypointFromForm() {
+  const coordinates = parseCoordinates(ui.waypointPasteInput.value);
+  if (!coordinates) {
+    ui.waypointStatus.textContent = "Keine Koordinaten erkannt. Beispiel: 50,04079° N, 8,43239° O";
+    ui.waypointPasteInput.focus();
+    return;
+  }
+  const name = ui.waypointNameInput.value.trim() || "Eigener Waypoint";
+  addWaypoint(name, coordinates.lat, coordinates.lng);
+  ui.waypointNameInput.value = "";
+  ui.waypointPasteInput.value = "";
+}
+
+function addWaypointAtCenter() {
+  const center = map.getCenter();
+  const name = ui.waypointNameInput.value.trim() || "Waypoint Kartenmitte";
+  addWaypoint(name, center.lat, center.lng);
+  ui.waypointNameInput.value = "";
+}
+
+function addWaypoint(name, lat, lng) {
+  const waypoint = {
+    id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    name,
+    lat,
+    lng,
+    createdAt: new Date().toISOString(),
+  };
+  state.waypoints.push(waypoint);
+  saveWaypoints();
+  renderWaypoints();
+  moveToLocation(lat, lng, name);
+  ui.waypointStatus.textContent = `${state.waypoints.length} eigene Waypoints gespeichert`;
+}
+
+function removeWaypoint(id) {
+  state.waypoints = state.waypoints.filter((waypoint) => waypoint.id !== id);
+  saveWaypoints();
+  renderWaypoints();
+}
+
+function clearWaypoints() {
+  state.waypoints = [];
+  saveWaypoints();
+  renderWaypoints();
+}
+
+function renderWaypoints() {
+  if (!state.waypointGroup) return;
+  state.waypointGroup.clearLayers();
+  ui.waypointList.textContent = "";
+
+  if (!state.waypoints.length) {
+    ui.waypointStatus.textContent = "Noch keine eigenen Waypoints";
+    return;
+  }
+
+  const s17Counts = countCellsForWaypoints(17);
+  ui.waypointStatus.textContent = `${state.waypoints.length} eigene Waypoints gespeichert`;
+
+  state.waypoints.forEach((waypoint) => {
+    const s14 = latLngToCell(waypoint.lat, waypoint.lng, 14);
+    const s17 = latLngToCell(waypoint.lat, waypoint.lng, 17);
+    const s14Key = cellKey(s14);
+    const s17Key = cellKey(s17);
+    const conflict = (s17Counts.get(s17Key) || 0) > 1;
+
+    L.circleMarker([waypoint.lat, waypoint.lng], {
+      radius: 8,
+      color: "#ffffff",
+      weight: 3,
+      fillColor: conflict ? "#ef4444" : "#ffcb05",
+      fillOpacity: 1,
+    })
+      .bindTooltip(
+        [
+          waypoint.name,
+          `${waypoint.lat.toFixed(5)}, ${waypoint.lng.toFixed(5)}`,
+          `S14: ${s14Key}`,
+          `S17: ${s17Key}`,
+          conflict ? "Hinweis: mehrere Waypoints in dieser S17-Zelle" : "S17-Zelle ist in deiner Liste frei",
+        ].join("<br>"),
+        { sticky: true, direction: "top" },
+      )
+      .addTo(state.waypointGroup);
+
+    ui.waypointList.appendChild(createWaypointListItem(waypoint, s17Key, conflict));
+  });
+}
+
+function createWaypointListItem(waypoint, s17Key, conflict) {
+  const item = document.createElement("article");
+  item.className = "waypoint-item";
+  if (conflict) item.classList.add("has-conflict");
+
+  const text = document.createElement("div");
+  const title = document.createElement("strong");
+  title.textContent = waypoint.name;
+  const meta = document.createElement("span");
+  meta.textContent = `${waypoint.lat.toFixed(5)}, ${waypoint.lng.toFixed(5)} · S17 ${shortCellKey(s17Key)}`;
+  const note = document.createElement("em");
+  note.textContent = conflict ? "Doppelt in S17" : "S17 frei";
+  text.append(title, meta, note);
+
+  const actions = document.createElement("div");
+  const focus = document.createElement("button");
+  focus.type = "button";
+  focus.textContent = "Fokus";
+  focus.addEventListener("click", () => moveToLocation(waypoint.lat, waypoint.lng, waypoint.name));
+  const remove = document.createElement("button");
+  remove.type = "button";
+  remove.textContent = "×";
+  remove.setAttribute("aria-label", `${waypoint.name} löschen`);
+  remove.addEventListener("click", () => removeWaypoint(waypoint.id));
+  actions.append(focus, remove);
+
+  item.append(text, actions);
+  return item;
+}
+
+function countCellsForWaypoints(level) {
+  const counts = new Map();
+  state.waypoints.forEach((waypoint) => {
+    const key = cellKey(latLngToCell(waypoint.lat, waypoint.lng, level));
+    counts.set(key, (counts.get(key) || 0) + 1);
+  });
+  return counts;
+}
+
+function shortCellKey(key) {
+  const parts = key.split(":");
+  return `${parts[0]}/${parts[1]}/${parts[2]}`;
+}
+
+function parseCoordinates(value) {
+  const text = String(value || "").trim();
+  if (!text) return null;
+
+  const atMatch = text.match(/@(-?\d+(?:[\.,]\d+)?),\s*(-?\d+(?:[\.,]\d+)?)/);
+  if (atMatch) return normalizeCoordinates(atMatch[1], atMatch[2]);
+
+  const queryMatch = text.match(/[?&](?:q|ll|center)=(-?\d+(?:[\.,]\d+)?),\s*(-?\d+(?:[\.,]\d+)?)/);
+  if (queryMatch) return normalizeCoordinates(queryMatch[1], queryMatch[2]);
+
+  const directionalMatch = text.match(/(-?\d+(?:[\.,]\d+)?)\s*°?\s*([NS])[,;\s]+(-?\d+(?:[\.,]\d+)?)\s*°?\s*([EOW])/i);
+  if (directionalMatch) {
+    let lat = parseNumber(directionalMatch[1]);
+    let lng = parseNumber(directionalMatch[3]);
+    if (/S/i.test(directionalMatch[2])) lat *= -1;
+    if (/W/i.test(directionalMatch[4])) lng *= -1;
+    return validLatLng(lat, lng) ? { lat, lng } : null;
+  }
+
+  const numbers = text.match(/-?\d+(?:[\.,]\d+)?/g) || [];
+  for (let index = 0; index < numbers.length - 1; index += 1) {
+    const coordinates = normalizeCoordinates(numbers[index], numbers[index + 1]);
+    if (coordinates) return coordinates;
+  }
+  return null;
+}
+
+function normalizeCoordinates(latValue, lngValue) {
+  const lat = parseNumber(latValue);
+  const lng = parseNumber(lngValue);
+  return validLatLng(lat, lng) ? { lat, lng } : null;
+}
+
+function parseNumber(value) {
+  return Number(String(value).replace(",", "."));
+}
+
+function validLatLng(lat, lng) {
+  return Number.isFinite(lat) && Number.isFinite(lng) && Math.abs(lat) <= 90 && Math.abs(lng) <= 180;
 }
 
 function cellKey(cell) {
