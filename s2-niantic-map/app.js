@@ -680,7 +680,7 @@ function renderWaypoints() {
       .on("focus", () => marker.openTooltip())
       .on("touchstart", () => marker.openTooltip())
       .on("dragend", (event) => moveWaypointToLatLng(waypoint.id, event.target.getLatLng()))
-      .bindPopup(waypointPopupHtml(waypoint, s14Key, s17Key, hasS17Duplicates, inactive, plausibility))
+      .bindPopup(waypointPopupHtml(waypoint))
       .on("popupopen", () => wireWaypointPopup(marker, waypoint.id))
       .addTo(state.waypointGroup);
 
@@ -743,29 +743,17 @@ function createWaypointListItem(waypoint, s17Key, hasS17Duplicates, inactive, pl
   return item;
 }
 
-function waypointPopupHtml(waypoint, s14Key, s17Key, hasS17Duplicates, inactive, plausibility) {
-  const stateText = hasS17Duplicates
-    ? waypoint.active
-      ? "Aktiver Eintrag in dieser S17-Zelle"
-      : "Inaktiv: anderer Eintrag in dieser S17-Zelle ist aktiv"
-    : "S17-Zelle ist in deiner Liste frei";
+function waypointPopupHtml(waypoint) {
   return `
     <div class="waypoint-popup">
       <strong>${escapeHtml(waypoint.name)}</strong>
       <label>
         <span>Name</span>
-        <input type="text" value="${escapeHtml(waypoint.name)}" data-waypoint-name />
+        <input type="text" value="${escapeHtml(waypoint.name)}" data-waypoint-name data-original-name="${escapeHtml(waypoint.name)}" />
       </label>
-      <span>${waypoint.type === "arena" ? "Arena" : "Stop"} · ${waypoint.lat.toFixed(5)}, ${waypoint.lng.toFixed(5)}</span>
-      <span>S14: ${escapeHtml(s14Key)}</span>
-      <span>S17: ${escapeHtml(s17Key)}</span>
-      <em>${escapeHtml(stateText)}</em>
-      <span>${escapeHtml(plausibility)}</span>
-      <em>Zum Korrigieren den Marker auf der Karte ziehen.</em>
       <div>
-        <button type="button" data-waypoint-action="rename">Name speichern</button>
+        <button type="button" data-waypoint-action="rename" hidden>Speichern</button>
         <button type="button" data-waypoint-action="focus">Fokus</button>
-        <button type="button" data-waypoint-action="move">Auf Kartenmitte verschieben</button>
         <button type="button" data-waypoint-action="delete">Löschen</button>
       </div>
     </div>
@@ -776,12 +764,18 @@ function wireWaypointPopup(marker, id) {
   const popup = marker.getPopup();
   const root = popup && popup.getElement();
   if (!root) return;
+  const nameInput = root.querySelector("[data-waypoint-name]");
+  const saveButton = root.querySelector('[data-waypoint-action="rename"]');
+  if (nameInput && saveButton) {
+    nameInput.addEventListener("input", () => {
+      saveButton.hidden = nameInput.value.trim() === nameInput.getAttribute("data-original-name");
+    });
+  }
   root.querySelectorAll("[data-waypoint-action]").forEach((button) => {
     button.addEventListener("click", () => {
       const action = button.getAttribute("data-waypoint-action");
       if (action === "rename") renameWaypointFromPopup(id, root);
       if (action === "focus") focusWaypoint(id);
-      if (action === "move") moveWaypointToCenter(id);
       if (action === "delete") {
         removeWaypoint(id);
         map.closePopup();
@@ -809,13 +803,6 @@ function focusWaypoint(id) {
   const waypoint = state.waypoints.find((entry) => entry.id === id);
   if (!waypoint) return;
   moveToLocation(waypoint.lat, waypoint.lng, waypoint.name, { level: 14 });
-}
-
-function moveWaypointToCenter(id) {
-  const waypoint = state.waypoints.find((entry) => entry.id === id);
-  if (!waypoint) return;
-  const center = map.getCenter();
-  moveWaypointToLatLng(id, center, { focus: true });
 }
 
 function moveWaypointToLatLng(id, latLng, options = {}) {
