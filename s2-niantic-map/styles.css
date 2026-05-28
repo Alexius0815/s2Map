@@ -166,13 +166,13 @@ body {
 
 .leaflet-control-zoom a {
   display: block;
-  width: 40px;
-  height: 40px;
+  width: 32px;
+  height: 32px;
   color: #fff;
   text-align: center;
   text-decoration: none;
-  line-height: 40px;
-  font-size: 20px;
+  line-height: 32px;
+  font-size: 16px;
   font-weight: 700;
   background: #1d8cf8;
 }
@@ -491,10 +491,10 @@ button {
 
 .icon-button {
   display: grid;
-  width: 44px;
-  height: 44px;
+  width: 36px;
+  height: 36px;
   place-items: center;
-  flex: 0 0 44px;
+  flex: 0 0 36px;
   border: 2px solid rgba(255, 255, 255, 0.9);
   border-radius: 8px;
   color: #0956b6;
@@ -504,13 +504,13 @@ button {
 }
 
 .icon-button span {
-  font-size: 24px;
+  font-size: 19px;
   line-height: 1;
 }
 
 .icon-button.compact {
-  width: 42px;
-  height: 42px;
+  width: 34px;
+  height: 34px;
   box-shadow: none;
 }
 
@@ -657,14 +657,14 @@ button {
   top: max(82px, calc(env(safe-area-inset-top) + 82px));
   left: 12px;
   display: none;
-  width: 48px;
-  height: 48px;
+  width: 38px;
+  height: 38px;
   border: 2px solid rgba(255, 255, 255, 0.9);
   border-radius: 8px;
   color: #0956b6;
   background: #fff;
   box-shadow: 0 12px 28px rgba(12, 47, 92, 0.2);
-  font-size: 36px;
+  font-size: 29px;
 }
 
 .location-panel-toggle.is-visible {
@@ -744,31 +744,35 @@ button {
   position: absolute;
   z-index: 520;
   bottom: max(18px, env(safe-area-inset-bottom));
-  min-width: 84px;
-  min-height: 44px;
+  min-width: 76px;
+  min-height: 36px;
   border-radius: 8px;
   color: #fff;
   background: #1d8cf8;
-  box-shadow: 0 5px 0 #0956b6, 0 14px 28px rgba(12, 47, 92, 0.2);
+  box-shadow: 0 4px 0 #0956b6, 0 12px 24px rgba(12, 47, 92, 0.2);
+  font-size: 12px;
   font-weight: 900;
 }
 
 .panel-toggle {
   right: 14px;
+  width: 86px;
 }
 
 .cell-panel-toggle {
-  right: 250px;
+  right: 198px;
+  width: 76px;
   color: #102033;
   background: #92e0ff;
-  box-shadow: 0 5px 0 #16a3d7, 0 14px 28px rgba(12, 47, 92, 0.2);
+  box-shadow: 0 4px 0 #16a3d7, 0 12px 24px rgba(12, 47, 92, 0.2);
 }
 
 .weather-panel-toggle {
   right: 108px;
+  width: 82px;
   color: #102033;
   background: #33d1a0;
-  box-shadow: 0 5px 0 #0f766e, 0 14px 28px rgba(12, 47, 92, 0.2);
+  box-shadow: 0 4px 0 #0f766e, 0 12px 24px rgba(12, 47, 92, 0.2);
 }
 
 .help-toggle {
@@ -1619,18 +1623,23 @@ button {
 
   .cell-panel-toggle {
     right: auto;
-    left: 64px;
-    min-width: 70px;
+    left: 54px;
+    width: 76px;
+    min-width: 76px;
   }
 
   .weather-panel-toggle {
     right: auto;
-    left: 142px;
-    min-width: 74px;
+    left: 138px;
+    width: 82px;
+    min-width: 82px;
   }
 
   .panel-toggle {
-    min-width: 78px;
+    right: auto;
+    left: 228px;
+    width: 86px;
+    min-width: 86px;
   }
 
   .help-toggle {
