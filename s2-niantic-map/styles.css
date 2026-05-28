@@ -882,7 +882,7 @@ button {
 
 .weather-controls {
   display: grid;
-  grid-template-columns: 1fr 88px;
+  grid-template-columns: 1fr auto;
   gap: 10px;
   align-items: center;
   padding: 11px;
@@ -908,18 +908,56 @@ button {
   line-height: 1.35;
 }
 
-.weather-controls button {
-  min-height: 40px;
-  border-radius: 8px;
-  color: #fff;
-  background: #1d8cf8;
-  box-shadow: 0 3px 0 #0956b6;
-  font-weight: 900;
+.switch-control {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  width: 66px;
+  height: 38px;
 }
 
-.weather-controls button.is-active {
-  background: var(--danger);
-  box-shadow: 0 3px 0 #b91c1c;
+.switch-control input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.switch-control span {
+  position: relative;
+  width: 58px;
+  height: 32px;
+  border: 2px solid rgba(9, 86, 182, 0.2);
+  border-radius: 999px;
+  background: #d8e5f1;
+  box-shadow: inset 0 2px 5px rgba(12, 47, 92, 0.14);
+}
+
+.switch-control span::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 4px 10px rgba(12, 47, 92, 0.24);
+  transition: transform 160ms ease;
+}
+
+.switch-control input:checked + span {
+  border-color: rgba(15, 118, 110, 0.38);
+  background: #33d1a0;
+}
+
+.switch-control input:checked + span::after {
+  transform: translateX(26px);
+}
+
+.switch-control input:focus-visible + span {
+  outline: 3px solid rgba(29, 140, 248, 0.28);
+  outline-offset: 3px;
 }
 
 .waypoint-controls {
@@ -1157,6 +1195,11 @@ button {
 
 .waypoint-popup button[data-waypoint-action="delete"] {
   background: var(--danger);
+}
+
+.waypoint-tooltip {
+  border-color: rgba(239, 59, 120, 0.28);
+  font-weight: 900;
 }
 
 .legend {

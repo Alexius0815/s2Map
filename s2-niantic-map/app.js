@@ -42,6 +42,7 @@ const state = {
   labels: new Map(),
   weather: new Map(),
   weatherPending: new Set(),
+  weatherFailed: new Set(),
   weatherEnabled: false,
   waypointGroup: null,
   waypoints: [],
@@ -74,6 +75,10 @@ L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
   maxZoom: 19,
   attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap-Mitwirkende</a>',
 }).addTo(map);
+
+map.createPane("waypointPane");
+map.getPane("waypointPane").style.zIndex = 625;
+map.getPane("waypointPane").style.pointerEvents = "auto";
 
 const ui = {
   layerList: document.querySelector("#layerList"),
@@ -160,7 +165,7 @@ ui.locationPanelToggle.addEventListener("click", () => setLocationPanelCollapsed
 ui.closeLocationPanel.addEventListener("click", () => setLocationPanelCollapsed(true));
 ui.ownLocationButton.addEventListener("click", locateUser);
 ui.locationGoButton.addEventListener("click", jumpToLocation);
-ui.weatherButton.addEventListener("click", toggleWeather);
+ui.weatherButton.addEventListener("change", toggleWeather);
 ui.addWaypointButton.addEventListener("click", addWaypointFromForm);
 ui.addWaypointHereButton.addEventListener("click", addWaypointAtCenter);
 ui.exportWaypointsButton.addEventListener("click", exportWaypoints);
@@ -362,33 +367,44 @@ function renderCells() {
 }
 
 function toggleWeather() {
-  state.weatherEnabled = !state.weatherEnabled;
-  ui.weatherButton.textContent = state.weatherEnabled ? "Aus" : "Laden";
-  ui.weatherButton.classList.toggle("is-active", state.weatherEnabled);
+  state.weatherEnabled = ui.weatherButton.checked;
+  if (state.weatherEnabled) {
+    state.weatherFailed.clear();
+  }
   ui.weatherStatus.textContent = state.weatherEnabled
-    ? "Lade Open-Meteo fuer sichtbare L10-Zellen ..."
-    : "Open-Meteo-Daten sind aus";
+    ? `An · ${weatherSourceText()}`
+    : `Aus · ${weatherSourceText()}`;
   scheduleRender();
+}
+
+function weatherSourceText() {
+  return "Quelle: Open-Meteo über den eigenen API-Proxy";
 }
 
 function fetchWeatherForCells(cells) {
   const missing = cells
-    .filter((cell) => !state.weather.has(cellKey(cell)) && !state.weatherPending.has(cellKey(cell)))
+    .filter((cell) => {
+      const key = cellKey(cell);
+      return !state.weather.has(key) && !state.weatherPending.has(key) && !state.weatherFailed.has(key);
+    })
     .slice(0, 18);
 
   const loaded = cells.filter((cell) => state.weather.has(cellKey(cell))).length;
+  const failed = cells.filter((cell) => state.weatherFailed.has(cellKey(cell))).length;
   const pending = state.weatherPending.size;
 
   if (!missing.length) {
     ui.weatherStatus.textContent = loaded
-      ? `${loaded} Wetterzellen geladen`
+      ? `${loaded} Wetterzellen geladen · ${weatherSourceText()}`
       : pending
-        ? `${pending} Wetterzellen werden geladen ...`
-        : "Keine neuen Wetterzellen sichtbar";
+        ? `${pending} Wetterzellen werden geladen · ${weatherSourceText()}`
+        : failed
+          ? `Wetterdaten nicht erreichbar · ${weatherSourceText()}`
+          : `Keine neuen Wetterzellen sichtbar · ${weatherSourceText()}`;
     return;
   }
 
-  ui.weatherStatus.textContent = `${loaded} geladen, ${missing.length} neue Abfragen ...`;
+  ui.weatherStatus.textContent = `${loaded} geladen, ${missing.length} neue Abfragen · ${weatherSourceText()}`;
   missing.forEach((cell) => fetchWeatherForCell(cell));
 }
 
@@ -412,9 +428,10 @@ async function fetchWeatherForCell(cell) {
     }
 
     state.weather.set(key, data);
-    ui.weatherStatus.textContent = `${state.weather.size} Wetterzellen geladen`;
+    ui.weatherStatus.textContent = `${state.weather.size} Wetterzellen geladen · ${weatherSourceText()}`;
   } catch (error) {
-    ui.weatherStatus.textContent = error.message;
+    state.weatherFailed.add(key);
+    ui.weatherStatus.textContent = `${error.message} · ${weatherSourceText()}`;
   } finally {
     state.weatherPending.delete(key);
     scheduleRender();
@@ -574,6 +591,8 @@ function renderWaypoints() {
     const plausibility = gymPlausibilityForWaypoint(waypoint);
 
     const marker = L.circleMarker([waypoint.lat, waypoint.lng], {
+      pane: "waypointPane",
+      interactive: true,
       radius: waypoint.type === "arena" ? 10 : 8,
       color: "#ffffff",
       weight: 3,
@@ -585,7 +604,11 @@ function renderWaypoints() {
       .bindTooltip(`${waypoint.name} · ${waypoint.type === "arena" ? "Arena" : "Stop"}`, {
         sticky: true,
         direction: "top",
+        className: "waypoint-tooltip",
       })
+      .on("mouseover", () => marker.openTooltip())
+      .on("focus", () => marker.openTooltip())
+      .on("touchstart", () => marker.openTooltip())
       .bindPopup(waypointPopupHtml(waypoint, s14Key, s17Key, hasS17Duplicates, inactive, plausibility))
       .on("popupopen", () => wireWaypointPopup(marker, waypoint.id))
       .addTo(state.waypointGroup);
@@ -1185,7 +1208,7 @@ function locateUser(options = {}) {
   ui.locationStatus.textContent = "Suche eigene Location ...";
   navigator.geolocation.getCurrentPosition(
     (position) => {
-      moveToLocation(position.coords.latitude, position.coords.longitude, "Eigene Location");
+      moveToLocation(position.coords.latitude, position.coords.longitude, "Eigene Location", { level: 14 });
       if (options.initial) {
         setLocationPanelCollapsed(true);
       }
@@ -1330,7 +1353,7 @@ function jumpToCoordinates() {
 }
 
 function moveToLocation(lat, lng, label, options = {}) {
-  focusS2CellForLocation(lat, lng, options.level || 10);
+  focusS2CellForLocation(lat, lng, options.level || 14);
   ui.locationStatus.textContent = label;
   if (!state.locationMarker) {
     state.locationMarker = L.circleMarker([lat, lng], {
@@ -1350,9 +1373,9 @@ function focusS2CellForLocation(lat, lng, level) {
   const cell = latLngToCell(lat, lng, level);
   const polygon = cellPolygon(cell.face, cell.i, cell.j, cell.level);
   const bounds = L.latLngBounds(polygon);
-  const padding = level >= 14 ? [42, 150] : [36, 120];
-  const baseZoom = map.getBoundsZoom(bounds.pad(0.04), false, padding);
-  const targetZoom = Math.min(level >= 14 ? 15 : 12.5, baseZoom + 0.25);
+  const padding = level >= 14 ? [28, 96] : [28, 92];
+  const baseZoom = map.getBoundsZoom(bounds.pad(0.02), false, padding);
+  const targetZoom = Math.min(level >= 14 ? 16 : 13.25, baseZoom + 0.8);
 
   map.setView([lat, lng], targetZoom, {
     animate: true,
