@@ -565,9 +565,9 @@ function buildLabel(layer, weather, cell = null, showS14Status = false) {
 function buildS14StatusLabel(cell) {
   const validation = s14GymValidationForCell(cellKey(cell));
   const text = validation.activeCount
-    ? `${validation.arenaCount}/${validation.expected} Arena · ${validation.activeCount} POI`
+    ? `${validation.arenaCount}/${validation.expected} · ${validation.activeCount}`
     : "0 POI";
-  return `<span class="s2-label is-s14-status is-${escapeHtml(validation.status)}">S14 · ${escapeHtml(text)}</span>`;
+  return `<span class="s2-label is-s14-status is-${escapeHtml(validation.status)}">${escapeHtml(text)}</span>`;
 }
 
 function formatBoostedTypes(weather) {
@@ -930,12 +930,12 @@ function s14CellPopupHtml(cell) {
         <strong>S14 ${escapeHtml(shortCellKey(key))}</strong>
         <span>${escapeHtml(statusLabel)}</span>
       </div>
-      <p>${escapeHtml(validation.text)}</p>
       <dl>
-        <div><dt>Aktive POI</dt><dd>${validation.activeCount}</dd></div>
+        <div><dt>POI</dt><dd>${validation.activeCount}</dd></div>
         <div><dt>Arenen</dt><dd>${validation.arenaCount}/${validation.expected}</dd></div>
-        <div><dt>Nächste Arena</dt><dd>${validation.next ? `${validation.missing} bis ${validation.next}` : "-"}</dd></div>
+        <div><dt>Nächste</dt><dd>${validation.next ? `${validation.missing}/${validation.next}` : "-"}</dd></div>
       </dl>
+      <p>${escapeHtml(validation.text)}</p>
     </div>
   `;
 }
