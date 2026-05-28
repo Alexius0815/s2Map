@@ -1085,6 +1085,50 @@ button {
   box-shadow: none;
 }
 
+.waypoint-popup {
+  display: grid;
+  gap: 5px;
+  min-width: 220px;
+}
+
+.waypoint-popup strong {
+  color: var(--ink);
+  font-size: 14px;
+}
+
+.waypoint-popup span,
+.waypoint-popup em {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.waypoint-popup em {
+  color: #0956b6;
+  font-style: normal;
+  font-weight: 900;
+}
+
+.waypoint-popup div {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 6px;
+  margin-top: 5px;
+}
+
+.waypoint-popup button {
+  min-height: 34px;
+  border-radius: 8px;
+  color: #fff;
+  background: #1d8cf8;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.waypoint-popup button[data-waypoint-action="delete"] {
+  background: var(--danger);
+}
+
 .legend {
   padding-top: 12px;
   border-top: 1px solid var(--line);

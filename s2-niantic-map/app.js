@@ -206,7 +206,7 @@ registerServiceWorker();
 updateInstallHelp();
 scheduleRender();
 window.setTimeout(requestInitialLocation, 300);
-window.setTimeout(focusActiveS14Cell, 700);
+window.setTimeout(focusActiveS14Cell, 1200);
 
 function setPanelCollapsed(collapsed) {
   state.collapsed = collapsed;
@@ -549,30 +549,21 @@ function renderWaypoints() {
     const inactive = hasS17Duplicates && !waypoint.active;
     const plausibility = gymPlausibilityForWaypoint(waypoint);
 
-    L.circleMarker([waypoint.lat, waypoint.lng], {
+    const marker = L.circleMarker([waypoint.lat, waypoint.lng], {
       radius: waypoint.type === "arena" ? 10 : 8,
       color: "#ffffff",
       weight: 3,
       fillColor: waypointMarkerColor(waypoint, inactive),
       fillOpacity: inactive ? 0.42 : 1,
       opacity: inactive ? 0.55 : 1,
-    })
-      .bindTooltip(
-        [
-          waypoint.name,
-          waypoint.type === "arena" ? "Arena" : "Stop",
-          `${waypoint.lat.toFixed(5)}, ${waypoint.lng.toFixed(5)}`,
-          `S14: ${s14Key}`,
-          `S17: ${s17Key}`,
-          hasS17Duplicates
-            ? waypoint.active
-              ? "Aktiver Eintrag in dieser S17-Zelle"
-              : "Inaktiv: anderer Eintrag in dieser S17-Zelle ist aktiv"
-            : "S17-Zelle ist in deiner Liste frei",
-          plausibility,
-        ].join("<br>"),
-        { sticky: true, direction: "top" },
-      )
+    });
+    marker
+      .bindTooltip(`${waypoint.name} · ${waypoint.type === "arena" ? "Arena" : "Stop"}`, {
+        sticky: true,
+        direction: "top",
+      })
+      .bindPopup(waypointPopupHtml(waypoint, s14Key, s17Key, hasS17Duplicates, inactive, plausibility))
+      .on("popupopen", () => wireWaypointPopup(marker, waypoint.id))
       .addTo(state.waypointGroup);
 
     ui.waypointList.appendChild(createWaypointListItem(waypoint, s17Key, hasS17Duplicates, inactive, plausibility));
@@ -618,6 +609,72 @@ function createWaypointListItem(waypoint, s17Key, hasS17Duplicates, inactive, pl
 
   item.append(text, actions);
   return item;
+}
+
+function waypointPopupHtml(waypoint, s14Key, s17Key, hasS17Duplicates, inactive, plausibility) {
+  const stateText = hasS17Duplicates
+    ? waypoint.active
+      ? "Aktiver Eintrag in dieser S17-Zelle"
+      : "Inaktiv: anderer Eintrag in dieser S17-Zelle ist aktiv"
+    : "S17-Zelle ist in deiner Liste frei";
+  return `
+    <div class="waypoint-popup">
+      <strong>${escapeHtml(waypoint.name)}</strong>
+      <span>${waypoint.type === "arena" ? "Arena" : "Stop"} · ${waypoint.lat.toFixed(5)}, ${waypoint.lng.toFixed(5)}</span>
+      <span>S14: ${escapeHtml(s14Key)}</span>
+      <span>S17: ${escapeHtml(s17Key)}</span>
+      <em>${escapeHtml(stateText)}</em>
+      <span>${escapeHtml(plausibility)}</span>
+      <div>
+        <button type="button" data-waypoint-action="focus">Fokus</button>
+        <button type="button" data-waypoint-action="move">Auf Kartenmitte verschieben</button>
+        <button type="button" data-waypoint-action="delete">Löschen</button>
+      </div>
+    </div>
+  `;
+}
+
+function wireWaypointPopup(marker, id) {
+  const popup = marker.getPopup();
+  const root = popup && popup.getElement();
+  if (!root) return;
+  root.querySelectorAll("[data-waypoint-action]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const action = button.getAttribute("data-waypoint-action");
+      if (action === "focus") focusWaypoint(id);
+      if (action === "move") moveWaypointToCenter(id);
+      if (action === "delete") {
+        removeWaypoint(id);
+        map.closePopup();
+      }
+    });
+  });
+}
+
+function focusWaypoint(id) {
+  const waypoint = state.waypoints.find((entry) => entry.id === id);
+  if (!waypoint) return;
+  moveToLocation(waypoint.lat, waypoint.lng, waypoint.name, { level: 14 });
+}
+
+function moveWaypointToCenter(id) {
+  const waypoint = state.waypoints.find((entry) => entry.id === id);
+  if (!waypoint) return;
+  const center = map.getCenter();
+  waypoint.lat = center.lat;
+  waypoint.lng = center.lng;
+  enforceActiveWaypoints();
+  saveWaypoints();
+  renderWaypoints();
+  moveToLocation(waypoint.lat, waypoint.lng, waypoint.name, { level: 14 });
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;");
 }
 
 function setActiveWaypoint(id) {
@@ -734,13 +791,7 @@ function csvValue(value) {
 function focusActiveS14Cell() {
   const waypoint = state.waypoints.find((entry) => entry.active) || state.waypoints[0];
   if (!waypoint) return;
-  const cell = latLngToCell(waypoint.lat, waypoint.lng, 14);
-  const bounds = L.latLngBounds(cellPolygon(cell.face, cell.i, cell.j, cell.level));
-  map.fitBounds(bounds.pad(0.08), {
-    animate: true,
-    maxZoom: 14,
-    padding: [30, 120],
-  });
+  focusS2CellForLocation(waypoint.lat, waypoint.lng, 14);
 }
 
 function shortCellKey(key) {
@@ -1084,8 +1135,8 @@ function jumpToCoordinates() {
   moveToLocation(lat, lng, `${lat.toFixed(5)}, ${lng.toFixed(5)}`);
 }
 
-function moveToLocation(lat, lng, label) {
-  fitWeatherCellForLocation(lat, lng);
+function moveToLocation(lat, lng, label, options = {}) {
+  focusS2CellForLocation(lat, lng, options.level || 10);
   ui.locationStatus.textContent = label;
   if (!state.locationMarker) {
     state.locationMarker = L.circleMarker([lat, lng], {
@@ -1101,12 +1152,13 @@ function moveToLocation(lat, lng, label) {
   state.locationMarker.bindTooltip(label, { permanent: false, direction: "top" });
 }
 
-function fitWeatherCellForLocation(lat, lng) {
-  const cell = latLngToCell(lat, lng, 10);
+function focusS2CellForLocation(lat, lng, level) {
+  const cell = latLngToCell(lat, lng, level);
   const polygon = cellPolygon(cell.face, cell.i, cell.j, cell.level);
   const bounds = L.latLngBounds(polygon);
-  const baseZoom = map.getBoundsZoom(bounds.pad(0.04), false, [36, 120]);
-  const targetZoom = Math.min(12.5, baseZoom + 0.25);
+  const padding = level >= 14 ? [42, 150] : [36, 120];
+  const baseZoom = map.getBoundsZoom(bounds.pad(0.04), false, padding);
+  const targetZoom = Math.min(level >= 14 ? 15 : 12.5, baseZoom + 0.25);
 
   map.setView([lat, lng], targetZoom, {
     animate: true,
