@@ -1,3 +1,19 @@
+const APP_VERSION = "1.0.0";
+const APP_RELEASE_DATE = "29.05.2026";
+const APP_CHANGELOG = [
+  {
+    version: "1.0.0",
+    date: "29.05.2026",
+    changes: [
+      "S2-Zellen für Wetter, S14-Planung und S17-Waypoints",
+      "Waypoint-Import, Export, Bearbeiten und lokale Speicherung",
+      "GPS-Following mit 80-m-Drehradius und Blickrichtungsanzeige",
+      "Wetterboost-Overlay mit reduzierter S10-Anzeige",
+      "PWA-Installationshilfe, Rechtstexte und App-Info",
+    ],
+  },
+];
+
 const layers = [
   {
     id: "weather",
@@ -133,6 +149,10 @@ const ui = {
   helpPanel: document.querySelector("#helpPanel"),
   closeHelpPanel: document.querySelector("#closeHelpPanel"),
   brandButton: document.querySelector("#brandButton"),
+  versionBadge: document.querySelector("#versionBadge"),
+  appVersion: document.querySelector("#appVersion"),
+  appReleaseDate: document.querySelector("#appReleaseDate"),
+  changelogList: document.querySelector("#changelogList"),
   aboutPanel: document.querySelector("#aboutPanel"),
   closeAboutPanel: document.querySelector("#closeAboutPanel"),
   installButton: document.querySelector("#installButton"),
@@ -177,6 +197,7 @@ layers.forEach((layer) => {
 });
 
 state.waypointGroup = L.layerGroup().addTo(map);
+renderAppMetadata();
 loadWaypoints();
 
 ui.panelToggle.addEventListener("click", () => setPanelCollapsed(!state.collapsed));
@@ -319,6 +340,23 @@ function setAboutPanelCollapsed(collapsed) {
     setPanelCollapsed(true);
     setHelpPanelCollapsed(true);
   }
+}
+
+function renderAppMetadata() {
+  const versionText = `V${APP_VERSION}`;
+  if (ui.versionBadge) ui.versionBadge.textContent = versionText;
+  if (ui.appVersion) ui.appVersion.textContent = versionText;
+  if (ui.appReleaseDate) ui.appReleaseDate.textContent = APP_RELEASE_DATE;
+  if (!ui.changelogList) return;
+
+  ui.changelogList.innerHTML = APP_CHANGELOG.map((entry) => `
+    <article class="changelog-entry">
+      <h3>${escapeHtml(`V${entry.version}`)} <span>${escapeHtml(entry.date)}</span></h3>
+      <ul>
+        ${entry.changes.map((change) => `<li>${escapeHtml(change)}</li>`).join("")}
+      </ul>
+    </article>
+  `).join("");
 }
 
 function setLocationConsentVisible(visible) {
