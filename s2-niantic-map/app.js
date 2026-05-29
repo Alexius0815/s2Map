@@ -368,6 +368,7 @@ function scheduleRender() {
 function renderCells() {
   const zoom = map.getZoom();
   const viewBounds = map.getBounds();
+  const weatherLabelKey = state.weatherEnabled ? currentWeatherCellKey() : null;
   let totalCells = 0;
   let visibleWeatherCells = [];
   const activeLayers = layers.filter((layer) => state.active.has(layer.id));
@@ -416,7 +417,7 @@ function renderCells() {
         weight: lineWeight,
         opacity: 0.9,
         fillColor: s14StatusColor || (hasWaypoint ? "#475569" : weatherColor),
-        fillOpacity: s14StatusColor ? 0.18 : hasWaypoint ? 0.2 : layer.id === "weather" ? 0.04 : 0,
+        fillOpacity: s14StatusColor ? 0.1 : hasWaypoint ? 0.2 : layer.id === "weather" ? 0.04 : 0,
         interactive: true,
       }).bindTooltip(buildTooltip(layer, cell, weather), {
         sticky: true,
@@ -428,17 +429,19 @@ function renderCells() {
       leafletPolygon.addTo(state.groups.get(layer.id));
 
       const shouldShowS14Status = layer.id === "gym" && occupiedS14Keys.has(key);
-      const shouldShowLabel = shouldShowS14Status || ((zoom >= layer.labelZoom || weather) && shouldLabelCell(cell, layer.level, zoom));
+      const shouldShowWeatherLabel = layer.id === "weather" && weather && key === weatherLabelKey;
+      const shouldShowLabel = shouldShowS14Status || shouldShowWeatherLabel || ((zoom >= layer.labelZoom && !weather) && shouldLabelCell(cell, layer.level, zoom));
       if (shouldShowLabel) {
-        const center = weather ? visibleLabelPosition(polygon, viewBounds) : cellCenter(cell.face, cell.i, cell.j, cell.level);
+        const center = shouldShowWeatherLabel ? visibleLabelPosition(polygon, viewBounds) : cellCenter(cell.face, cell.i, cell.j, cell.level);
         const labelHtml = buildLabel(layer, weather, cell, shouldShowS14Status);
+        const weatherIconSize = shouldShowWeatherLabel ? weatherLabelIconSize(zoom) : null;
         L.marker(center, {
           interactive: layer.id === "gym",
           icon: L.divIcon({
             className: "",
             html: labelHtml,
-            iconSize: layer.id === "gym" ? [92, 22] : weather ? [74, 18] : [34, 18],
-            iconAnchor: layer.id === "gym" ? [46, 11] : weather ? [37, 9] : [17, 9],
+            iconSize: layer.id === "gym" ? [92, 22] : weatherIconSize || [34, 18],
+            iconAnchor: layer.id === "gym" ? [46, 11] : weatherIconSize ? [weatherIconSize[0] / 2, weatherIconSize[1] / 2] : [17, 9],
           }),
         })
           .on("click", () => L.popup({ className: "s14-cell-popup-wrapper", autoPanPadding: [18, 18] })
@@ -478,6 +481,17 @@ function occupiedS14CellKeys() {
       .filter((waypoint) => waypoint.active)
       .map((waypoint) => cellKey(latLngToCell(waypoint.lat, waypoint.lng, 14))),
   );
+}
+
+function currentWeatherCellKey() {
+  const center = map.getCenter();
+  return cellKey(latLngToCell(center.lat, center.lng, 10));
+}
+
+function weatherLabelIconSize(zoom) {
+  if (zoom >= 17) return [108, 24];
+  if (zoom >= 14) return [94, 22];
+  return [78, 19];
 }
 
 function wireS14CellPopup(polygon, cell, lineWeight) {
