@@ -149,11 +149,8 @@ const ui = {
   helpPanel: document.querySelector("#helpPanel"),
   closeHelpPanel: document.querySelector("#closeHelpPanel"),
   brandButton: document.querySelector("#brandButton"),
-  versionButton: document.querySelector("#versionButton"),
-  versionInfoRow: document.querySelector("#versionInfoRow"),
   appVersion: document.querySelector("#appVersion"),
   appReleaseDate: document.querySelector("#appReleaseDate"),
-  changelogRow: document.querySelector("#changelogRow"),
   changelogList: document.querySelector("#changelogList"),
   aboutPanel: document.querySelector("#aboutPanel"),
   closeAboutPanel: document.querySelector("#closeAboutPanel"),
@@ -224,7 +221,6 @@ ui.helpToggle.addEventListener("click", () => setHelpPanelCollapsed(!ui.helpPane
 ui.closeHelpPanel.addEventListener("click", () => setHelpPanelCollapsed(true));
 ui.brandButton.addEventListener("click", () => setAboutPanelCollapsed(!ui.aboutPanel.classList.contains("is-collapsed")));
 ui.brandButton.addEventListener("mouseenter", () => setAboutPanelCollapsed(false));
-ui.versionButton.addEventListener("click", openVersionInfo);
 ui.closeAboutPanel.addEventListener("click", () => setAboutPanelCollapsed(true));
 ui.installButton.addEventListener("click", installApp);
 ui.allowLocationButton.addEventListener("click", () => {
@@ -337,7 +333,6 @@ function setHelpPanelCollapsed(collapsed) {
 function setAboutPanelCollapsed(collapsed) {
   ui.aboutPanel.classList.toggle("is-collapsed", collapsed);
   ui.brandButton.setAttribute("aria-expanded", String(!collapsed));
-  ui.versionButton.setAttribute("aria-expanded", String(!collapsed));
   if (!collapsed) {
     setCellPanelCollapsed(true);
     setWeatherPanelCollapsed(true);
@@ -346,18 +341,8 @@ function setAboutPanelCollapsed(collapsed) {
   }
 }
 
-function openVersionInfo() {
-  setAboutPanelCollapsed(false);
-  window.setTimeout(() => {
-    ui.versionInfoRow.scrollIntoView({ block: "nearest", behavior: "smooth" });
-    ui.changelogRow.classList.add("is-highlighted");
-    window.setTimeout(() => ui.changelogRow.classList.remove("is-highlighted"), 1400);
-  }, 80);
-}
-
 function renderAppMetadata() {
   const versionText = `V${APP_VERSION}`;
-  if (ui.versionButton) ui.versionButton.textContent = versionText;
   if (ui.appVersion) ui.appVersion.textContent = versionText;
   if (ui.appReleaseDate) ui.appReleaseDate.textContent = APP_RELEASE_DATE;
   if (!ui.changelogList) return;

@@ -310,20 +310,6 @@ button {
     transform 140ms ease;
 }
 
-.version-badge {
-  align-self: center;
-  flex: 0 0 auto;
-  padding: 4px 7px;
-  border: 1px solid rgba(15, 118, 110, 0.22);
-  border-radius: 999px;
-  color: #0f766e;
-  background: rgba(51, 209, 160, 0.16);
-  font-size: 10px;
-  font-weight: 1000;
-  line-height: 1;
-  pointer-events: auto;
-}
-
 .brand:hover,
 .brand:focus-visible {
   border-color: var(--spark);
@@ -455,16 +441,6 @@ button {
 
 .about-list .changelog-row {
   align-items: start;
-  transition:
-    border-color 180ms ease,
-    background 180ms ease,
-    box-shadow 180ms ease;
-}
-
-.about-list .changelog-row.is-highlighted {
-  border-color: rgba(255, 203, 5, 0.75);
-  background: #fff8d6;
-  box-shadow: 0 0 0 3px rgba(255, 203, 5, 0.22);
 }
 
 .about-list dt {
