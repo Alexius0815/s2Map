@@ -155,7 +155,10 @@ layers.forEach((layer) => {
   title.textContent = layer.title;
   description.textContent = layer.description;
   info.title = layer.description;
-  info.addEventListener("click", () => node.classList.toggle("is-open"));
+  info.addEventListener("click", () => {
+    const isOpen = node.classList.toggle("is-open");
+    info.setAttribute("aria-expanded", String(isOpen));
+  });
   input.addEventListener("change", () => {
     if (input.checked) {
       state.active.add(layer.id);
@@ -415,7 +418,7 @@ function renderCells() {
       leafletPolygon.addTo(state.groups.get(layer.id));
 
       const shouldShowS14Status = layer.id === "gym" && occupiedS14Keys.has(key);
-      const shouldShowLabel = shouldShowS14Status || ((zoom >= layer.labelZoom || weather) && shouldLabelCell(cell, layer.level));
+      const shouldShowLabel = shouldShowS14Status || ((zoom >= layer.labelZoom || weather) && shouldLabelCell(cell, layer.level, zoom));
       if (shouldShowLabel) {
         const center = weather ? visibleLabelPosition(polygon, viewBounds) : cellCenter(cell.face, cell.i, cell.j, cell.level);
         const labelHtml = buildLabel(layer, weather, cell, shouldShowS14Status);
@@ -772,13 +775,19 @@ function renderWaypoints() {
       .on("mouseover", () => marker.openTooltip())
       .on("focus", () => marker.openTooltip())
       .on("touchstart", () => marker.openTooltip())
-      .on("dragend", (event) => moveWaypointToLatLng(waypoint.id, event.target.getLatLng()))
+      .on("dragend", (event) => {
+        moveWaypointToLatLng(waypoint.id, event.target.getLatLng());
+        marker.dragging.disable();
+        const element = marker.getElement();
+        if (element) element.classList.remove("is-moving-waypoint");
+      })
       .bindPopup(waypointPopupHtml(waypoint))
       .on("popupopen", () => {
         marker.closeTooltip();
         wireWaypointPopup(marker, waypoint.id);
       })
       .addTo(state.waypointGroup);
+    marker.dragging.disable();
   });
 }
 
@@ -815,6 +824,7 @@ function waypointPopupHtml(waypoint) {
       </div>
       <div class="waypoint-popup-actions">
         <button type="button" data-waypoint-action="save" hidden>Speichern</button>
+        <button type="button" data-waypoint-action="move">Verschieben</button>
         <button type="button" data-waypoint-action="focus">Fokus</button>
         <button type="button" data-waypoint-action="delete">Löschen</button>
       </div>
@@ -842,6 +852,7 @@ function wireWaypointPopup(marker, id) {
     button.addEventListener("click", () => {
       const action = button.getAttribute("data-waypoint-action");
       if (action === "save") saveWaypointFromPopup(id, root);
+      if (action === "move") startWaypointMove(marker, id);
       if (action === "focus") focusWaypoint(id);
       if (action === "delete") {
         removeWaypoint(id);
@@ -849,6 +860,17 @@ function wireWaypointPopup(marker, id) {
       }
     });
   });
+}
+
+function startWaypointMove(marker, id) {
+  const waypoint = state.waypoints.find((entry) => entry.id === id);
+  if (!waypoint || !marker.dragging) return;
+  marker.dragging.enable();
+  marker.closePopup();
+  marker.openTooltip();
+  const element = marker.getElement();
+  if (element) element.classList.add("is-moving-waypoint");
+  ui.waypointStatus.textContent = `${waypoint.name}: Marker jetzt ziehen.`;
 }
 
 function selectedWaypointType(root) {
@@ -1602,10 +1624,20 @@ function collectVisibleCells(level) {
   return Array.from(cells.values()).slice(0, 4200);
 }
 
-function shouldLabelCell(cell, level) {
-  if (level >= 17) return (cell.i + cell.j) % 3 === 0;
-  if (level >= 14) return (cell.i + cell.j) % 2 === 0;
+function shouldLabelCell(cell, level, zoom) {
+  if (level >= 17) {
+    const density = zoom >= 18.5 ? 9 : zoom >= 17.75 ? 6 : 4;
+    return positiveModulo(cell.i * 17 + cell.j * 31, density) === 0;
+  }
+  if (level >= 14) {
+    const density = zoom >= 17.5 ? 4 : 2;
+    return positiveModulo(cell.i * 11 + cell.j * 19, density) === 0;
+  }
   return true;
+}
+
+function positiveModulo(value, divisor) {
+  return ((value % divisor) + divisor) % divisor;
 }
 
 function polygonTouchesBounds(polygon, bounds) {
