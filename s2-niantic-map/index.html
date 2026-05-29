@@ -17,7 +17,7 @@
       integrity="sha256-p4NxAoJBhIINfQ3p5SMYk9g3Wg5p0p2mIPlQGLrC6r0="
       crossorigin=""
     />
-    <link rel="stylesheet" href="styles.css?v=waypoints-35" />
+    <link rel="stylesheet" href="styles.css?v=waypoints-36" />
   </head>
   <body class="awaiting-location">
     <main class="app-shell">
@@ -99,6 +99,16 @@
               <span aria-hidden="true">⌖</span>
             </button>
           </div>
+          <div class="location-radius-control">
+            <div>
+              <strong>80-m-Drehradius</strong>
+              <span>Dezent anzeigen, welche Stops/Arenen in Reichweite liegen.</span>
+            </div>
+            <label class="switch-control" aria-label="80-m-Drehradius anzeigen">
+              <input id="locationRadiusButton" type="checkbox" checked />
+              <span></span>
+            </label>
+          </div>
           <p id="locationStatus">Ort oder PLZ suchen</p>
         </aside>
 
@@ -152,6 +162,7 @@
           <details class="help-section">
             <summary>Waypoints</summary>
             <p>Waypoints speichert die App nur lokal auf deinem Gerät. In einer S17-Zelle bleibt ein Eintrag aktiv; weitere Einträge werden ausgegraut und können gezielt aktiviert werden.</p>
+            <p>Der 80-m-Drehradius ist eine Näherung für die aktuelle Stop- und Arena-Reichweite in Pokémon GO. Der Kreis zeigt, welche erfassten Waypoints ungefähr erreichbar sind.</p>
             <p>Import unterstützt CSV aus dieser App, einfache JSON-Listen, Koordinaten-Text, Kartenlinks und Screenshots. Ohne erkannte Koordinate startet „Waypoint hinzufügen“ einen Platzierungsmodus auf der Karte.</p>
           </details>
         </aside>
@@ -264,6 +275,6 @@
       integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
       crossorigin=""
     ></script>
-    <script src="app.js?v=waypoints-35"></script>
+    <script src="app.js?v=waypoints-36"></script>
   </body>
 </html>

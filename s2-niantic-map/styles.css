@@ -996,6 +996,41 @@ button {
   line-height: 1.35;
 }
 
+.location-radius-control {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 9px;
+  border: 1px solid rgba(29, 140, 248, 0.14);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.location-radius-control strong,
+.location-radius-control span {
+  display: block;
+}
+
+.location-radius-control strong {
+  color: var(--ink);
+  font-size: 11.5px;
+  line-height: 1.2;
+}
+
+.location-radius-control span {
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 10.5px;
+  line-height: 1.25;
+}
+
+.location-radius-control .switch-control {
+  flex: 0 0 auto;
+  transform: scale(0.82);
+  transform-origin: right center;
+}
+
 .switch-control {
   position: relative;
   display: inline-grid;

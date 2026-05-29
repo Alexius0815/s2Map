@@ -37,6 +37,7 @@ const layers = [
 const WAYPOINT_STORAGE_KEY = "s2MapsWaypoints";
 const LOCATION_CHOICE_STORAGE_KEY = "s2MapsLocationChoice";
 const OCR_SCRIPT_URL = "https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js";
+const INTERACTION_RADIUS_METERS = 80;
 
 let tesseractLoader = null;
 
@@ -57,6 +58,9 @@ const state = {
   locationCollapsed: false,
   locationMode: "place",
   locationMarker: null,
+  locationRadiusCircle: null,
+  locationFollow: true,
+  locationRadiusVisible: true,
   locationWatchId: null,
   locationTrackStarted: false,
   locationHeading: null,
@@ -105,6 +109,7 @@ const ui = {
   locationStatus: document.querySelector("#locationStatus"),
   locationModes: document.querySelectorAll("input[name='locationMode']"),
   ownLocationButton: document.querySelector("#ownLocationButton"),
+  locationRadiusButton: document.querySelector("#locationRadiusButton"),
   weatherButton: document.querySelector("#weatherButton"),
   weatherStatus: document.querySelector("#weatherStatus"),
   waypointNameInput: document.querySelector("#waypointNameInput"),
@@ -179,6 +184,7 @@ ui.closePanel.addEventListener("click", () => setPanelCollapsed(true));
 ui.locationPanelToggle.addEventListener("click", () => setLocationPanelCollapsed(!state.locationCollapsed));
 ui.closeLocationPanel.addEventListener("click", () => setLocationPanelCollapsed(true));
 ui.ownLocationButton.addEventListener("click", locateUser);
+ui.locationRadiusButton.addEventListener("change", toggleLocationRadius);
 ui.locationGoButton.addEventListener("click", jumpToLocation);
 ui.weatherButton.addEventListener("change", toggleWeather);
 ui.addWaypointButton.addEventListener("click", addWaypointFromForm);
@@ -232,6 +238,10 @@ document.addEventListener("keydown", (event) => {
   if (event.key === "Escape") setAboutPanelCollapsed(true);
 });
 
+map.on("dragstart", disableLocationFollow);
+map.on("zoomstart", (event) => {
+  if (event.originalEvent) disableLocationFollow();
+});
 map.on("moveend zoomend resize", scheduleRender);
 map.on("click", addWaypointFromMapClick);
 window.addEventListener("beforeinstallprompt", handleInstallPrompt);
@@ -1740,6 +1750,7 @@ function locateUser(options = {}) {
   }
 
   state.locationTrackStarted = false;
+  state.locationFollow = true;
   ui.locationStatus.textContent = "GPS wird gestartet ...";
   enableHeadingUpdates();
   state.locationWatchId = navigator.geolocation.watchPosition(
@@ -1754,7 +1765,9 @@ function locateUser(options = {}) {
         firstUpdate,
         heading: state.locationHeading,
       });
-      ui.locationStatus.textContent = "GPS aktiv · Karte folgt deiner Position";
+      ui.locationStatus.textContent = state.locationFollow
+        ? "GPS aktiv · Karte folgt deiner Position"
+        : "GPS aktiv · Karte frei bewegt";
       if (options.initial && firstUpdate) {
         setLocationPanelCollapsed(true);
       }
@@ -1765,6 +1778,23 @@ function locateUser(options = {}) {
     },
     { enableHighAccuracy: true, timeout: 12000, maximumAge: 10000 },
   );
+}
+
+function disableLocationFollow() {
+  if (!state.locationTrackStarted || !state.locationFollow) return;
+  state.locationFollow = false;
+  ui.locationStatus.textContent = "GPS aktiv · Karte frei bewegt";
+}
+
+function toggleLocationRadius() {
+  state.locationRadiusVisible = ui.locationRadiusButton.checked;
+  if (state.locationRadiusCircle) {
+    if (state.locationRadiusVisible) {
+      state.locationRadiusCircle.addTo(map);
+    } else {
+      state.locationRadiusCircle.remove();
+    }
+  }
 }
 
 function locationLabel(position) {
@@ -1939,9 +1969,9 @@ function jumpToCoordinates() {
 
 function moveToLocation(lat, lng, label, options = {}) {
   if (options.tracking) {
-    if (options.firstUpdate) {
+    if (options.firstUpdate && state.locationFollow) {
       focusS2CellForLocation(lat, lng, options.level || 14);
-    } else {
+    } else if (state.locationFollow) {
       const targetZoom = Math.max(map.getZoom(), options.level >= 14 ? 17 : 16);
       map.setView([lat, lng], targetZoom, { animate: true });
     }
@@ -1960,6 +1990,7 @@ function moveToLocation(lat, lng, label, options = {}) {
     state.locationMarker.setIcon(locationIcon(options.heading));
   }
   state.locationMarker.bindTooltip(label, { permanent: false, direction: "top" });
+  updateLocationRadius(lat, lng);
 }
 
 function locationIcon(heading) {
@@ -1972,6 +2003,28 @@ function locationIcon(heading) {
     iconSize: [34, 34],
     iconAnchor: [17, 17],
   });
+}
+
+function updateLocationRadius(lat, lng) {
+  if (!state.locationRadiusCircle) {
+    state.locationRadiusCircle = L.circle([lat, lng], {
+      radius: INTERACTION_RADIUS_METERS,
+      color: "#1d8cf8",
+      weight: 1.25,
+      opacity: 0.45,
+      fillColor: "#1d8cf8",
+      fillOpacity: 0.055,
+      interactive: false,
+    });
+    if (state.locationRadiusVisible) state.locationRadiusCircle.addTo(map);
+    return;
+  }
+
+  state.locationRadiusCircle.setLatLng([lat, lng]);
+  state.locationRadiusCircle.setRadius(INTERACTION_RADIUS_METERS);
+  if (state.locationRadiusVisible && !map.hasLayer(state.locationRadiusCircle)) {
+    state.locationRadiusCircle.addTo(map);
+  }
 }
 
 function focusS2CellForLocation(lat, lng, level) {
