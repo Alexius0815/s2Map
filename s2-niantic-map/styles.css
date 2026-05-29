@@ -401,8 +401,7 @@ button {
   background: #fff8d6;
 }
 
-.about-panel,
-.changelog-panel {
+.about-panel {
   position: absolute;
   z-index: 525;
   top: max(82px, calc(env(safe-area-inset-top) + 82px));
@@ -420,14 +419,11 @@ button {
     opacity 160ms ease,
     transform 160ms ease,
     visibility 160ms ease;
+  max-height: min(76vh, 680px);
+  overflow: auto;
 }
 
-.changelog-panel {
-  width: min(350px, calc(100vw - 24px));
-}
-
-.about-panel.is-collapsed,
-.changelog-panel.is-collapsed {
+.about-panel.is-collapsed {
   visibility: hidden;
   opacity: 0;
   transform: translateY(-12px);
@@ -455,6 +451,20 @@ button {
   border: 1px solid rgba(29, 140, 248, 0.14);
   border-radius: 8px;
   background: #f8fbff;
+}
+
+.about-list .changelog-row {
+  align-items: start;
+  transition:
+    border-color 180ms ease,
+    background 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.about-list .changelog-row.is-highlighted {
+  border-color: rgba(255, 203, 5, 0.75);
+  background: #fff8d6;
+  box-shadow: 0 0 0 3px rgba(255, 203, 5, 0.22);
 }
 
 .about-list dt {
