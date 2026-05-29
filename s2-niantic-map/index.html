@@ -17,7 +17,7 @@
       integrity="sha256-p4NxAoJBhIINfQ3p5SMYk9g3Wg5p0p2mIPlQGLrC6r0="
       crossorigin=""
     />
-    <link rel="stylesheet" href="styles.css?v=waypoints-32" />
+    <link rel="stylesheet" href="styles.css?v=waypoints-33" />
   </head>
   <body class="awaiting-location">
     <main class="app-shell">
@@ -209,6 +209,16 @@
               <button id="clearWaypointsButton" type="button">Leeren</button>
             </div>
             <input id="waypointImportInput" class="sr-only-file" type="file" accept=".csv,.json,.txt,.jpg,.jpeg,.png,.webp,text/csv,application/json,text/plain,image/jpeg,image/png,image/webp" />
+            <div class="waypoint-visibility">
+              <div>
+                <strong>Waypoints ausblenden</strong>
+                <span>Marker bleiben gespeichert und können wieder eingeblendet werden.</span>
+              </div>
+              <label class="switch-control" aria-label="Waypoints ausblenden">
+                <input id="waypointsVisibilityButton" type="checkbox" />
+                <span></span>
+              </label>
+            </div>
             <input id="waypointNameInput" type="text" placeholder="Name, z.B. Rad- und Wanderweg Wegweiser" autocomplete="off" />
             <div class="waypoint-selects">
               <label>
@@ -254,6 +264,6 @@
       integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
       crossorigin=""
     ></script>
-    <script src="app.js?v=waypoints-32"></script>
+    <script src="app.js?v=waypoints-33"></script>
   </body>
 </html>

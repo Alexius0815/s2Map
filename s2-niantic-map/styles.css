@@ -1076,6 +1076,41 @@ button {
   line-height: 1.35;
 }
 
+.waypoint-visibility {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 10px;
+  border: 1px solid rgba(29, 140, 248, 0.14);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.82);
+}
+
+.waypoint-visibility strong,
+.waypoint-visibility span {
+  display: block;
+}
+
+.waypoint-visibility strong {
+  color: var(--ink);
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+.waypoint-visibility span {
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 10.5px;
+  line-height: 1.25;
+}
+
+.waypoint-visibility .switch-control {
+  flex: 0 0 auto;
+  transform: scale(0.86);
+  transform-origin: right center;
+}
+
 .waypoint-controls input,
 .waypoint-controls textarea,
 .waypoint-controls select {
@@ -1174,6 +1209,44 @@ button {
   color: #e2e8f0;
   background: #94a3b8;
   opacity: 0.7;
+}
+
+.location-marker {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 3px solid #fff;
+  border-radius: 50%;
+  background: rgba(29, 140, 248, 0.18);
+  box-shadow:
+    0 0 0 8px rgba(29, 140, 248, 0.14),
+    0 8px 22px rgba(12, 47, 92, 0.28);
+}
+
+.location-marker::before {
+  content: "";
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #1d8cf8;
+  box-shadow: inset 0 0 0 3px #fff;
+}
+
+.location-marker.has-heading::after {
+  content: "";
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-right: 7px solid transparent;
+  border-bottom: 16px solid #1d8cf8;
+  border-left: 7px solid transparent;
+  filter: drop-shadow(0 2px 2px rgba(12, 47, 92, 0.25));
+  transform: translateX(-50%) rotate(var(--heading));
+  transform-origin: 50% 25px;
 }
 
 .leaflet-marker-icon:hover .waypoint-marker,

@@ -49,6 +49,7 @@ const state = {
   weatherFailed: new Set(),
   weatherEnabled: false,
   waypointGroup: null,
+  waypointsVisible: true,
   waypoints: [],
   installPrompt: null,
   renderTimer: 0,
@@ -56,6 +57,10 @@ const state = {
   locationCollapsed: false,
   locationMode: "place",
   locationMarker: null,
+  locationWatchId: null,
+  locationTrackStarted: false,
+  locationHeading: null,
+  orientationListening: false,
   waypointPlacement: false,
 };
 
@@ -112,6 +117,7 @@ const ui = {
   importWaypointsButton: document.querySelector("#importWaypointsButton"),
   waypointImportInput: document.querySelector("#waypointImportInput"),
   clearWaypointsButton: document.querySelector("#clearWaypointsButton"),
+  waypointsVisibilityButton: document.querySelector("#waypointsVisibilityButton"),
   cellPanel: document.querySelector("#cellPanel"),
   cellPanelToggle: document.querySelector("#cellPanelToggle"),
   closeCellPanel: document.querySelector("#closeCellPanel"),
@@ -177,6 +183,7 @@ ui.exportWaypointsButton.addEventListener("click", exportWaypoints);
 ui.importWaypointsButton.addEventListener("click", () => ui.waypointImportInput.click());
 ui.waypointImportInput.addEventListener("change", importWaypointsFromFile);
 ui.clearWaypointsButton.addEventListener("click", clearWaypoints);
+ui.waypointsVisibilityButton.addEventListener("change", toggleWaypointsVisibility);
 ui.cellPanelToggle.addEventListener("click", () => setCellPanelCollapsed(!ui.cellPanel.classList.contains("is-collapsed")));
 ui.closeCellPanel.addEventListener("click", () => setCellPanelCollapsed(true));
 ui.weatherPanelToggle.addEventListener("click", () => setWeatherPanelCollapsed(!ui.weatherPanel.classList.contains("is-collapsed")));
@@ -702,8 +709,19 @@ function removeWaypoint(id) {
 }
 
 function clearWaypoints() {
+  if (!state.waypoints.length) {
+    ui.waypointStatus.textContent = "Keine Waypoints zum Leeren vorhanden.";
+    return;
+  }
+  const confirmed = window.confirm("alle aktuell sichtbaren waypoints werden gelöscht. fortfahren?");
+  if (!confirmed) return;
   state.waypoints = [];
   saveWaypoints();
+  renderWaypoints();
+}
+
+function toggleWaypointsVisibility() {
+  state.waypointsVisible = !ui.waypointsVisibilityButton.checked;
   renderWaypoints();
 }
 
@@ -721,6 +739,11 @@ function renderWaypoints() {
   const s17Groups = groupWaypointsByCell(17);
   const activeWaypoints = state.waypoints.filter((waypoint) => waypoint.active);
   ui.waypointStatus.textContent = `${activeWaypoints.length}/${state.waypoints.length} aktive Waypoints`;
+
+  if (!state.waypointsVisible) {
+    ui.waypointStatus.textContent = `Waypoints ausgeblendet · ${state.waypoints.length} gespeichert`;
+    return;
+  }
 
   state.waypoints.forEach((waypoint) => {
     const s14 = latLngToCell(waypoint.lat, waypoint.lng, 14);
@@ -1683,11 +1706,27 @@ function locateUser(options = {}) {
     setLocationPanelCollapsed(false);
     return;
   }
-  ui.locationStatus.textContent = "Suche eigene Location ...";
-  navigator.geolocation.getCurrentPosition(
+  if (state.locationWatchId !== null) {
+    navigator.geolocation.clearWatch(state.locationWatchId);
+  }
+
+  state.locationTrackStarted = false;
+  ui.locationStatus.textContent = "GPS wird gestartet ...";
+  enableHeadingUpdates();
+  state.locationWatchId = navigator.geolocation.watchPosition(
     (position) => {
-      moveToLocation(position.coords.latitude, position.coords.longitude, "Eigene Location", { level: 14 });
-      if (options.initial) {
+      const firstUpdate = !state.locationTrackStarted;
+      state.locationTrackStarted = true;
+      const gpsHeading = Number.isFinite(position.coords.heading) ? position.coords.heading : null;
+      if (gpsHeading !== null) state.locationHeading = gpsHeading;
+      moveToLocation(position.coords.latitude, position.coords.longitude, locationLabel(position), {
+        level: 14,
+        tracking: true,
+        firstUpdate,
+        heading: state.locationHeading,
+      });
+      ui.locationStatus.textContent = "GPS aktiv · Karte folgt deiner Position";
+      if (options.initial && firstUpdate) {
         setLocationPanelCollapsed(true);
       }
     },
@@ -1695,8 +1734,47 @@ function locateUser(options = {}) {
       ui.locationStatus.textContent = geolocationErrorMessage(error);
       setLocationPanelCollapsed(false);
     },
-    { enableHighAccuracy: true, timeout: 8000 },
+    { enableHighAccuracy: true, timeout: 12000, maximumAge: 10000 },
   );
+}
+
+function locationLabel(position) {
+  const accuracy = Math.round(position.coords.accuracy || 0);
+  return accuracy > 0 ? `Eigene Location · ±${accuracy} m` : "Eigene Location";
+}
+
+function enableHeadingUpdates() {
+  if (state.orientationListening || typeof window === "undefined") return;
+
+  const attachListener = () => {
+    if (state.orientationListening) return;
+    window.addEventListener("deviceorientationabsolute", handleDeviceOrientation, true);
+    window.addEventListener("deviceorientation", handleDeviceOrientation, true);
+    state.orientationListening = true;
+  };
+
+  if (window.DeviceOrientationEvent && typeof window.DeviceOrientationEvent.requestPermission === "function") {
+    window.DeviceOrientationEvent.requestPermission()
+      .then((permission) => {
+        if (permission === "granted") attachListener();
+      })
+      .catch(() => {});
+    return;
+  }
+
+  attachListener();
+}
+
+function handleDeviceOrientation(event) {
+  const compassHeading = Number.isFinite(event.webkitCompassHeading) ? event.webkitCompassHeading : null;
+  const alphaHeading = event.absolute && Number.isFinite(event.alpha) ? 360 - event.alpha : null;
+  const heading = compassHeading ?? alphaHeading;
+  if (!Number.isFinite(heading)) return;
+
+  state.locationHeading = (heading + 360) % 360;
+  if (state.locationMarker) {
+    state.locationMarker.setIcon(locationIcon(state.locationHeading));
+  }
 }
 
 function geolocationErrorMessage(error) {
@@ -1831,20 +1909,40 @@ function jumpToCoordinates() {
 }
 
 function moveToLocation(lat, lng, label, options = {}) {
-  focusS2CellForLocation(lat, lng, options.level || 14);
+  if (options.tracking) {
+    if (options.firstUpdate) {
+      focusS2CellForLocation(lat, lng, options.level || 14);
+    } else {
+      const targetZoom = Math.max(map.getZoom(), options.level >= 14 ? 17 : 16);
+      map.setView([lat, lng], targetZoom, { animate: true });
+    }
+  } else {
+    focusS2CellForLocation(lat, lng, options.level || 14);
+  }
   ui.locationStatus.textContent = label;
   if (!state.locationMarker) {
-    state.locationMarker = L.circleMarker([lat, lng], {
-      radius: 7,
-      color: "#ffffff",
-      weight: 3,
-      fillColor: "#0f766e",
-      fillOpacity: 1,
+    state.locationMarker = L.marker([lat, lng], {
+      icon: locationIcon(options.heading),
+      interactive: true,
+      zIndexOffset: 900,
     }).addTo(map);
   } else {
     state.locationMarker.setLatLng([lat, lng]);
+    state.locationMarker.setIcon(locationIcon(options.heading));
   }
   state.locationMarker.bindTooltip(label, { permanent: false, direction: "top" });
+}
+
+function locationIcon(heading) {
+  const hasHeading = Number.isFinite(heading);
+  const headingStyle = hasHeading ? ` style="--heading:${heading}deg"` : "";
+  const headingClass = hasHeading ? " has-heading" : "";
+  return L.divIcon({
+    className: "",
+    html: `<span class="location-marker${headingClass}"${headingStyle} aria-hidden="true"></span>`,
+    iconSize: [34, 34],
+    iconAnchor: [17, 17],
+  });
 }
 
 function focusS2CellForLocation(lat, lng, level) {
