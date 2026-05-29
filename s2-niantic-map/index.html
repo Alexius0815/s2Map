@@ -17,7 +17,7 @@
       integrity="sha256-p4NxAoJBhIINfQ3p5SMYk9g3Wg5p0p2mIPlQGLrC6r0="
       crossorigin=""
     />
-    <link rel="stylesheet" href="styles.css?v=waypoints-38" />
+    <link rel="stylesheet" href="styles.css?v=waypoints-39" />
   </head>
   <body class="awaiting-location">
     <main class="app-shell">
@@ -31,8 +31,8 @@
               <h1>S2 Map für Pokémon GO</h1>
               <p>Inoffizielle Orientierung für S2 Zellen, Wetterboosts und Waypoints</p>
             </div>
-            <span id="versionBadge" class="version-badge">V1.0.0</span>
           </button>
+          <button id="versionButton" class="version-badge" type="button" aria-expanded="false" aria-controls="changelogPanel">V1.0.0</button>
         </div>
 
         <nav class="legal-links" aria-label="Rechtliches">
@@ -53,10 +53,6 @@
             <div><dt>Build</dt><dd>Static Web App · Leaflet · Vercel Function</dd></div>
             <div><dt>Stand</dt><dd><span id="appReleaseDate">29.05.2026</span></dd></div>
             <div><dt>Autor</dt><dd>Alex Hofmann</dd></div>
-            <div class="changelog-row">
-              <dt>Changelog</dt>
-              <dd id="changelogList" class="changelog-list"></dd>
-            </div>
             <div>
               <dt>Installieren</dt>
               <dd class="install-box">
@@ -71,6 +67,17 @@
             <div><dt>Rechtliches</dt><dd><a href="impressum.html">Impressum</a> · <a href="datenschutz.html">Datenschutz</a></dd></div>
             <div><dt>Hinweis</dt><dd>Inoffizielle Orientierungshilfe. Nicht verbunden mit Niantic, Pokémon GO, The Pokémon Company oder PokéWiki.</dd></div>
           </dl>
+        </aside>
+
+        <aside id="changelogPanel" class="changelog-panel is-collapsed" aria-label="Changelog">
+          <div class="panel-header">
+            <div>
+              <h2>Changelog</h2>
+              <p id="changelogVersion">V1.0.0</p>
+            </div>
+            <button id="closeChangelogPanel" class="panel-close-button" type="button" aria-label="Changelog schließen">×</button>
+          </div>
+          <div id="changelogList" class="changelog-list"></div>
         </aside>
 
         <div id="locationConsent" class="location-consent" role="dialog" aria-label="Standortfreigabe">
@@ -281,6 +288,6 @@
       integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
       crossorigin=""
     ></script>
-    <script src="app.js?v=waypoints-38"></script>
+    <script src="app.js?v=waypoints-39"></script>
   </body>
 </html>
