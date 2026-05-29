@@ -1625,10 +1625,7 @@ function collectVisibleCells(level) {
 }
 
 function shouldLabelCell(cell, level, zoom) {
-  if (level >= 17) {
-    const density = zoom >= 18.5 ? 9 : zoom >= 17.75 ? 6 : 4;
-    return positiveModulo(cell.i * 17 + cell.j * 31, density) === 0;
-  }
+  if (level >= 17) return false;
   if (level >= 14) {
     const density = zoom >= 17.5 ? 4 : 2;
     return positiveModulo(cell.i * 11 + cell.j * 19, density) === 0;
