@@ -496,8 +496,8 @@ button {
 }
 
 .version-info-row dd {
-  display: grid;
-  gap: 8px;
+  display: flex;
+  align-items: center;
 }
 
 .version-inline-button {
@@ -524,8 +524,14 @@ button {
 }
 
 .changelog-list {
+  grid-column: 1 / -1;
   display: grid;
   gap: 8px;
+  margin-top: 8px;
+  padding: 10px 12px;
+  border: 1px solid rgba(29, 140, 248, 0.14);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.68);
 }
 
 .changelog-list[hidden] {
