@@ -172,7 +172,7 @@ body {
   border-radius: 8px;
   overflow: hidden;
   background: #fff;
-  box-shadow: 0 10px 24px rgba(12, 47, 92, 0.2);
+  box-shadow: 0 4px 10px rgba(12, 47, 92, 0.12);
 }
 
 .leaflet-control-zoom a {
@@ -209,7 +209,7 @@ body {
   border-radius: 6px;
   color: var(--ink);
   background: rgba(255, 255, 255, 0.97);
-  box-shadow: 0 10px 26px rgba(12, 47, 92, 0.18);
+  box-shadow: 0 4px 10px rgba(12, 47, 92, 0.12);
   white-space: nowrap;
   pointer-events: none;
 }
@@ -312,7 +312,7 @@ button {
   border: 2px solid rgba(255, 255, 255, 0.9);
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.9);
-  box-shadow: 0 14px 34px rgba(12, 47, 92, 0.2);
+  box-shadow: 0 6px 14px rgba(12, 47, 92, 0.13);
   backdrop-filter: blur(18px);
   pointer-events: auto;
   text-align: left;
@@ -325,7 +325,7 @@ button {
 .brand:hover,
 .brand:focus-visible {
   border-color: var(--spark);
-  box-shadow: 0 16px 36px rgba(12, 47, 92, 0.24), 0 0 0 3px rgba(255, 203, 5, 0.32);
+  box-shadow: 0 8px 16px rgba(12, 47, 92, 0.14), 0 0 0 3px rgba(255, 203, 5, 0.32);
   transform: translateY(-1px);
 }
 
@@ -367,39 +367,6 @@ button {
   font-size: 12px;
 }
 
-.legal-links {
-  position: absolute;
-  z-index: 540;
-  top: max(14px, calc(env(safe-area-inset-top) + 2px));
-  right: 12px;
-  display: flex;
-  gap: 6px;
-  pointer-events: auto;
-}
-
-.legal-links a {
-  min-height: 28px;
-  display: inline-flex;
-  align-items: center;
-  padding: 0 8px;
-  border: 1px solid rgba(29, 140, 248, 0.1);
-  border-radius: 999px;
-  color: rgba(9, 86, 182, 0.72);
-  background: rgba(255, 255, 255, 0.68);
-  box-shadow: 0 8px 18px rgba(12, 47, 92, 0.08);
-  font-size: 10.5px;
-  font-weight: 800;
-  text-decoration: none;
-  backdrop-filter: blur(18px);
-}
-
-.legal-links a:hover,
-.legal-links a:focus-visible {
-  border-color: rgba(255, 203, 5, 0.62);
-  color: #0956b6;
-  background: rgba(255, 248, 214, 0.95);
-}
-
 .about-panel {
   position: absolute;
   z-index: 525;
@@ -412,7 +379,7 @@ button {
   border: 2px solid rgba(255, 255, 255, 0.92);
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.96);
-  box-shadow: 0 18px 42px rgba(12, 47, 92, 0.24);
+  box-shadow: 0 8px 18px rgba(12, 47, 92, 0.14);
   backdrop-filter: blur(18px);
   transition:
     opacity 160ms ease,
@@ -455,7 +422,7 @@ button {
 .about-list dt {
   color: #0956b6;
   font-size: 12px;
-  font-weight: 900;
+  font-weight: 600;
 }
 
 .about-list dd {
@@ -468,7 +435,7 @@ button {
 
 .about-list a {
   color: #0956b6;
-  font-weight: 900;
+  font-weight: 600;
   text-decoration: none;
 }
 
@@ -491,7 +458,7 @@ button {
   background: #1d8cf8;
   box-shadow: 0 3px 0 #0956b6;
   font-size: 12px;
-  font-weight: 900;
+  font-weight: 700;
 }
 
 .install-box button.is-hidden {
@@ -522,7 +489,7 @@ button {
   color: #0f766e;
   background: rgba(51, 209, 160, 0.16);
   font-size: 11px;
-  font-weight: 1000;
+  font-weight: 600;
 }
 
 .version-inline-button::after {
@@ -614,7 +581,7 @@ button {
   border-radius: 8px;
   color: #0956b6;
   background: #fff;
-  box-shadow: 0 8px 18px rgba(12, 47, 92, 0.16);
+  box-shadow: 0 4px 10px rgba(12, 47, 92, 0.11);
   pointer-events: auto;
 }
 
@@ -665,7 +632,7 @@ button {
     linear-gradient(145deg, rgba(255, 255, 255, 0.96), rgba(232, 248, 255, 0.93)),
     radial-gradient(circle at 18% 18%, rgba(255, 203, 5, 0.24), transparent 34%),
     radial-gradient(circle at 88% 8%, rgba(51, 209, 160, 0.22), transparent 28%);
-  box-shadow: 0 20px 46px rgba(12, 47, 92, 0.28);
+  box-shadow: 0 8px 20px rgba(12, 47, 92, 0.16);
   transform: translate(-50%, -50%);
   backdrop-filter: blur(18px);
 }
@@ -678,7 +645,7 @@ button {
   margin: 0;
   color: #0956b6;
   font-size: 18px;
-  font-weight: 900;
+  font-weight: 700;
   text-align: center;
 }
 
@@ -717,7 +684,7 @@ button {
   color: #fff;
   background: #1d8cf8;
   box-shadow: 0 4px 0 #0956b6;
-  font-weight: 900;
+  font-weight: 700;
 }
 
 .location-consent button + button {
@@ -738,7 +705,7 @@ button {
   border: 2px solid rgba(255, 255, 255, 0.9);
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.92);
-  box-shadow: 0 14px 34px rgba(12, 47, 92, 0.2);
+  box-shadow: 0 6px 14px rgba(12, 47, 92, 0.13);
   backdrop-filter: blur(18px);
   transition:
     opacity 160ms ease,
@@ -763,7 +730,7 @@ button {
 .location-panel-header span {
   color: #0956b6;
   font-size: 14px;
-  font-weight: 900;
+  font-weight: 700;
 }
 
 .gps-return-button,
@@ -772,13 +739,13 @@ button {
   z-index: 506;
   left: 12px;
   display: grid;
-  width: 38px;
-  height: 38px;
+  width: 44px;
+  height: 44px;
   border: 2px solid rgba(255, 255, 255, 0.9);
   border-radius: 8px;
   color: #0956b6;
   background: #fff;
-  box-shadow: 0 12px 28px rgba(12, 47, 92, 0.2);
+  box-shadow: 0 4px 12px rgba(12, 47, 92, 0.12);
 }
 
 .gps-return-button {
@@ -787,7 +754,7 @@ button {
 }
 
 .location-panel-toggle {
-  top: max(136px, calc(env(safe-area-inset-top) + 136px));
+  top: max(142px, calc(env(safe-area-inset-top) + 142px));
   display: none;
 }
 
@@ -809,8 +776,8 @@ button {
 .location-panel-toggle::before {
   content: "";
   position: absolute;
-  top: 7px;
-  left: 7px;
+  top: 10px;
+  left: 10px;
   width: 13px;
   height: 13px;
   border: 2.5px solid #0956b6;
@@ -820,8 +787,8 @@ button {
 .location-panel-toggle::after {
   content: "";
   position: absolute;
-  top: 21px;
-  left: 21px;
+  top: 24px;
+  left: 24px;
   width: 9px;
   height: 2.5px;
   border-radius: 999px;
@@ -836,14 +803,14 @@ button {
   top: max(124px, calc(env(safe-area-inset-top) + 124px));
   right: 14px;
   display: grid;
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   place-items: center;
   border: 2px solid rgba(255, 255, 255, 0.9);
   border-radius: 50%;
   color: #0956b6;
   background: rgba(255, 255, 255, 0.88);
-  box-shadow: 0 10px 24px rgba(12, 47, 92, 0.18);
+  box-shadow: 0 4px 10px rgba(12, 47, 92, 0.11);
   opacity: 0.76;
   pointer-events: auto;
   backdrop-filter: blur(14px);
@@ -894,7 +861,7 @@ button {
   color: #5d7288;
   background: #f1f8ff;
   font-size: 13px;
-  font-weight: 800;
+  font-weight: 600;
 }
 
 .mode-switch input:checked + span {
@@ -925,7 +892,7 @@ button {
   color: #fff;
   background: #1d8cf8;
   box-shadow: 0 3px 0 #0956b6;
-  font-weight: 900;
+  font-weight: 700;
 }
 
 .location-panel p {
@@ -942,13 +909,23 @@ button {
   z-index: 520;
   bottom: max(18px, env(safe-area-inset-bottom));
   min-width: 76px;
-  min-height: 36px;
+  min-height: 44px;
   border-radius: 8px;
-  color: #fff;
-  background: #1d8cf8;
-  box-shadow: 0 4px 0 #0956b6, 0 12px 24px rgba(12, 47, 92, 0.2);
+  color: #0956b6;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1.5px solid rgba(29, 140, 248, 0.28);
+  box-shadow: 0 4px 10px rgba(12, 47, 92, 0.12);
   font-size: 12px;
-  font-weight: 900;
+  font-weight: 600;
+  backdrop-filter: blur(12px);
+  transition: background 120ms ease, border-color 120ms ease;
+}
+
+.cell-panel-toggle:hover,
+.weather-panel-toggle:hover,
+.panel-toggle:hover {
+  background: rgba(255, 255, 255, 1);
+  border-color: rgba(29, 140, 248, 0.5);
 }
 
 .panel-toggle {
@@ -959,17 +936,11 @@ button {
 .cell-panel-toggle {
   right: 198px;
   width: 76px;
-  color: #102033;
-  background: #92e0ff;
-  box-shadow: 0 4px 0 #16a3d7, 0 12px 24px rgba(12, 47, 92, 0.2);
 }
 
 .weather-panel-toggle {
   right: 108px;
   width: 82px;
-  color: #102033;
-  background: #33d1a0;
-  box-shadow: 0 4px 0 #0f766e, 0 12px 24px rgba(12, 47, 92, 0.2);
 }
 
 .help-toggle {
@@ -977,14 +948,16 @@ button {
   z-index: 520;
   top: max(78px, calc(env(safe-area-inset-top) + 78px));
   right: 14px;
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
-  color: #102033;
-  background: var(--spark);
-  box-shadow: 0 4px 0 var(--spark-strong), 0 12px 24px rgba(12, 47, 92, 0.2);
+  color: #0956b6;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1.5px solid rgba(29, 140, 248, 0.28);
+  box-shadow: 0 4px 10px rgba(12, 47, 92, 0.12);
   font-size: 16px;
-  font-weight: 900;
+  font-weight: 600;
+  backdrop-filter: blur(12px);
 }
 
 .help-panel {
@@ -1002,7 +975,7 @@ button {
   border: 2px solid rgba(255, 255, 255, 0.9);
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.94);
-  box-shadow: 0 18px 42px rgba(12, 47, 92, 0.24);
+  box-shadow: 0 8px 18px rgba(12, 47, 92, 0.14);
   backdrop-filter: blur(18px);
   transition:
     opacity 160ms ease,
@@ -1033,7 +1006,7 @@ button {
   border: 2px solid rgba(255, 255, 255, 0.9);
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.94);
-  box-shadow: 0 18px 42px rgba(12, 47, 92, 0.24);
+  box-shadow: 0 8px 18px rgba(12, 47, 92, 0.14);
   backdrop-filter: blur(18px);
   transform: translateY(0);
   transition:
@@ -1134,7 +1107,7 @@ button {
   color: #0956b6;
   background: #e7f3ff;
   font-size: 18px;
-  font-weight: 900;
+  font-weight: 700;
   line-height: 1;
   transition: transform 150ms ease;
 }
@@ -1281,10 +1254,52 @@ button {
 }
 
 .waypoint-header {
-  display: grid;
-  grid-template-columns: 1fr repeat(3, 64px);
-  gap: 10px;
+  display: flex;
   align-items: center;
+  gap: 8px;
+}
+
+.waypoint-header > div:first-child {
+  flex: 1;
+  min-width: 0;
+}
+
+.waypoint-header-actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.waypoint-icon-btn {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  min-height: unset;
+  border-radius: 8px;
+  color: #0956b6;
+  background: rgba(29, 140, 248, 0.08);
+  border: 1px solid rgba(29, 140, 248, 0.16);
+  box-shadow: none;
+}
+
+.waypoint-icon-btn:hover:not(:disabled) {
+  background: rgba(29, 140, 248, 0.16);
+}
+
+.waypoint-icon-btn:disabled {
+  opacity: 0.32;
+  cursor: default;
+}
+
+.waypoint-icon-btn--danger {
+  color: #854f0b;
+  background: rgba(255, 203, 5, 0.12);
+  border-color: rgba(242, 169, 0, 0.24);
+}
+
+.waypoint-icon-btn--danger:hover {
+  background: rgba(255, 203, 5, 0.24);
 }
 
 .waypoint-controls h2,
@@ -1302,6 +1317,33 @@ button {
   color: var(--muted);
   font-size: 11px;
   line-height: 1.35;
+}
+
+.waypoint-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 20px 12px 16px;
+  text-align: center;
+}
+
+.waypoint-empty-state[hidden] {
+  display: none;
+}
+
+.waypoint-empty-state p {
+  margin: 0;
+  color: #0956b6;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.waypoint-empty-state span {
+  color: var(--muted);
+  font-size: 11.5px;
+  line-height: 1.5;
+  max-width: 28ch;
 }
 
 .waypoint-visibility {
@@ -1371,7 +1413,7 @@ button {
 .waypoint-selects span {
   color: var(--muted);
   font-size: 10.5px;
-  font-weight: 900;
+  font-weight: 600;
 }
 
 .waypoint-controls textarea {
@@ -1393,7 +1435,7 @@ button {
   background: #1d8cf8;
   box-shadow: 0 3px 0 #0956b6;
   font-size: 11.5px;
-  font-weight: 900;
+  font-weight: 700;
 }
 
 .sr-only-file {
@@ -1405,11 +1447,6 @@ button {
   white-space: nowrap;
 }
 
-#clearWaypointsButton {
-  color: #102033;
-  background: var(--spark);
-  box-shadow: 0 3px 0 var(--spark-strong);
-}
 
 .waypoint-marker {
   display: grid;
@@ -1420,9 +1457,9 @@ button {
   border-radius: 50%;
   color: #fff;
   background: #1d8cf8;
-  box-shadow: 0 8px 20px rgba(12, 47, 92, 0.28);
+  box-shadow: 0 4px 10px rgba(12, 47, 92, 0.16);
   font-size: 13px;
-  font-weight: 1000;
+  font-weight: 700;
   pointer-events: auto;
   transition:
     transform 140ms ease,
@@ -1487,7 +1524,7 @@ button {
 .leaflet-marker-icon:hover .waypoint-marker,
 .leaflet-marker-icon:focus .waypoint-marker {
   transform: scale(1.18);
-  box-shadow: 0 10px 26px rgba(12, 47, 92, 0.34);
+  box-shadow: 0 4px 10px rgba(12, 47, 92, 0.18);
 }
 
 #map.is-placing-waypoint {
@@ -1546,7 +1583,7 @@ button {
   border-radius: 6px;
   color: var(--muted);
   font-size: 11px;
-  font-weight: 1000;
+  font-weight: 700;
 }
 
 .waypoint-type-toggle input:checked + span {
@@ -1570,7 +1607,7 @@ button {
 .waypoint-popup em {
   color: #0956b6;
   font-style: normal;
-  font-weight: 900;
+  font-weight: 700;
 }
 
 .waypoint-popup-actions {
@@ -1585,7 +1622,7 @@ button {
   color: #fff;
   background: #1d8cf8;
   font-size: 11px;
-  font-weight: 900;
+  font-weight: 700;
 }
 
 .waypoint-popup button[data-waypoint-action="save"] {
@@ -1599,14 +1636,14 @@ button {
 
 .waypoint-tooltip {
   border-color: rgba(239, 59, 120, 0.28);
-  font-weight: 900;
+  font-weight: 700;
 }
 
 .s14-cell-popup-wrapper .leaflet-popup-content-wrapper {
   border: 1px solid rgba(29, 140, 248, 0.22);
   border-radius: 10px;
   background: #fffffff2;
-  box-shadow: 0 14px 34px rgba(12, 47, 92, 0.22);
+  box-shadow: 0 6px 14px rgba(12, 47, 92, 0.13);
   backdrop-filter: none;
   animation: s14-popup-in 160ms ease-out;
 }
@@ -1640,7 +1677,7 @@ button {
 .s14-cell-popup span {
   color: #0956b6;
   font-size: 10px;
-  font-weight: 1000;
+  font-weight: 700;
   white-space: nowrap;
 }
 
@@ -1677,13 +1714,13 @@ button {
 .s14-cell-popup dt {
   color: var(--muted);
   font-size: 9px;
-  font-weight: 900;
+  font-weight: 600;
 }
 
 .s14-cell-popup dd {
   color: var(--ink);
   font-size: 11px;
-  font-weight: 1000;
+  font-weight: 700;
 }
 
 .s14-cell-popup.is-near span,
@@ -1741,7 +1778,7 @@ button {
   cursor: pointer;
   color: #0956b6;
   font-size: 14px;
-  font-weight: 900;
+  font-weight: 700;
 }
 
 .help-section p {
@@ -1779,7 +1816,7 @@ button {
 .boost-list dt {
   color: #0956b6;
   font-size: 12px;
-  font-weight: 900;
+  font-weight: 600;
 }
 
 .boost-list dd {
@@ -1793,7 +1830,7 @@ button {
 
 .boost-list b {
   color: var(--ink);
-  font-weight: 900;
+  font-weight: 700;
 }
 
 .boost-list span {
@@ -1816,7 +1853,7 @@ button {
   color: #0956b6;
   background: #e7f3ff;
   font-size: 12px;
-  font-weight: 900;
+  font-weight: 700;
   text-decoration: none;
 }
 
@@ -1847,9 +1884,9 @@ button {
   border: 2px solid rgba(255, 255, 255, 0.92);
   color: #0956b6;
   background: rgba(255, 255, 255, 0.9);
-  box-shadow: 0 7px 16px rgba(12, 47, 92, 0.16);
+  box-shadow: 0 3px 8px rgba(12, 47, 92, 0.11);
   font-size: 10px;
-  font-weight: 900;
+  font-weight: 700;
   white-space: nowrap;
 }
 
@@ -1858,7 +1895,7 @@ button {
   font-size: 11px;
   color: #fff;
   border-color: rgba(255, 255, 255, 0.92);
-  box-shadow: 0 8px 18px rgba(12, 47, 92, 0.24);
+  box-shadow: 0 4px 10px rgba(12, 47, 92, 0.14);
   text-shadow: 0 1px 1px rgba(0, 0, 0, 0.28);
 }
 
@@ -1925,7 +1962,7 @@ button {
   background: #1d8cf8;
   box-shadow: 0 4px 0 #0956b6;
   font-size: 13px;
-  font-weight: 900;
+  font-weight: 700;
   text-decoration: none;
 }
 
@@ -1936,7 +1973,7 @@ button {
   border: 2px solid rgba(255, 255, 255, 0.92);
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.96);
-  box-shadow: 0 18px 42px rgba(12, 47, 92, 0.22);
+  box-shadow: 0 8px 18px rgba(12, 47, 92, 0.13);
 }
 
 .legal-card h1,
@@ -1991,24 +2028,6 @@ button {
     max-width: calc(100vw - 82px);
   }
 
-  .legal-links {
-    top: max(74px, calc(env(safe-area-inset-top) + 74px));
-    left: 10px;
-    right: auto;
-  }
-
-  .awaiting-location .legal-links {
-    top: max(12px, env(safe-area-inset-top));
-    left: auto;
-    right: 10px;
-  }
-
-  .legal-links a {
-    min-height: 28px;
-    padding: 0 7px;
-    font-size: 10px;
-  }
-
   .brand p {
     display: none;
   }
@@ -2033,7 +2052,7 @@ button {
   }
 
   .location-panel-toggle {
-    top: max(168px, calc(env(safe-area-inset-top) + 168px));
+    top: max(174px, calc(env(safe-area-inset-top) + 174px));
     left: 10px;
   }
 

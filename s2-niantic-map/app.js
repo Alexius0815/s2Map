@@ -1,6 +1,20 @@
-const APP_VERSION = "0.8.5";
+const APP_VERSION = "0.8.6";
 const APP_RELEASE_DATE = "30.05.2026";
 const APP_CHANGELOG = [
+  {
+    version: "0.8.6",
+    date: "30.05.2026",
+    changes: [
+      "UX: Icon-Buttons im Waypoint-Panel, Touch-Targets auf 44px",
+      "UX: Bottom-Buttons vereinheitlicht, Schatten reduziert",
+      "UX: Schriftgewicht-Hierarchie bereinigt (700/600 statt 900/1000)",
+      "UX: Impressum/Datenschutz aus Karten-Topbar entfernt",
+      "UX: Leer-Zustand im Waypoint-Panel mit Illustration",
+      "UX: Undo für Waypoint-Aktionen (bis 20 Schritte)",
+      "UX: Waypoint-Import zeigt fehlgeschlagene Dateinamen",
+      "UX: locationMode wird nach Reload gespeichert",
+    ],
+  },
   {
     version: "0.8.5",
     date: "30.05.2026",
@@ -97,6 +111,7 @@ const state = {
   groups: new Map(),
   labels: new Map(),
   renderedCells: new Map(), // Map<layerId, Map<cellKey, {polygon, labelMarker, fingerprint}>>
+  undoStack: [], // Snapshots von state.waypoints vor Mutationen
 
   weather: new Map(),
   weatherPending: new Set(),
@@ -174,11 +189,13 @@ const ui = {
   waypointAreaInput: document.querySelector("#waypointAreaInput"),
   waypointPasteInput: document.querySelector("#waypointPasteInput"),
   waypointStatus: document.querySelector("#waypointStatus"),
+  waypointEmptyState: document.querySelector("#waypointEmptyState"),
   addWaypointButton: document.querySelector("#addWaypointButton"),
   exportWaypointsButton: document.querySelector("#exportWaypointsButton"),
   importWaypointsButton: document.querySelector("#importWaypointsButton"),
   waypointImportInput: document.querySelector("#waypointImportInput"),
   clearWaypointsButton: document.querySelector("#clearWaypointsButton"),
+  undoWaypointButton: document.querySelector("#undoWaypointButton"),
   waypointsVisibilityButton: document.querySelector("#waypointsVisibilityButton"),
   cellPanel: document.querySelector("#cellPanel"),
   cellPanelToggle: document.querySelector("#cellPanelToggle"),
@@ -255,6 +272,7 @@ ui.exportWaypointsButton.addEventListener("click", exportWaypoints);
 ui.importWaypointsButton.addEventListener("click", () => ui.waypointImportInput.click());
 ui.waypointImportInput.addEventListener("change", importWaypointsFromFile);
 ui.clearWaypointsButton.addEventListener("click", clearWaypoints);
+ui.undoWaypointButton.addEventListener("click", undoWaypointAction);
 ui.waypointsVisibilityButton.addEventListener("change", toggleWaypointsVisibility);
 ui.cellPanelToggle.addEventListener("click", () => setCellPanelCollapsed(!ui.cellPanel.classList.contains("is-collapsed")));
 ui.closeCellPanel.addEventListener("click", () => setCellPanelCollapsed(true));
@@ -836,7 +854,30 @@ function waypointFormMeta() {
   };
 }
 
+const UNDO_MAX = 20;
+
+function pushUndoSnapshot() {
+  state.undoStack.push(JSON.parse(JSON.stringify(state.waypoints)));
+  if (state.undoStack.length > UNDO_MAX) state.undoStack.shift();
+  updateUndoButton();
+}
+
+function undoWaypointAction() {
+  if (!state.undoStack.length) return;
+  state.waypoints = state.undoStack.pop();
+  saveWaypoints();
+  renderWaypoints();
+  scheduleRender();
+  updateUndoButton();
+  ui.waypointStatus.textContent = "Rückgängig gemacht";
+}
+
+function updateUndoButton() {
+  ui.undoWaypointButton.disabled = state.undoStack.length === 0;
+}
+
 function addWaypoint(name, lat, lng, meta = {}) {
+  pushUndoSnapshot();
   const s17Key = cellKey(latLngToCell(lat, lng, 17));
   const hasActiveInCell = state.waypoints.some((waypoint) => waypoint.active && cellKey(latLngToCell(waypoint.lat, waypoint.lng, 17)) === s17Key);
   const waypoint = {
@@ -858,6 +899,7 @@ function addWaypoint(name, lat, lng, meta = {}) {
 }
 
 function removeWaypoint(id) {
+  pushUndoSnapshot();
   state.waypoints = state.waypoints.filter((waypoint) => waypoint.id !== id);
   enforceActiveWaypoints();
   saveWaypoints();
@@ -871,6 +913,7 @@ function clearWaypoints() {
   }
   const confirmed = window.confirm("alle aktuell sichtbaren waypoints werden gelöscht. fortfahren?");
   if (!confirmed) return;
+  pushUndoSnapshot();
   state.waypoints = [];
   saveWaypoints();
   renderWaypoints();
@@ -888,8 +931,10 @@ function renderWaypoints() {
   state.waypointGroup.clearLayers();
   scheduleRender();
 
-  if (!state.waypoints.length) {
-    ui.waypointStatus.textContent = "Noch keine eigenen Waypoints";
+  const isEmpty = !state.waypoints.length;
+  ui.waypointEmptyState.hidden = !isEmpty;
+  if (isEmpty) {
+    ui.waypointStatus.textContent = "";
     return;
   }
 
@@ -1041,6 +1086,7 @@ function saveWaypointFromPopup(id, root) {
   }
   const waypoint = state.waypoints.find((entry) => entry.id === id);
   if (!waypoint) return;
+  pushUndoSnapshot();
   waypoint.name = name;
   waypoint.type = selectedWaypointType(root);
   enforceActiveWaypoints();
@@ -1058,6 +1104,7 @@ function focusWaypoint(id) {
 function moveWaypointToLatLng(id, latLng, options = {}) {
   const waypoint = state.waypoints.find((entry) => entry.id === id);
   if (!waypoint) return;
+  pushUndoSnapshot();
   const center = L.latLng(latLng);
   waypoint.lat = center.lat;
   waypoint.lng = center.lng;
@@ -1307,7 +1354,7 @@ async function importWaypointsFromFile(event) {
     const additions = [];
     let duplicates = 0;
     let empty = 0;
-    let failed = 0;
+    const failedFiles = [];
 
     for (const [index, file] of files.entries()) {
       const isImage = isImageImportFile(file);
@@ -1335,12 +1382,12 @@ async function importWaypointsFromFile(event) {
           additions.push(waypoint);
         });
       } catch (error) {
-        failed += 1;
+        failedFiles.push(file.name);
       }
     }
 
     if (!additions.length) {
-      ui.waypointStatus.textContent = importSummary(files.length, 0, duplicates, empty, failed);
+      ui.waypointStatus.textContent = importSummary(files.length, 0, duplicates, empty, failedFiles);
       return;
     }
 
@@ -1349,7 +1396,7 @@ async function importWaypointsFromFile(event) {
     saveWaypoints();
     renderWaypoints();
     focusActiveS14Cell();
-    ui.waypointStatus.textContent = importSummary(files.length, additions.length, duplicates, empty, failed);
+    ui.waypointStatus.textContent = importSummary(files.length, additions.length, duplicates, empty, failedFiles);
   } catch (error) {
     ui.waypointStatus.textContent = error.message || "Import konnte nicht gelesen werden.";
   } finally {
@@ -1357,12 +1404,15 @@ async function importWaypointsFromFile(event) {
   }
 }
 
-function importSummary(fileCount, added, duplicates, empty, failed) {
+function importSummary(fileCount, added, duplicates, empty, failedFiles) {
   const parts = [`${added} Waypoint${added === 1 ? "" : "s"} importiert`];
   if (fileCount > 1) parts.unshift(`${fileCount} Dateien`);
   if (duplicates) parts.push(`${duplicates} doppelt`);
   if (empty) parts.push(`${empty} ohne sicheren Treffer`);
-  if (failed) parts.push(`${failed} fehlgeschlagen`);
+  if (failedFiles.length) {
+    const names = failedFiles.join(", ");
+    parts.push(`Fehler: ${names}`);
+  }
   return parts.join(" · ");
 }
 
@@ -2017,6 +2067,7 @@ function updateHeading(heading) {
     setMapBearing(state.locationHeading);
   }
 }
+
 
 function setMapBearing(bearing) {
   const normalized = normalizeBearing(bearing);

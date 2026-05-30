@@ -17,7 +17,7 @@
       integrity="sha256-p4NxAoJBhIINfQ3p5SMYk9g3Wg5p0p2mIPlQGLrC6r0="
       crossorigin=""
     />
-    <link rel="stylesheet" href="styles.css?v=waypoints-50" />
+    <link rel="stylesheet" href="styles.css?v=waypoints-51" />
   </head>
   <body class="awaiting-location">
     <main class="app-shell">
@@ -34,10 +34,6 @@
           </button>
         </div>
 
-        <nav class="legal-links" aria-label="Rechtliches">
-          <a href="impressum.html">Impressum</a>
-          <a href="datenschutz.html">Datenschutz</a>
-        </nav>
 
         <aside id="aboutPanel" class="about-panel is-collapsed" aria-label="App-Info">
           <div class="panel-header">
@@ -223,11 +219,30 @@
                 <h2>Waypoints</h2>
                 <p id="waypointStatus">Noch keine eigenen Waypoints</p>
               </div>
-              <button id="exportWaypointsButton" type="button">Export</button>
-              <button id="importWaypointsButton" type="button">Import</button>
-              <button id="clearWaypointsButton" type="button">Leeren</button>
+              <div class="waypoint-header-actions">
+                <button id="exportWaypointsButton" type="button" class="waypoint-icon-btn" title="Exportieren" aria-label="Waypoints exportieren"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M9 2v10M5 8l4 4 4-4M3 15h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+                <button id="importWaypointsButton" type="button" class="waypoint-icon-btn" title="Importieren" aria-label="Waypoints importieren"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M9 12V2M5 6l4-4 4 4M3 15h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+                <button id="undoWaypointButton" type="button" class="waypoint-icon-btn" title="Rückgängig" aria-label="Letzte Aktion rückgängig machen" disabled><svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M4 7h7a4 4 0 0 1 0 8H7M4 7l3-3M4 7l3 3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+                <button id="clearWaypointsButton" type="button" class="waypoint-icon-btn waypoint-icon-btn--danger" title="Alle löschen" aria-label="Alle Waypoints löschen"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M2 5h14M7 5V3h4v2M4 5l1 11h8l1-11M7.5 8v4.5M10.5 8v4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+              </div>
             </div>
             <input id="waypointImportInput" class="sr-only-file" type="file" accept=".csv,.json,.txt,.jpg,.jpeg,.png,.webp,text/csv,application/json,text/plain,image/jpeg,image/png,image/webp" multiple />
+
+            <div id="waypointEmptyState" class="waypoint-empty-state">
+              <svg width="48" height="48" viewBox="0 0 48 48" fill="none" aria-hidden="true">
+                <circle cx="24" cy="24" r="22" stroke="#b3d4f5" stroke-width="2"/>
+                <circle cx="24" cy="24" r="10" stroke="#b3d4f5" stroke-width="2"/>
+                <line x1="24" y1="2" x2="24" y2="8" stroke="#b3d4f5" stroke-width="2" stroke-linecap="round"/>
+                <line x1="24" y1="40" x2="24" y2="46" stroke="#b3d4f5" stroke-width="2" stroke-linecap="round"/>
+                <line x1="2" y1="24" x2="8" y2="24" stroke="#b3d4f5" stroke-width="2" stroke-linecap="round"/>
+                <line x1="40" y1="24" x2="46" y2="24" stroke="#b3d4f5" stroke-width="2" stroke-linecap="round"/>
+                <circle cx="24" cy="24" r="3" fill="#1d8cf8"/>
+                <line x1="24" y1="21" x2="24" y2="13" stroke="#1d8cf8" stroke-width="2.5" stroke-linecap="round"/>
+              </svg>
+              <p>Noch keine Waypoints erfasst</p>
+              <span>Name eingeben und auf die Karte tippen – oder einen Link, Screenshot oder CSV importieren.</span>
+            </div>
+
             <div class="waypoint-visibility">
               <div>
                 <strong>Waypoints ausblenden</strong>
@@ -283,6 +298,6 @@
       integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
       crossorigin=""
     ></script>
-    <script src="app.js?v=waypoints-50"></script>
+    <script src="app.js?v=waypoints-51"></script>
   </body>
 </html>
