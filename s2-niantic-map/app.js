@@ -306,38 +306,41 @@ scheduleRender();
 window.setTimeout(requestInitialLocation, 300);
 window.setTimeout(focusActiveS14Cell, 1200);
 
+function closeAllPanels() {
+  state.collapsed = true;
+  ui.panel.classList.add("is-collapsed");
+  ui.panelToggle.setAttribute("aria-expanded", "false");
+
+  ui.cellPanel.classList.add("is-collapsed");
+  ui.cellPanelToggle.setAttribute("aria-expanded", "false");
+
+  ui.weatherPanel.classList.add("is-collapsed");
+  ui.weatherPanelToggle.setAttribute("aria-expanded", "false");
+
+  ui.helpPanel.classList.add("is-collapsed");
+  ui.helpToggle.setAttribute("aria-expanded", "false");
+
+  ui.aboutPanel.classList.add("is-collapsed");
+  ui.brandButton.setAttribute("aria-expanded", "false");
+}
+
 function setPanelCollapsed(collapsed) {
+  if (!collapsed) closeAllPanels();
   state.collapsed = collapsed;
   ui.panel.classList.toggle("is-collapsed", collapsed);
   ui.panelToggle.setAttribute("aria-expanded", String(!collapsed));
-  if (!collapsed) {
-    setCellPanelCollapsed(true);
-    setWeatherPanelCollapsed(true);
-    setHelpPanelCollapsed(true);
-    setAboutPanelCollapsed(true);
-  }
 }
 
 function setCellPanelCollapsed(collapsed) {
+  if (!collapsed) closeAllPanels();
   ui.cellPanel.classList.toggle("is-collapsed", collapsed);
   ui.cellPanelToggle.setAttribute("aria-expanded", String(!collapsed));
-  if (!collapsed) {
-    setWeatherPanelCollapsed(true);
-    setPanelCollapsed(true);
-    setHelpPanelCollapsed(true);
-    setAboutPanelCollapsed(true);
-  }
 }
 
 function setWeatherPanelCollapsed(collapsed) {
+  if (!collapsed) closeAllPanels();
   ui.weatherPanel.classList.toggle("is-collapsed", collapsed);
   ui.weatherPanelToggle.setAttribute("aria-expanded", String(!collapsed));
-  if (!collapsed) {
-    setCellPanelCollapsed(true);
-    setPanelCollapsed(true);
-    setHelpPanelCollapsed(true);
-    setAboutPanelCollapsed(true);
-  }
 }
 
 function setLocationPanelCollapsed(collapsed) {
@@ -348,27 +351,15 @@ function setLocationPanelCollapsed(collapsed) {
 }
 
 function setHelpPanelCollapsed(collapsed) {
+  if (!collapsed) closeAllPanels();
   ui.helpPanel.classList.toggle("is-collapsed", collapsed);
   ui.helpToggle.setAttribute("aria-expanded", String(!collapsed));
-  if (!collapsed && !state.collapsed) {
-    setPanelCollapsed(true);
-  }
-  if (!collapsed) {
-    setCellPanelCollapsed(true);
-    setWeatherPanelCollapsed(true);
-    setAboutPanelCollapsed(true);
-  }
 }
 
 function setAboutPanelCollapsed(collapsed) {
+  if (!collapsed) closeAllPanels();
   ui.aboutPanel.classList.toggle("is-collapsed", collapsed);
   ui.brandButton.setAttribute("aria-expanded", String(!collapsed));
-  if (!collapsed) {
-    setCellPanelCollapsed(true);
-    setWeatherPanelCollapsed(true);
-    setPanelCollapsed(true);
-    setHelpPanelCollapsed(true);
-  }
 }
 
 function renderAppMetadata() {
