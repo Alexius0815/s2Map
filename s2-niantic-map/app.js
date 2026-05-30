@@ -352,7 +352,7 @@ function renderAppMetadata() {
     <article class="changelog-entry">
       <h3>${escapeHtml(`V${entry.version}`)} <span>${escapeHtml(entry.date)}</span></h3>
       <ul>
-        ${entry.changes.map((change) => `<li>${escapeHtml(change)}</li>`).join("")}
+        ${entry.changes.map((change) => `<li><span>${escapeHtml(change)}</span></li>`).join("")}
       </ul>
     </article>
   `).join("");
