@@ -1,6 +1,13 @@
-const APP_VERSION = "0.8.1";
-const APP_RELEASE_DATE = "29.05.2026";
+const APP_VERSION = "0.8.2";
+const APP_RELEASE_DATE = "30.05.2026";
 const APP_CHANGELOG = [
+  {
+    version: "0.8.2",
+    date: "30.05.2026",
+    changes: [
+      "Bulk-Import für mehrere Screenshots, Bilder und Importdateien",
+    ],
+  },
   {
     version: "0.8.1",
     date: "29.05.2026",
@@ -1218,35 +1225,48 @@ function exportWaypoints() {
 }
 
 async function importWaypointsFromFile(event) {
-  const [file] = Array.from(event.target.files || []);
-  if (!file) return;
+  const files = Array.from(event.target.files || []);
+  if (!files.length) return;
 
   try {
-    const isImage = isImageImportFile(file);
-    ui.waypointStatus.textContent = isImage
-      ? "Screenshot wird gelesen ..."
-      : "Import wird gelesen ...";
-    await yieldToBrowser();
+    const known = new Set(state.waypoints.map(waypointIdentity));
+    const additions = [];
+    let duplicates = 0;
+    let empty = 0;
+    let failed = 0;
 
-    const text = isImage ? await textFromImageFile(file) : await file.text();
-    const imported = parseWaypointImport(text, file.name);
-    if (!imported.length) {
+    for (const [index, file] of files.entries()) {
+      const isImage = isImageImportFile(file);
+      const progressLabel = files.length > 1 ? `${index + 1}/${files.length}: ` : "";
       ui.waypointStatus.textContent = isImage
-        ? "Bildimport: Name und Koordinaten wurden nicht sicher erkannt."
-        : "Import: keine gültigen Waypoints gefunden.";
-      return;
+        ? `${progressLabel}Screenshot wird gelesen ...`
+        : `${progressLabel}Import wird gelesen ...`;
+      await yieldToBrowser();
+
+      try {
+        const text = isImage ? await textFromImageFile(file, `${progressLabel}Screenshot`) : await file.text();
+        const imported = parseWaypointImport(text, file.name);
+        if (!imported.length) {
+          empty += 1;
+          continue;
+        }
+
+        imported.forEach((waypoint) => {
+          const identity = waypointIdentity(waypoint);
+          if (known.has(identity)) {
+            duplicates += 1;
+            return;
+          }
+          known.add(identity);
+          additions.push(waypoint);
+        });
+      } catch (error) {
+        failed += 1;
+      }
     }
 
-    const known = new Set(state.waypoints.map(waypointIdentity));
-    const additions = imported.filter((waypoint) => {
-      const identity = waypointIdentity(waypoint);
-      if (known.has(identity)) return false;
-      known.add(identity);
-      return true;
-    });
-
     if (!additions.length) {
-      ui.waypointStatus.textContent = "Import: alle Waypoints waren bereits vorhanden.";
+      ui.waypointStatus.textContent = importSummary(files.length, 0, duplicates, empty, failed);
       return;
     }
 
@@ -1255,7 +1275,7 @@ async function importWaypointsFromFile(event) {
     saveWaypoints();
     renderWaypoints();
     focusActiveS14Cell();
-    ui.waypointStatus.textContent = `${additions.length} Waypoints importiert`;
+    ui.waypointStatus.textContent = importSummary(files.length, additions.length, duplicates, empty, failed);
   } catch (error) {
     ui.waypointStatus.textContent = error.message || "Import konnte nicht gelesen werden.";
   } finally {
@@ -1263,7 +1283,16 @@ async function importWaypointsFromFile(event) {
   }
 }
 
-async function textFromImageFile(file) {
+function importSummary(fileCount, added, duplicates, empty, failed) {
+  const parts = [`${added} Waypoint${added === 1 ? "" : "s"} importiert`];
+  if (fileCount > 1) parts.unshift(`${fileCount} Dateien`);
+  if (duplicates) parts.push(`${duplicates} doppelt`);
+  if (empty) parts.push(`${empty} ohne sicheren Treffer`);
+  if (failed) parts.push(`${failed} fehlgeschlagen`);
+  return parts.join(" · ");
+}
+
+async function textFromImageFile(file, label = "Screenshot") {
   if (isHeicFile(file)) {
     throw new Error("HEIC-Bilder kann der Browser nicht sicher lesen. Bitte den Screenshot als PNG/JPEG importieren.");
   }
@@ -1285,13 +1314,13 @@ async function textFromImageFile(file) {
   await yieldToBrowser();
   await loadTesseract();
 
-  ui.waypointStatus.textContent = "Screenshot wird erkannt ...";
+  ui.waypointStatus.textContent = `${label} wird erkannt ...`;
   await yieldToBrowser();
   const imageUrl = await fileToDataUrl(file);
   const result = await window.Tesseract.recognize(imageUrl, "deu+eng", {
     logger: (progress) => {
       if (progress.status !== "recognizing text" || !Number.isFinite(progress.progress)) return;
-      ui.waypointStatus.textContent = `Screenshot wird erkannt ... ${Math.round(progress.progress * 100)}%`;
+      ui.waypointStatus.textContent = `${label} wird erkannt ... ${Math.round(progress.progress * 100)}%`;
     },
   });
 
