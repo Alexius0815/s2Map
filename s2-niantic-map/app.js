@@ -1,8 +1,8 @@
-const APP_VERSION = "1.0.0";
+const APP_VERSION = "0.8.1";
 const APP_RELEASE_DATE = "29.05.2026";
 const APP_CHANGELOG = [
   {
-    version: "1.0.0",
+    version: "0.8.1",
     date: "29.05.2026",
     changes: [
       "S2-Zellen für Wetter, S14-Planung und S17-Waypoints",
