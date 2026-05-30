@@ -366,25 +366,26 @@ button {
 }
 
 .legal-links a {
-  min-height: 34px;
+  min-height: 28px;
   display: inline-flex;
   align-items: center;
-  padding: 0 10px;
-  border: 1px solid rgba(29, 140, 248, 0.18);
-  border-radius: 8px;
-  color: #0956b6;
-  background: rgba(255, 255, 255, 0.94);
-  box-shadow: 0 10px 24px rgba(12, 47, 92, 0.16);
-  font-size: 12px;
-  font-weight: 900;
+  padding: 0 8px;
+  border: 1px solid rgba(29, 140, 248, 0.1);
+  border-radius: 999px;
+  color: rgba(9, 86, 182, 0.72);
+  background: rgba(255, 255, 255, 0.68);
+  box-shadow: 0 8px 18px rgba(12, 47, 92, 0.08);
+  font-size: 10.5px;
+  font-weight: 800;
   text-decoration: none;
   backdrop-filter: blur(18px);
 }
 
 .legal-links a:hover,
 .legal-links a:focus-visible {
-  border-color: var(--spark);
-  background: #fff8d6;
+  border-color: rgba(255, 203, 5, 0.62);
+  color: #0956b6;
+  background: rgba(255, 248, 214, 0.95);
 }
 
 .about-panel {
@@ -1918,9 +1919,9 @@ button {
   }
 
   .legal-links a {
-    min-height: 32px;
-    padding: 0 8px;
-    font-size: 11px;
+    min-height: 28px;
+    padding: 0 7px;
+    font-size: 10px;
   }
 
   .brand p {
