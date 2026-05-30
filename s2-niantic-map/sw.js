@@ -1,9 +1,9 @@
-const CACHE_NAME = "s2-maps-shell-v51";
+const CACHE_NAME = "s2-maps-shell-v52";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./styles.css?v=waypoints-49",
-  "./app.js?v=waypoints-49",
+  "./styles.css?v=waypoints-50",
+  "./app.js?v=waypoints-50",
   "./icon.svg",
   "./manifest.webmanifest",
   "./impressum.html",

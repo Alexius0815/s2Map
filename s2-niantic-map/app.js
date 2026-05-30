@@ -1,6 +1,19 @@
-const APP_VERSION = "0.8.4";
+const APP_VERSION = "0.8.5";
 const APP_RELEASE_DATE = "30.05.2026";
 const APP_CHANGELOG = [
+  {
+    version: "0.8.5",
+    date: "30.05.2026",
+    changes: [
+      "Sichtrichtung per default aktiv",
+      "GPS-Button springt sofort zur aktuellen Position wenn GPS läuft",
+      "Standortmodus (Ort/Koordinaten) wird nach Reload gespeichert",
+      "Lupe als Standortsuche-Symbol überarbeitet",
+      "S14 ok-Status für plausible Arena-Zellen ergänzt",
+      "Panel-Management vereinheitlicht: Panels schließen sich gegenseitig korrekt",
+      "Scroll-Performance: diff-basiertes Karten-Rendering statt Komplett-Neuaufbau",
+    ],
+  },
   {
     version: "0.8.4",
     date: "30.05.2026",
@@ -73,6 +86,7 @@ const layers = [
 
 const WAYPOINT_STORAGE_KEY = "s2MapsWaypoints";
 const LOCATION_CHOICE_STORAGE_KEY = "s2MapsLocationChoice";
+const LOCATION_MODE_STORAGE_KEY = "s2MapsLocationMode";
 const OCR_SCRIPT_URL = "https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js";
 const INTERACTION_RADIUS_METERS = 80;
 
@@ -95,7 +109,7 @@ const state = {
   renderTimer: 0,
   collapsed: true,
   locationCollapsed: false,
-  locationMode: "place",
+  locationMode: (() => { try { return localStorage.getItem("s2MapsLocationMode") || "place"; } catch { return "place"; } })(),
   locationMarker: null,
   locationRadiusCircle: null,
   locationFollow: true,
@@ -276,14 +290,19 @@ ui.locationInput.addEventListener("keydown", (event) => {
   if (event.key === "Enter") jumpToLocation();
 });
 ui.locationModes.forEach((input) => {
+  if (input.value === state.locationMode) input.checked = true;
   input.addEventListener("change", () => {
     if (!input.checked) return;
     state.locationMode = input.value;
+    try { localStorage.setItem(LOCATION_MODE_STORAGE_KEY, input.value); } catch { /* ignorieren */ }
     ui.locationInput.placeholder = input.value === "place" ? "München, Berlin, Köln ..." : "48.137, 11.575";
     ui.locationStatus.textContent = input.value === "place" ? "Ort oder PLZ suchen" : "Koordinaten eingeben";
     ui.locationInput.focus();
   });
 });
+// Placeholder und Status beim Start auf gespeicherten Modus setzen
+ui.locationInput.placeholder = state.locationMode === "place" ? "München, Berlin, Köln ..." : "48.137, 11.575";
+ui.locationStatus.textContent = state.locationMode === "place" ? "Ort oder PLZ suchen" : "Koordinaten eingeben";
 document.addEventListener("keydown", (event) => {
   if (event.key === "Escape") setAboutPanelCollapsed(true);
 });
