@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#0f766e" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="S2 Map" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <title>S2 Map für Pokémon GO</title>
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="icon" href="icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="icon.svg" />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIINfQ3p5SMYk9g3Wg5p0p2mIPlQGLrC6r0="
+      crossorigin=""
+    />
+    <link rel="stylesheet" href="styles.css?v=waypoints-49" />
+  </head>
+  <body class="awaiting-location">
+    <main class="app-shell">
+      <section class="map-stage" aria-label="Karte mit S2-Zellen">
+        <div id="map"></div>
+
+        <div class="topbar">
+          <button id="brandButton" class="brand" type="button" aria-expanded="false" aria-controls="aboutPanel">
+            <span class="brand-mark" aria-hidden="true"></span>
+            <div>
+              <h1>S2 Map für Pokémon GO</h1>
+              <p>Inoffizielle Orientierung für S2 Zellen, Wetterboosts und Waypoints</p>
+            </div>
+          </button>
+        </div>
+
+        <nav class="legal-links" aria-label="Rechtliches">
+          <a href="impressum.html">Impressum</a>
+          <a href="datenschutz.html">Datenschutz</a>
+        </nav>
+
+        <aside id="aboutPanel" class="about-panel is-collapsed" aria-label="App-Info">
+          <div class="panel-header">
+            <div>
+              <h2>App-Info</h2>
+              <p>S2 Map für Pokémon GO</p>
+            </div>
+            <button id="closeAboutPanel" class="panel-close-button" type="button" aria-label="App-Info schließen">×</button>
+          </div>
+          <dl class="about-list">
+            <div id="versionInfoRow" class="version-info-row">
+              <dt>Version</dt>
+              <dd>
+                <button id="appVersion" class="version-inline-button" type="button" aria-expanded="false">V0.8.4</button>
+              </dd>
+              <div id="changelogList" class="changelog-list" hidden></div>
+            </div>
+            <div><dt>Build</dt><dd>Static Web App · Leaflet · Vercel Function</dd></div>
+            <div><dt>Stand</dt><dd><span id="appReleaseDate">30.05.2026</span></dd></div>
+            <div><dt>Autor</dt><dd>Alex Hofmann</dd></div>
+            <div>
+              <dt>Installieren</dt>
+              <dd class="install-box">
+                <button id="installButton" type="button">App installieren</button>
+                <span id="installStatus">iPhone: Safari öffnen, Teilen antippen, „Zum Home-Bildschirm“ wählen. Android: Chrome öffnen und „App installieren“ nutzen.</span>
+              </dd>
+            </div>
+            <div><dt>Projekt</dt><dd><a href="https://github.com/Alexius0815/s2Map" target="_blank" rel="noreferrer">github.com/Alexius0815/s2Map</a></dd></div>
+            <div><dt>Daten</dt><dd>OpenStreetMap, <a href="https://s2geometry.io/" target="_blank" rel="noreferrer">S2 Geometry</a> und Open-Meteo-Näherung</dd></div>
+            <div><dt>Lizenzen</dt><dd>Karten © OpenStreetMap-Mitwirkende · Wetterdaten by Open-Meteo.com · Leaflet BSD-2-Clause</dd></div>
+            <div><dt>S2</dt><dd>S2 Geometry ist ein Google-Open-Source-Projekt. Diese App nutzt eine eigene vereinfachte Browser-Implementierung für Zell-Overlays.</dd></div>
+            <div><dt>Rechtliches</dt><dd><a href="impressum.html">Impressum</a> · <a href="datenschutz.html">Datenschutz</a></dd></div>
+            <div><dt>Hinweis</dt><dd>Inoffizielle Orientierungshilfe. Nicht verbunden mit Niantic, Pokémon GO, The Pokémon Company oder PokéWiki.</dd></div>
+          </dl>
+        </aside>
+
+        <div id="locationConsent" class="location-consent" role="dialog" aria-label="Standortfreigabe">
+          <span class="location-consent-logo" aria-hidden="true"></span>
+          <p>Aktuellen Standort nutzen?</p>
+          <span>Dann startet die Karte direkt in deiner Nähe. Dein Standort bleibt nur auf deinem Gerät.</span>
+          <div>
+            <button id="allowLocationButton" type="button">Ja</button>
+            <button id="skipLocationButton" type="button">Nein</button>
+          </div>
+        </div>
+
+        <aside class="location-panel" aria-label="Standort auswählen">
+          <div class="location-panel-header">
+            <span>Standort</span>
+            <button id="closeLocationPanel" class="panel-close-button" type="button" aria-label="Standortpanel einklappen">×</button>
+          </div>
+          <div class="mode-switch" role="group" aria-label="Standortmodus">
+            <label>
+              <input type="radio" name="locationMode" value="place" checked />
+              <span>Ort</span>
+            </label>
+            <label>
+              <input type="radio" name="locationMode" value="coordinates" />
+              <span>Koordinaten</span>
+            </label>
+          </div>
+          <div class="location-row">
+            <input id="locationInput" type="text" placeholder="München, Berlin, Köln ..." autocomplete="off" />
+            <button id="locationGoButton" type="button">Los</button>
+          </div>
+          <div class="location-radius-control">
+            <div>
+              <strong>80-m-Drehradius</strong>
+              <span>Dezent anzeigen, welche Stops/Arenen in Reichweite liegen.</span>
+            </div>
+            <label class="switch-control" aria-label="80-m-Drehradius anzeigen">
+              <input id="locationRadiusButton" type="checkbox" checked />
+              <span></span>
+            </label>
+          </div>
+          <p id="locationStatus">Ort oder PLZ suchen</p>
+        </aside>
+
+        <button id="gpsReturnButton" class="gps-return-button" type="button" aria-label="Zur GPS-Position springen" title="Zur GPS-Position"></button>
+        <button id="locationPanelToggle" class="location-panel-toggle" type="button" aria-expanded="true" aria-label="Standortsuche öffnen" title="Standortsuche"></button>
+        <button id="compassButton" class="compass-button" type="button" aria-label="Karte einnorden" title="Karte einnorden">
+          <span aria-hidden="true"></span>
+        </button>
+
+        <button id="cellPanelToggle" class="cell-panel-toggle" type="button" aria-expanded="false" aria-controls="cellPanel">
+          S2 Zellen
+        </button>
+
+        <button id="weatherPanelToggle" class="weather-panel-toggle" type="button" aria-expanded="false" aria-controls="weatherPanel">
+          Wetter
+        </button>
+
+        <button id="panelToggle" class="panel-toggle" type="button" aria-expanded="false" aria-controls="controlPanel">
+          Waypoints
+        </button>
+
+        <button id="helpToggle" class="help-toggle" type="button" aria-expanded="false" aria-controls="helpPanel" aria-label="Boost-Hilfe öffnen">
+          ?
+        </button>
+
+        <aside id="helpPanel" class="help-panel is-collapsed" aria-label="Boost-Hilfe">
+          <div class="panel-header">
+            <div>
+              <h2>Hilfe</h2>
+              <p>S2 Zellen, Wetter und Waypoints</p>
+            </div>
+            <button id="closeHelpPanel" class="panel-close-button" type="button" aria-label="Boost-Hilfe schließen">×</button>
+          </div>
+          <details class="help-section" open>
+            <summary>S2 Zellen</summary>
+            <p><strong>S10</strong> dient als grobe Wetterzelle. <strong>S14</strong> hilft bei Arena- und POI-Planung. <strong>S17</strong> ist die feine Orientierung für einzelne Stop- oder Waypoint-Positionen.</p>
+            <p>S14-Zellen mit erfassten Waypoints bekommen farbige Hintergründe: gelb nahe am nächsten Arena-Kipppunkt, grün plausibel, rot auffällig. Tippe die S14-Zelle oder das Label an, um Details zu öffnen.</p>
+            <p>Die Sichtbarkeit der S2 Zellen schaltest du getrennt im Menü <strong>S2 Zellen</strong>.</p>
+          </details>
+          <details class="help-section">
+            <summary>Wetter</summary>
+            <div class="boost-list" aria-label="Wetterboost-Typen">
+              <dl>
+                <div><dt>Sonnig / Klar</dt><dd><span class="type-links"><a href="https://www.pokewiki.de/Pflanze" target="_blank" rel="noreferrer">Pflanze</a><a href="https://www.pokewiki.de/Feuer" target="_blank" rel="noreferrer">Feuer</a><a href="https://www.pokewiki.de/Boden" target="_blank" rel="noreferrer">Boden</a></span></dd></div>
+                <div><dt>Regen</dt><dd><span class="type-links"><a href="https://www.pokewiki.de/Wasser" target="_blank" rel="noreferrer">Wasser</a><a href="https://www.pokewiki.de/Elektro" target="_blank" rel="noreferrer">Elektro</a><a href="https://www.pokewiki.de/K%C3%A4fer" target="_blank" rel="noreferrer">Käfer</a></span></dd></div>
+                <div><dt>Schnee</dt><dd><span class="type-links"><a href="https://www.pokewiki.de/Eis" target="_blank" rel="noreferrer">Eis</a><a href="https://www.pokewiki.de/Stahl" target="_blank" rel="noreferrer">Stahl</a></span></dd></div>
+                <div><dt>Windig</dt><dd><span class="type-links"><a href="https://www.pokewiki.de/Flug" target="_blank" rel="noreferrer">Flug</a><a href="https://www.pokewiki.de/Drache" target="_blank" rel="noreferrer">Drache</a><a href="https://www.pokewiki.de/Psycho" target="_blank" rel="noreferrer">Psycho</a></span></dd></div>
+                <div><dt>Bewölkt</dt><dd><span class="type-links"><a href="https://www.pokewiki.de/Fee" target="_blank" rel="noreferrer">Fee</a><a href="https://www.pokewiki.de/Kampf" target="_blank" rel="noreferrer">Kampf</a><a href="https://www.pokewiki.de/Gift" target="_blank" rel="noreferrer">Gift</a></span></dd></div>
+                <div><dt>Teilweise bewölkt</dt><dd><span class="type-links"><a href="https://www.pokewiki.de/Normal" target="_blank" rel="noreferrer">Normal</a><a href="https://www.pokewiki.de/Gestein" target="_blank" rel="noreferrer">Gestein</a></span></dd></div>
+                <div><dt>Nebel</dt><dd><span class="type-links"><a href="https://www.pokewiki.de/Unlicht" target="_blank" rel="noreferrer">Unlicht</a><a href="https://www.pokewiki.de/Geist" target="_blank" rel="noreferrer">Geist</a></span></dd></div>
+              </dl>
+              <p class="source-note">Externe Typ-Links führen zu PokéWiki. Es werden keine PokéWiki-Inhalte in diese App übernommen.</p>
+            </div>
+          </details>
+          <details class="help-section">
+            <summary>Waypoints</summary>
+            <p>Waypoints speichert die App nur lokal auf deinem Gerät. In einer S17-Zelle bleibt ein Eintrag aktiv; weitere Einträge werden ausgegraut und können gezielt aktiviert werden.</p>
+            <p>Der 80-m-Drehradius ist eine Näherung für die aktuelle Stop- und Arena-Reichweite in Pokémon GO. Der Kreis zeigt, welche erfassten Waypoints ungefähr erreichbar sind.</p>
+            <p>Import unterstützt CSV aus dieser App, einfache JSON-Listen, Koordinaten-Text, Kartenlinks und Screenshots. Ohne erkannte Koordinate startet „Waypoint hinzufügen“ einen Platzierungsmodus auf der Karte.</p>
+          </details>
+        </aside>
+
+        <aside id="cellPanel" class="cell-panel is-collapsed" aria-label="S2 Zellen auswählen">
+          <div class="panel-header">
+            <div>
+              <h2>S2 Zellen</h2>
+              <p id="renderStatus">Bereit</p>
+            </div>
+            <button id="closeCellPanel" class="panel-close-button" type="button" aria-label="S2-Zellmenü einklappen">×</button>
+          </div>
+
+          <div class="layer-list" id="layerList"></div>
+        </aside>
+
+        <aside id="weatherPanel" class="weather-panel is-collapsed" aria-label="Wetterdaten">
+          <div class="panel-header">
+            <div>
+              <h2>Wetter</h2>
+              <p>Boost-Orientierung</p>
+            </div>
+            <button id="closeWeatherPanel" class="panel-close-button" type="button" aria-label="Wettermenü einklappen">×</button>
+          </div>
+
+          <div class="weather-controls">
+            <div>
+              <h2>Wetter</h2>
+              <p id="weatherStatus">Aus · Quelle: Open-Meteo über den eigenen API-Proxy</p>
+            </div>
+            <label class="switch-control" aria-label="Wetterdaten umschalten">
+              <input id="weatherButton" type="checkbox" />
+              <span></span>
+            </label>
+          </div>
+        </aside>
+
+        <aside id="controlPanel" class="control-panel is-collapsed" aria-label="Waypoints">
+          <div class="panel-header">
+            <div>
+              <h2>Waypoints</h2>
+              <p>Stops, Arenen und Plausibilität</p>
+            </div>
+            <button id="closePanel" class="panel-close-button" type="button" aria-label="Panel einklappen">×</button>
+          </div>
+
+          <div class="waypoint-controls">
+            <div class="waypoint-header">
+              <div>
+                <h2>Waypoints</h2>
+                <p id="waypointStatus">Noch keine eigenen Waypoints</p>
+              </div>
+              <button id="exportWaypointsButton" type="button">Export</button>
+              <button id="importWaypointsButton" type="button">Import</button>
+              <button id="clearWaypointsButton" type="button">Leeren</button>
+            </div>
+            <input id="waypointImportInput" class="sr-only-file" type="file" accept=".csv,.json,.txt,.jpg,.jpeg,.png,.webp,text/csv,application/json,text/plain,image/jpeg,image/png,image/webp" multiple />
+            <div class="waypoint-visibility">
+              <div>
+                <strong>Waypoints ausblenden</strong>
+                <span>Marker bleiben gespeichert und können wieder eingeblendet werden.</span>
+              </div>
+              <label class="switch-control" aria-label="Waypoints ausblenden">
+                <input id="waypointsVisibilityButton" type="checkbox" />
+                <span></span>
+              </label>
+            </div>
+            <input id="waypointNameInput" type="text" placeholder="Name, z.B. Rad- und Wanderweg Wegweiser" autocomplete="off" />
+            <div class="waypoint-selects">
+              <label>
+                <span>Typ</span>
+                <select id="waypointTypeInput">
+                  <option value="stop">Stop</option>
+                  <option value="arena">Arena</option>
+                </select>
+              </label>
+              <label>
+                <span>Umfeld</span>
+                <select id="waypointAreaInput">
+                  <option value="normal">Normal</option>
+                  <option value="park">Park / Grünfläche</option>
+                  <option value="sponsor">Sponsor / Geschäft</option>
+                  <option value="unclear">Unklar</option>
+                </select>
+              </label>
+            </div>
+            <textarea id="waypointPasteInput" rows="3" placeholder="Koordinaten, Link oder Screenshot importieren, z.B. Große Reifenschaukel https://maps.apple/..."></textarea>
+            <div class="waypoint-actions">
+              <button id="addWaypointButton" type="button">Waypoint hinzufügen</button>
+            </div>
+          </div>
+        </aside>
+      </section>
+    </main>
+
+    <template id="layerTemplate">
+      <article class="layer-card">
+        <label class="layer-toggle">
+          <input type="checkbox" />
+          <span class="swatch"></span>
+          <span class="layer-title"></span>
+        </label>
+        <button class="info-button" type="button" aria-label="Erklärung aufklappen" aria-expanded="false">⌄</button>
+        <p class="layer-description"></p>
+      </article>
+    </template>
+
+    <script
+      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+      crossorigin=""
+    ></script>
+    <script src="app.js?v=waypoints-49"></script>
+  </body>
+</html>
