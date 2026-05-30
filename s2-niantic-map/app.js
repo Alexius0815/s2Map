@@ -221,6 +221,7 @@ ui.helpToggle.addEventListener("click", () => setHelpPanelCollapsed(!ui.helpPane
 ui.closeHelpPanel.addEventListener("click", () => setHelpPanelCollapsed(true));
 ui.brandButton.addEventListener("click", () => setAboutPanelCollapsed(!ui.aboutPanel.classList.contains("is-collapsed")));
 ui.brandButton.addEventListener("mouseenter", () => setAboutPanelCollapsed(false));
+ui.appVersion.addEventListener("click", toggleChangelog);
 ui.closeAboutPanel.addEventListener("click", () => setAboutPanelCollapsed(true));
 ui.installButton.addEventListener("click", installApp);
 ui.allowLocationButton.addEventListener("click", () => {
@@ -355,6 +356,12 @@ function renderAppMetadata() {
       </ul>
     </article>
   `).join("");
+}
+
+function toggleChangelog() {
+  const expanded = ui.appVersion.getAttribute("aria-expanded") === "true";
+  ui.appVersion.setAttribute("aria-expanded", String(!expanded));
+  ui.changelogList.hidden = expanded;
 }
 
 function setLocationConsentVisible(visible) {

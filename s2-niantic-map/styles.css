@@ -439,10 +439,6 @@ button {
   background: #f8fbff;
 }
 
-.about-list .changelog-row {
-  align-items: start;
-}
-
 .about-list dt {
   color: #0956b6;
   font-size: 12px;
@@ -495,9 +491,45 @@ button {
   line-height: 1.35;
 }
 
+.version-info-row {
+  align-items: start;
+}
+
+.version-info-row dd {
+  display: grid;
+  gap: 8px;
+}
+
+.version-inline-button {
+  width: fit-content;
+  min-height: 28px;
+  padding: 0 10px;
+  border: 1px solid rgba(15, 118, 110, 0.22);
+  border-radius: 999px;
+  color: #0f766e;
+  background: rgba(51, 209, 160, 0.16);
+  font-size: 11px;
+  font-weight: 1000;
+}
+
+.version-inline-button::after {
+  content: "⌄";
+  margin-left: 6px;
+  display: inline-block;
+  transition: transform 150ms ease;
+}
+
+.version-inline-button[aria-expanded="true"]::after {
+  transform: rotate(180deg);
+}
+
 .changelog-list {
   display: grid;
   gap: 8px;
+}
+
+.changelog-list[hidden] {
+  display: none;
 }
 
 .changelog-entry {
