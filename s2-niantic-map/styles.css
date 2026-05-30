@@ -946,7 +946,7 @@ button {
 .help-toggle {
   position: absolute;
   z-index: 520;
-  top: max(78px, calc(env(safe-area-inset-top) + 78px));
+  top: max(12px, env(safe-area-inset-top));
   right: 14px;
   width: 44px;
   height: 44px;
@@ -2107,9 +2107,9 @@ button {
   }
 
   .help-toggle {
-    top: max(114px, calc(env(safe-area-inset-top) + 114px));
+    top: max(12px, env(safe-area-inset-top));
     right: 10px;
-    width: 36px;
-    height: 36px;
+    width: 44px;
+    height: 44px;
   }
 }
