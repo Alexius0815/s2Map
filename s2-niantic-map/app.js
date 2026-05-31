@@ -1065,7 +1065,7 @@ function renderWaypoints() {
         sticky: false,
         direction: "top",
         className: "waypoint-tooltip",
-        offset: [0, -32],
+        offset: [0, -16],
       })
       .on("mouseover", () => marker.openTooltip())
       .on("focus", () => marker.openTooltip())
@@ -1121,7 +1121,7 @@ function waypointIcon(waypoint, inactive) {
     iconSize: [34, 34],
     iconAnchor: [17, 17],
     popupAnchor: [0, -22],
-    tooltipAnchor: [0, -44],
+    tooltipAnchor: [0, -32],
   });
 }
 
