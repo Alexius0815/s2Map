@@ -12,6 +12,32 @@
   --spark: #ffcb05;
   --spark-strong: #f2a900;
   --danger: #ef4444;
+  --app-bg: #dbeeff;
+  --map-bg: #cfe7fb;
+  --panel-bg: rgba(255, 255, 255, 0.94);
+  --panel-bg-strong: rgba(255, 255, 255, 0.97);
+  --panel-card: #f8fbff;
+  --panel-card-soft: rgba(255, 255, 255, 0.72);
+  --input-bg: #ffffff;
+  --chip-bg: #e7f3ff;
+  --control-bg: rgba(255, 255, 255, 0.92);
+  --control-bg-hover: #ffffff;
+  --button-bg: #1d8cf8;
+  --button-shadow: #0956b6;
+  --inverse-ink: #ffffff;
+  --focus-ring: rgba(255, 203, 5, 0.32);
+  --map-tile-filter: none;
+  --legal-bg: #dbeeff;
+  --placeholder-bg: #fff1f2;
+  --placeholder-ink: #991b1b;
+  --status-next-bg: rgba(255, 255, 255, 0.94);
+  --status-near-bg: rgba(255, 250, 240, 0.95);
+  --status-ok-bg: rgba(240, 253, 244, 0.95);
+  --status-over-bg: rgba(255, 245, 245, 0.96);
+  --status-next-ink: #4c1d95;
+  --status-near-ink: #92400e;
+  --status-ok-ink: #166534;
+  --status-over-ink: #991b1b;
   font-family:
     Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
@@ -35,7 +61,7 @@ body,
 body {
   margin: 0;
   color: var(--ink);
-  background: #dbeeff;
+  background: var(--app-bg);
 }
 
 .leaflet-pane,
@@ -238,7 +264,7 @@ button {
 
 #map {
   z-index: 1;
-  background: #cfe7fb;
+  background: var(--map-bg);
 }
 
 .awaiting-location .map-stage {
@@ -493,6 +519,46 @@ button {
 
 .version-inline-button[aria-expanded="true"]::after {
   transform: rotate(180deg);
+}
+
+.theme-info-row dd {
+  min-width: 0;
+}
+
+.theme-switch {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
+  width: min(220px, 100%);
+  padding: 3px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel-card-soft);
+}
+
+.theme-switch label {
+  min-width: 0;
+}
+
+.theme-switch input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.theme-switch span {
+  display: grid;
+  min-height: 28px;
+  place-items: center;
+  border-radius: 6px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.theme-switch input:checked + span {
+  color: var(--inverse-ink);
+  background: var(--button-bg);
 }
 
 .changelog-list {
@@ -2379,4 +2445,355 @@ button {
   .location-marker { background: rgba(29, 140, 248, 0.2); }
 
   .waypoint-planned-form-toggle { color: var(--muted); }
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ink: #d9ecff;
+    --muted: #95abc2;
+    --surface: rgba(15, 25, 42, 0.96);
+    --surface-solid: #101b2c;
+    --line: rgba(115, 176, 245, 0.22);
+    --shadow: 0 18px 42px rgba(0, 0, 0, 0.42);
+    --accent: #5ba3f5;
+    --accent-strong: #84bfff;
+    --accent-soft: rgba(91, 163, 245, 0.16);
+    --spark: #ffd84d;
+    --spark-strong: #c99700;
+    --danger: #fb7185;
+    --app-bg: #0c1422;
+    --map-bg: #0e1a2c;
+    --panel-bg: rgba(14, 24, 40, 0.96);
+    --panel-bg-strong: rgba(14, 24, 40, 0.985);
+    --panel-card: rgba(255, 255, 255, 0.045);
+    --panel-card-soft: rgba(255, 255, 255, 0.065);
+    --input-bg: rgba(255, 255, 255, 0.075);
+    --chip-bg: rgba(91, 163, 245, 0.16);
+    --control-bg: rgba(14, 24, 40, 0.92);
+    --control-bg-hover: rgba(19, 35, 57, 0.98);
+    --button-bg: #1a5b9e;
+    --button-shadow: #0b315a;
+    --inverse-ink: #ffffff;
+    --focus-ring: rgba(255, 216, 77, 0.24);
+    --map-tile-filter: brightness(0.68) contrast(1.14) saturate(0.78);
+    --legal-bg: #0c1422;
+    --placeholder-bg: rgba(127, 29, 29, 0.18);
+    --placeholder-ink: #fecaca;
+    --status-next-bg: rgba(124, 58, 237, 0.2);
+    --status-near-bg: rgba(245, 158, 11, 0.16);
+    --status-ok-bg: rgba(34, 197, 94, 0.14);
+    --status-over-bg: rgba(239, 68, 68, 0.16);
+    --status-next-ink: #c4b5fd;
+    --status-near-ink: #fbbf24;
+    --status-ok-ink: #86efac;
+    --status-over-ink: #fca5a5;
+  }
+}
+
+:root[data-theme="dark"] {
+  --ink: #d9ecff;
+  --muted: #95abc2;
+  --surface: rgba(15, 25, 42, 0.96);
+  --surface-solid: #101b2c;
+  --line: rgba(115, 176, 245, 0.22);
+  --shadow: 0 18px 42px rgba(0, 0, 0, 0.42);
+  --accent: #5ba3f5;
+  --accent-strong: #84bfff;
+  --accent-soft: rgba(91, 163, 245, 0.16);
+  --spark: #ffd84d;
+  --spark-strong: #c99700;
+  --danger: #fb7185;
+  --app-bg: #0c1422;
+  --map-bg: #0e1a2c;
+  --panel-bg: rgba(14, 24, 40, 0.96);
+  --panel-bg-strong: rgba(14, 24, 40, 0.985);
+  --panel-card: rgba(255, 255, 255, 0.045);
+  --panel-card-soft: rgba(255, 255, 255, 0.065);
+  --input-bg: rgba(255, 255, 255, 0.075);
+  --chip-bg: rgba(91, 163, 245, 0.16);
+  --control-bg: rgba(14, 24, 40, 0.92);
+  --control-bg-hover: rgba(19, 35, 57, 0.98);
+  --button-bg: #1a5b9e;
+  --button-shadow: #0b315a;
+  --inverse-ink: #ffffff;
+  --focus-ring: rgba(255, 216, 77, 0.24);
+  --map-tile-filter: brightness(0.68) contrast(1.14) saturate(0.78);
+  --legal-bg: #0c1422;
+  --placeholder-bg: rgba(127, 29, 29, 0.18);
+  --placeholder-ink: #fecaca;
+  --status-next-bg: rgba(124, 58, 237, 0.2);
+  --status-near-bg: rgba(245, 158, 11, 0.16);
+  --status-ok-bg: rgba(34, 197, 94, 0.14);
+  --status-over-bg: rgba(239, 68, 68, 0.16);
+  --status-next-ink: #c4b5fd;
+  --status-near-ink: #fbbf24;
+  --status-ok-ink: #86efac;
+  --status-over-ink: #fca5a5;
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+
+:root[data-theme="dark"],
+:root.is-dark-theme {
+  color-scheme: dark;
+}
+
+.leaflet-tile-pane {
+  filter: var(--map-tile-filter);
+}
+
+.brand,
+.about-panel,
+.location-panel,
+.help-panel,
+.cell-panel,
+.weather-panel,
+.control-panel,
+.leaflet-popup-content-wrapper,
+.leaflet-tooltip {
+  color: var(--ink);
+  border-color: var(--line);
+  background: var(--panel-bg);
+  box-shadow: var(--shadow);
+}
+
+.leaflet-popup-tip {
+  background: var(--panel-bg);
+}
+
+.about-list > div,
+.changelog-list,
+.layer-card,
+.weather-controls,
+.waypoint-controls,
+.waypoint-visibility,
+.location-radius-control,
+.help-section,
+.s14-cell-popup dl div,
+.waypoint-type-toggle,
+.s14-cell-popup-wrapper .leaflet-popup-content-wrapper,
+.legal-card {
+  border-color: var(--line);
+  background: var(--panel-card);
+}
+
+.s14-cell-popup-wrapper .leaflet-popup-tip {
+  background: var(--panel-card);
+}
+
+.location-row input,
+.waypoint-controls input,
+.waypoint-controls textarea,
+.waypoint-controls select,
+.waypoint-name-field input,
+.waypoint-photo-fields input {
+  color: var(--ink);
+  border-color: var(--line);
+  background: var(--input-bg);
+}
+
+.cell-panel-toggle,
+.weather-panel-toggle,
+.panel-toggle,
+.help-toggle,
+.gps-return-button,
+.location-panel-toggle,
+.panel-close-button,
+.icon-button,
+.leaflet-control-attribution {
+  color: var(--accent-strong);
+  border-color: var(--line);
+  background: var(--control-bg);
+}
+
+.cell-panel-toggle:hover,
+.weather-panel-toggle:hover,
+.panel-toggle:hover,
+.help-toggle:hover,
+.gps-return-button:hover,
+.location-panel-toggle:hover,
+.panel-close-button:hover {
+  background: var(--control-bg-hover);
+}
+
+.leaflet-control-zoom {
+  border-color: var(--line);
+  background: var(--panel-bg);
+}
+
+.leaflet-control-zoom a,
+.location-row button:not(.icon-button),
+.location-consent button,
+.install-box button,
+.waypoint-popup button,
+.waypoint-actions button,
+.legal-back {
+  color: var(--inverse-ink);
+  background: var(--button-bg);
+  box-shadow: 0 3px 0 var(--button-shadow);
+}
+
+.brand h1,
+.about-list dt,
+.about-list a,
+.panel-header h2,
+.legend h2,
+.location-panel-header span,
+.location-consent p,
+.waypoint-controls h2,
+.weather-controls h2,
+.help-section summary,
+.boost-list dt,
+.type-links a,
+.s14-cell-popup span,
+.waypoint-popup em,
+.legal-card h1,
+.legal-card h2,
+.legal-card a {
+  color: var(--accent-strong);
+}
+
+.gps-return-button::before,
+.location-panel-toggle::after {
+  background: var(--accent-strong);
+}
+
+.location-panel-toggle::before {
+  border-color: var(--accent-strong);
+}
+
+.brand-mark,
+.location-consent-logo {
+  border-color: var(--accent-strong);
+  background:
+    radial-gradient(circle at 70% 30%, var(--spark) 0 10%, transparent 11%),
+    linear-gradient(90deg, transparent 0 30%, color-mix(in srgb, var(--accent-strong) 70%, transparent) 31% 36%, transparent 37% 63%, color-mix(in srgb, var(--accent-strong) 70%, transparent) 64% 69%, transparent 70%),
+    linear-gradient(0deg, transparent 0 30%, color-mix(in srgb, var(--accent-strong) 70%, transparent) 31% 36%, transparent 37% 63%, color-mix(in srgb, var(--accent-strong) 70%, transparent) 64% 69%, transparent 70%),
+    radial-gradient(circle, var(--surface-solid) 0 58%, var(--accent-soft) 59% 100%);
+}
+
+.location-consent {
+  border-color: var(--line);
+  background:
+    radial-gradient(circle at 18% 18%, color-mix(in srgb, var(--spark) 18%, transparent), transparent 34%),
+    radial-gradient(circle at 88% 8%, rgba(51, 209, 160, 0.14), transparent 28%),
+    var(--panel-bg-strong);
+}
+
+.location-consent button + button {
+  color: #102033;
+  background: var(--spark);
+  box-shadow: 0 3px 0 var(--spark-strong);
+}
+
+.mode-switch span,
+.type-links a,
+.info-button,
+.s2-label {
+  color: var(--accent-strong);
+  border-color: var(--line);
+  background: var(--chip-bg);
+}
+
+.mode-switch input:checked + span,
+.waypoint-type-toggle input:checked + span {
+  color: var(--inverse-ink);
+  border-color: var(--button-bg);
+  background: var(--button-bg);
+}
+
+.switch-control span {
+  border-color: var(--line);
+  background: color-mix(in srgb, var(--muted) 28%, transparent);
+}
+
+.switch-control span::after {
+  background: var(--surface-solid);
+}
+
+.switch-control input:checked + span {
+  border-color: rgba(51, 209, 160, 0.44);
+  background: #33d1a0;
+}
+
+.waypoint-icon-btn {
+  color: var(--accent-strong);
+  border-color: var(--line);
+  background: var(--accent-soft);
+}
+
+.waypoint-icon-btn--danger {
+  color: var(--spark-strong);
+  border-color: color-mix(in srgb, var(--spark) 32%, transparent);
+  background: color-mix(in srgb, var(--spark) 14%, transparent);
+}
+
+.waypoint-type-toggle input[value="arena"]:checked + span,
+.waypoint-marker.is-arena,
+.waypoint-popup button[data-waypoint-action="delete"] {
+  color: var(--inverse-ink);
+  background: #ef3b78;
+}
+
+.waypoint-marker {
+  border-color: var(--surface-solid);
+}
+
+.waypoint-marker.is-inactive {
+  color: #e2e8f0;
+  background: #64748b;
+}
+
+.waypoint-marker.is-planned,
+.s14-planned-badge {
+  color: #92400e;
+  border-color: #f59e0b;
+  background: #fef3c7;
+}
+
+.s14-candidate-chip {
+  color: #0f766e;
+  border-color: #6ee7b7;
+  background: #d1fae5;
+}
+
+.s2-label.is-s14-status {
+  color: var(--status-next-ink);
+  background: var(--status-next-bg);
+}
+
+.s2-label.is-s14-status.is-near {
+  color: var(--status-near-ink);
+  background: var(--status-near-bg);
+}
+
+.s2-label.is-s14-status.is-ok,
+.s2-label.is-s14-status.is-full {
+  color: var(--status-ok-ink);
+  background: var(--status-ok-bg);
+}
+
+.s2-label.is-s14-status.is-over {
+  color: var(--status-over-ink);
+  background: var(--status-over-bg);
+}
+
+.legal-page {
+  background: var(--legal-bg);
+}
+
+.legal-placeholder {
+  color: var(--placeholder-ink);
+  background: var(--placeholder-bg);
+}
+
+:root.is-dark-theme .waypoint-empty-state svg circle,
+:root.is-dark-theme .waypoint-empty-state svg line {
+  stroke: rgba(132, 191, 255, 0.45);
+}
+
+:root.is-dark-theme .waypoint-empty-state svg circle:last-of-type {
+  fill: var(--accent-strong);
 }

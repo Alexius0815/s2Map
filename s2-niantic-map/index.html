@@ -8,6 +8,19 @@
     <meta name="apple-mobile-web-app-title" content="S2 Map" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <title>S2 Map für Pokémon GO</title>
+    <script>
+      (() => {
+        try {
+          const theme = localStorage.getItem("s2MapsTheme") || "auto";
+          document.documentElement.dataset.theme = theme;
+          if (theme === "dark" || (theme === "auto" && matchMedia("(prefers-color-scheme: dark)").matches)) {
+            document.documentElement.classList.add("is-dark-theme");
+          }
+        } catch {
+          document.documentElement.dataset.theme = "auto";
+        }
+      })();
+    </script>
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="icon" href="icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="icon.svg" />
@@ -17,7 +30,7 @@
       integrity="sha256-p4NxAoJBhIINfQ3p5SMYk9g3Wg5p0p2mIPlQGLrC6r0="
       crossorigin=""
     />
-    <link rel="stylesheet" href="styles.css?v=waypoints-53" />
+    <link rel="stylesheet" href="styles.css?v=waypoints-54" />
   </head>
   <body class="awaiting-location">
     <main class="app-shell">
@@ -47,12 +60,22 @@
             <div id="versionInfoRow" class="version-info-row">
               <dt>Version</dt>
               <dd>
-                <button id="appVersion" class="version-inline-button" type="button" aria-expanded="false">V0.8.4</button>
+                <button id="appVersion" class="version-inline-button" type="button" aria-expanded="false">V0.8.9</button>
               </dd>
               <div id="changelogList" class="changelog-list" hidden></div>
             </div>
             <div><dt>Build</dt><dd>Static Web App · Leaflet · Vercel Function</dd></div>
             <div><dt>Stand</dt><dd><span id="appReleaseDate">30.05.2026</span></dd></div>
+            <div class="theme-info-row">
+              <dt>Design</dt>
+              <dd>
+                <div class="theme-switch" role="radiogroup" aria-label="Farbschema">
+                  <label><input type="radio" name="themeMode" value="auto" checked /><span>Auto</span></label>
+                  <label><input type="radio" name="themeMode" value="light" /><span>Hell</span></label>
+                  <label><input type="radio" name="themeMode" value="dark" /><span>Dunkel</span></label>
+                </div>
+              </dd>
+            </div>
             <div><dt>Autor</dt><dd>Alex Hofmann</dd></div>
             <div>
               <dt>Installieren</dt>
@@ -300,6 +323,6 @@
       integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
       crossorigin=""
     ></script>
-    <script src="app.js?v=waypoints-53"></script>
+    <script src="app.js?v=waypoints-54"></script>
   </body>
 </html>

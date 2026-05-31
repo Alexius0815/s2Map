@@ -1,6 +1,15 @@
-const APP_VERSION = "0.8.8";
+const APP_VERSION = "0.8.9";
 const APP_RELEASE_DATE = "30.05.2026";
 const APP_CHANGELOG = [
+  {
+    version: "0.8.9",
+    date: "30.05.2026",
+    changes: [
+      "Konsequenteres Farbschema mit Hell-, Dunkel- und Auto-Modus",
+      "Karte wird im Dunkelmodus dezent abgedimmt",
+      "Popups, Hilfsbereiche und Rechtstexte sind dunkler lesbar",
+    ],
+  },
   {
     version: "0.8.8",
     date: "30.05.2026",
@@ -114,6 +123,7 @@ const layers = [
 const WAYPOINT_STORAGE_KEY = "s2MapsWaypoints";
 const LOCATION_CHOICE_STORAGE_KEY = "s2MapsLocationChoice";
 const LOCATION_MODE_STORAGE_KEY = "s2MapsLocationMode";
+const THEME_STORAGE_KEY = "s2MapsTheme";
 const OCR_SCRIPT_URL = "https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js";
 const INTERACTION_RADIUS_METERS = 80;
 
@@ -140,6 +150,7 @@ const state = {
   collapsed: true,
   locationCollapsed: false,
   locationMode: (() => { try { return localStorage.getItem("s2MapsLocationMode") || "place"; } catch { return "place"; } })(),
+  themePreference: (() => { try { return localStorage.getItem(THEME_STORAGE_KEY) || "auto"; } catch { return "auto"; } })(),
   locationMarker: null,
   locationRadiusCircle: null,
   locationFollow: true,
@@ -223,6 +234,7 @@ const ui = {
   appVersion: document.querySelector("#appVersion"),
   appReleaseDate: document.querySelector("#appReleaseDate"),
   changelogList: document.querySelector("#changelogList"),
+  themeInputs: document.querySelectorAll("input[name='themeMode']"),
   aboutPanel: document.querySelector("#aboutPanel"),
   closeAboutPanel: document.querySelector("#closeAboutPanel"),
   installButton: document.querySelector("#installButton"),
@@ -297,6 +309,13 @@ ui.brandButton.addEventListener("mouseenter", () => setAboutPanelCollapsed(false
 ui.appVersion.addEventListener("click", toggleChangelog);
 ui.closeAboutPanel.addEventListener("click", () => setAboutPanelCollapsed(true));
 ui.installButton.addEventListener("click", installApp);
+ui.themeInputs.forEach((input) => {
+  input.checked = input.value === state.themePreference;
+  input.addEventListener("change", () => {
+    if (!input.checked) return;
+    setThemePreference(input.value);
+  });
+});
 ui.allowLocationButton.addEventListener("click", () => {
   saveLocationChoice("use-location");
   setLocationConsentVisible(false);
@@ -333,6 +352,10 @@ ui.locationModes.forEach((input) => {
 // Placeholder und Status beim Start auf gespeicherten Modus setzen
 ui.locationInput.placeholder = state.locationMode === "place" ? "München, Berlin, Köln ..." : "48.137, 11.575";
 ui.locationStatus.textContent = state.locationMode === "place" ? "Ort oder PLZ suchen" : "Koordinaten eingeben";
+applyThemePreference();
+if (window.matchMedia) {
+  window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", applyThemePreference);
+}
 document.addEventListener("keydown", (event) => {
   if (event.key === "Escape") setAboutPanelCollapsed(true);
 });
@@ -431,6 +454,31 @@ function toggleChangelog() {
   const expanded = ui.appVersion.getAttribute("aria-expanded") === "true";
   ui.appVersion.setAttribute("aria-expanded", String(!expanded));
   ui.changelogList.hidden = expanded;
+}
+
+function setThemePreference(theme) {
+  state.themePreference = ["auto", "light", "dark"].includes(theme) ? theme : "auto";
+  try {
+    localStorage.setItem(THEME_STORAGE_KEY, state.themePreference);
+  } catch {
+    // Theme-Auswahl ist Komfortzustand; ohne Storage greift weiter Auto.
+  }
+  applyThemePreference();
+}
+
+function applyThemePreference() {
+  const preference = state.themePreference || "auto";
+  document.documentElement.dataset.theme = preference;
+  ui.themeInputs.forEach((input) => {
+    input.checked = input.value === preference;
+  });
+
+  const systemDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+  const isDark = preference === "dark" || (preference === "auto" && systemDark);
+  document.documentElement.classList.toggle("is-dark-theme", isDark);
+  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", isDark ? "#0c1422" : "#0f766e");
+  scheduleRender();
+  renderWaypoints();
 }
 
 function setLocationConsentVisible(visible) {
