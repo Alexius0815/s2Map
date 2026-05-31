@@ -1,6 +1,16 @@
-const APP_VERSION = "0.8.7";
+const APP_VERSION = "0.8.8";
 const APP_RELEASE_DATE = "30.05.2026";
 const APP_CHANGELOG = [
+  {
+    version: "0.8.8",
+    date: "30.05.2026",
+    changes: [
+      "Dark Mode – folgt automatisch der Systemeinstellung",
+      "Panel-Animationen fühlen sich flüssiger an",
+      "Hilfeseite mit visuellen Erklärungen und PokéWiki-Links",
+      "Kandidaten-Anzeige: Popup schließt sich bevor zur Karte gesprungen wird",
+    ],
+  },
   {
     version: "0.8.7",
     date: "30.05.2026",
@@ -1430,6 +1440,7 @@ function arenaScoreSection(s14Key) {
 window.highlightCandidate = function (id) {
   const waypoint = state.waypoints.find((w) => w.id === id);
   if (!waypoint) return;
+  map.closePopup();
   state.highlightedCandidateIds = [id];
   renderWaypoints();
   map.panTo([waypoint.lat, waypoint.lng], { animate: true });

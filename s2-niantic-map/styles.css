@@ -1,5 +1,5 @@
 :root {
-  color-scheme: light;
+  color-scheme: light dark;
   --ink: #102033;
   --muted: #5d7288;
   --surface: rgba(255, 255, 255, 0.92);
@@ -374,9 +374,9 @@ button {
   box-shadow: 0 8px 18px rgba(12, 47, 92, 0.14);
   backdrop-filter: blur(18px);
   transition:
-    opacity 160ms ease,
-    transform 160ms ease,
-    visibility 160ms ease;
+    opacity 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    visibility 220ms cubic-bezier(0.22, 1, 0.36, 1);
   max-height: min(76vh, 680px);
   overflow: auto;
 }
@@ -488,7 +488,7 @@ button {
   content: "⌄";
   margin-left: 6px;
   display: inline-block;
-  transition: transform 150ms ease;
+  transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .version-inline-button[aria-expanded="true"]::after {
@@ -700,9 +700,9 @@ button {
   box-shadow: 0 6px 14px rgba(12, 47, 92, 0.13);
   backdrop-filter: blur(18px);
   transition:
-    opacity 160ms ease,
-    transform 160ms ease,
-    visibility 160ms ease;
+    opacity 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    visibility 220ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .location-panel.is-collapsed {
@@ -931,9 +931,9 @@ button {
   box-shadow: 0 8px 18px rgba(12, 47, 92, 0.14);
   backdrop-filter: blur(18px);
   transition:
-    opacity 160ms ease,
-    transform 160ms ease,
-    visibility 160ms ease;
+    opacity 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    visibility 220ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .help-panel.is-collapsed {
@@ -963,9 +963,9 @@ button {
   backdrop-filter: blur(18px);
   transform: translateY(0);
   transition:
-    opacity 160ms ease,
-    transform 160ms ease,
-    visibility 160ms ease;
+    opacity 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    visibility 220ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .cell-panel {
@@ -1062,7 +1062,7 @@ button {
   font-size: 18px;
   font-weight: 700;
   line-height: 1;
-  transition: transform 150ms ease;
+  transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .layer-card.is-open .info-button {
@@ -1180,7 +1180,7 @@ button {
   border-radius: 50%;
   background: #fff;
   box-shadow: 0 4px 10px rgba(12, 47, 92, 0.24);
-  transition: transform 160ms ease;
+  transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .switch-control input:checked + span {
@@ -2223,4 +2223,160 @@ button {
     width: 44px;
     height: 44px;
   }
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ink: #d0e4f8;
+    --muted: #7a9ab8;
+    --surface: rgba(16, 26, 44, 0.96);
+    --surface-solid: #111e2e;
+    --line: rgba(100, 160, 230, 0.2);
+    --accent-soft: rgba(29, 140, 248, 0.15);
+    --accent-strong: #5ba3f5;
+  }
+
+  body { background: #0c1422; }
+  #map { background: #0e1a2c; }
+
+  .awaiting-location .map-stage {
+    background: linear-gradient(145deg, #0d1a2e 0%, #0c1422 50%, #0c1e1a 100%);
+  }
+
+  .brand {
+    background: rgba(14, 24, 40, 0.96);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+  .brand h1 { color: #5ba3f5; }
+
+  .about-panel,
+  .location-panel,
+  .cell-panel,
+  .weather-panel,
+  .control-panel {
+    background: rgba(14, 24, 40, 0.97);
+    border-color: rgba(255, 255, 255, 0.09);
+  }
+
+  .gps-return-button,
+  .location-panel-toggle {
+    background: rgba(14, 24, 40, 0.97);
+    border-color: rgba(100, 160, 230, 0.25);
+    color: #5ba3f5;
+  }
+
+  .cell-panel-toggle,
+  .weather-panel-toggle,
+  .panel-toggle {
+    background: rgba(14, 24, 40, 0.92);
+    border-color: rgba(100, 160, 230, 0.25);
+    color: #5ba3f5;
+  }
+
+  .help-toggle {
+    background: rgba(14, 24, 40, 0.92);
+    border-color: rgba(100, 160, 230, 0.25);
+    color: #5ba3f5;
+  }
+
+  .leaflet-control-zoom {
+    background: #111e2e;
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+  .leaflet-control-zoom a { background: #1a3a62; }
+  .leaflet-control-attribution {
+    background: rgba(12, 20, 34, 0.85);
+    color: var(--muted);
+  }
+  .leaflet-tooltip {
+    background: rgba(14, 24, 40, 0.97);
+    color: var(--ink);
+    border-color: rgba(100, 160, 230, 0.2);
+  }
+  .leaflet-popup-content-wrapper {
+    background: rgba(14, 24, 40, 0.98);
+    border-color: rgba(100, 160, 230, 0.18);
+  }
+  .leaflet-popup-tip { background: rgba(14, 24, 40, 0.98); }
+  .leaflet-popup-close-button { color: var(--muted) !important; }
+  .s14-cell-popup-wrapper .leaflet-popup-content-wrapper {
+    background: rgba(14, 24, 40, 0.98);
+  }
+  .s14-cell-popup-wrapper .leaflet-popup-tip { background: rgba(14, 24, 40, 0.98); }
+
+  .panel-header h2 { color: #5ba3f5; }
+  .panel-header p { color: var(--muted); }
+  .panel-close-button { background: rgba(255, 255, 255, 0.06); border-color: rgba(100, 160, 230, 0.18); color: #5ba3f5; }
+
+  .layer-card { background: rgba(255, 255, 255, 0.04); border-color: rgba(100, 160, 230, 0.15); }
+  .layer-card .layer-title { color: var(--ink); }
+
+  .location-consent {
+    background: rgba(14, 24, 40, 0.98);
+    border-color: rgba(255, 255, 255, 0.12);
+  }
+  .location-consent p { color: #5ba3f5; }
+
+  .mode-switch span {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(100, 160, 230, 0.2);
+    color: var(--muted);
+  }
+  .location-panel-header span { color: #5ba3f5; }
+  .location-row input {
+    background: rgba(255, 255, 255, 0.07);
+    border-color: rgba(100, 160, 230, 0.2);
+    color: var(--ink);
+  }
+  .location-row button:not(.icon-button) { background: #1a3a62; box-shadow: 0 3px 0 #0c2545; }
+
+  .waypoint-controls {
+    background: rgba(255, 255, 255, 0.03);
+    border-color: rgba(100, 160, 230, 0.15);
+  }
+  .waypoint-controls h2 { color: #5ba3f5; }
+  .waypoint-controls input,
+  .waypoint-controls select,
+  .waypoint-controls textarea {
+    background: rgba(255, 255, 255, 0.07);
+    border-color: rgba(100, 160, 230, 0.2);
+    color: var(--ink);
+  }
+  .waypoint-visibility {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(100, 160, 230, 0.15);
+  }
+  .waypoint-visibility strong { color: var(--ink); }
+
+  .waypoint-empty-state p { color: #5ba3f5; }
+  .waypoint-empty-state svg circle, .waypoint-empty-state svg line { stroke: rgba(91, 163, 245, 0.4); }
+  .waypoint-empty-state svg circle:last-of-type { fill: #5ba3f5; }
+
+  .waypoint-icon-btn { background: rgba(29, 140, 248, 0.1); border-color: rgba(100, 160, 230, 0.2); color: #5ba3f5; }
+  .waypoint-icon-btn:hover:not(:disabled) { background: rgba(29, 140, 248, 0.18); }
+  .waypoint-icon-btn--danger { background: rgba(217, 119, 6, 0.1); border-color: rgba(251, 191, 36, 0.2); color: #fbbf24; }
+
+  .about-list > div { background: rgba(255, 255, 255, 0.04); border-color: rgba(100, 160, 230, 0.15); }
+  .about-list dt { color: #5ba3f5; }
+  .about-list a { color: #5ba3f5; }
+  .about-list dd { color: var(--muted); }
+  .version-inline-button { background: rgba(51, 209, 160, 0.1); border-color: rgba(15, 118, 110, 0.3); color: #34d399; }
+
+  .install-box button { background: #1a3a62; box-shadow: 0 3px 0 #0c2545; }
+
+  .help-section { background: rgba(255, 255, 255, 0.04); border-color: rgba(100, 160, 230, 0.15); }
+  .help-section summary { color: #5ba3f5; }
+
+  .s14-cell-popup { color: var(--ink); }
+  .s14-cell-popup dl div { background: rgba(29, 140, 248, 0.1); border-color: rgba(100, 160, 230, 0.18); }
+  .s14-cell-popup strong { color: var(--ink); }
+
+  .weather-controls h2 { color: #5ba3f5; }
+
+  .s2-label { background: rgba(14, 24, 40, 0.88) !important; color: #5ba3f5 !important; }
+  .s2-label.is-weather { color: #fff !important; }
+
+  .location-marker { background: rgba(29, 140, 248, 0.2); }
+
+  .waypoint-planned-form-toggle { color: var(--muted); }
 }
