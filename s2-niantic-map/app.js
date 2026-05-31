@@ -1,6 +1,13 @@
-const APP_VERSION = "0.8.11";
+const APP_VERSION = "0.8.12";
 const APP_RELEASE_DATE = "31.05.2026";
 const APP_CHANGELOG = [
+  {
+    version: "0.8.12",
+    date: "31.05.2026",
+    changes: [
+      "Waypoint-Namen schweben deutlicher oberhalb der Marker",
+    ],
+  },
   {
     version: "0.8.11",
     date: "31.05.2026",
@@ -1082,7 +1089,7 @@ function renderWaypoints() {
         sticky: false,
         direction: "top",
         className: "waypoint-tooltip",
-        offset: [0, -10],
+        offset: [0, -32],
       })
       .on("mouseover", () => marker.openTooltip())
       .on("focus", () => marker.openTooltip())
@@ -1138,7 +1145,7 @@ function waypointIcon(waypoint, inactive) {
     iconSize: [34, 34],
     iconAnchor: [17, 17],
     popupAnchor: [0, -22],
-    tooltipAnchor: [0, -28],
+    tooltipAnchor: [0, -44],
   });
 }
 
