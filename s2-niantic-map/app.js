@@ -1,37 +1,13 @@
-const APP_VERSION = "0.8.12";
+const APP_VERSION = "0.8.9";
 const APP_RELEASE_DATE = "31.05.2026";
 const APP_CHANGELOG = [
   {
-    version: "0.8.12",
-    date: "31.05.2026",
-    changes: [
-      "Waypoint-Namen schweben deutlicher oberhalb der Marker",
-    ],
-  },
-  {
-    version: "0.8.11",
-    date: "31.05.2026",
-    changes: [
-      "Standortsuche überdeckt die Lupe nicht mehr",
-      "Waypoint-Namen erscheinen beim Hover oberhalb des Markers",
-      "Waypoint-Popups bleiben besser im sichtbaren Kartenbereich",
-    ],
-  },
-  {
-    version: "0.8.10",
-    date: "31.05.2026",
-    changes: [
-      "S14-Info ist im Dunkelmodus kontrastreicher",
-      "Waypoint-Hinzufügen schließt das Panel und öffnet nach Kartentipp direkt das Edit-Popup",
-    ],
-  },
-  {
     version: "0.8.9",
-    date: "30.05.2026",
+    date: "31.05.2026",
     changes: [
-      "Konsequenteres Farbschema mit Hell-, Dunkel- und Auto-Modus",
-      "Karte wird im Dunkelmodus dezent abgedimmt",
-      "Popups, Hilfsbereiche und Rechtstexte sind dunkler lesbar",
+      "Dunkelmodus verbessert",
+      "Waypoints einfacher hinzufügen",
+      "Popups besser lesbar",
     ],
   },
   {
