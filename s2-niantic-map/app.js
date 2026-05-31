@@ -1,63 +1,66 @@
-const APP_VERSION = "0.8.6";
+const APP_VERSION = "0.8.7";
 const APP_RELEASE_DATE = "30.05.2026";
 const APP_CHANGELOG = [
+  {
+    version: "0.8.7",
+    date: "30.05.2026",
+    changes: [
+      "Geplante Stops markieren: als 'geplant' einreichen und auf der Karte gelb anzeigen",
+      "Kipppunkt-Vorschau: sieh sofort, was ein geplanter Stop an der S14-Schwelle ändert",
+      "Arena-Schätzung: Fotos und Votes hinterlegen – die wahrscheinlichste Arena wird direkt angezeigt",
+      "Kandidaten auf der Karte: Tippe im S14-Info-Fenster auf ① ② – der Marker blinkt auf",
+    ],
+  },
   {
     version: "0.8.6",
     date: "30.05.2026",
     changes: [
-      "UX: Icon-Buttons im Waypoint-Panel, Touch-Targets auf 44px",
-      "UX: Bottom-Buttons vereinheitlicht, Schatten reduziert",
-      "UX: Schriftgewicht-Hierarchie bereinigt (700/600 statt 900/1000)",
-      "UX: Impressum/Datenschutz aus Karten-Topbar entfernt",
-      "UX: Leer-Zustand im Waypoint-Panel mit Illustration",
-      "UX: Undo für Waypoint-Aktionen (bis 20 Schritte)",
-      "UX: Waypoint-Import zeigt fehlgeschlagene Dateinamen",
-      "UX: locationMode wird nach Reload gespeichert",
+      "Rückgängig-Funktion: bis zu 20 Waypoint-Aktionen rückgängig machen",
+      "Übersichtlicheres Waypoint-Panel mit Icons statt langer Buttons",
+      "Alle Tipp-Ziele mindestens 44 × 44 px groß – leichter zu treffen",
+      "Design aufgeräumt: weniger Schatten, ruhigere Schriften, einheitliche Buttons",
     ],
   },
   {
     version: "0.8.5",
     date: "30.05.2026",
     changes: [
-      "Sichtrichtung per default aktiv",
-      "GPS-Button springt sofort zur aktuellen Position wenn GPS läuft",
-      "Standortmodus (Ort/Koordinaten) wird nach Reload gespeichert",
-      "Lupe als Standortsuche-Symbol überarbeitet",
-      "S14 ok-Status für plausible Arena-Zellen ergänzt",
-      "Panel-Management vereinheitlicht: Panels schließen sich gegenseitig korrekt",
-      "Scroll-Performance: diff-basiertes Karten-Rendering statt Komplett-Neuaufbau",
+      "Blickrichtungspfeil ist jetzt sofort aktiv, sobald GPS läuft",
+      "GPS-Pfeil-Taste springt direkt zur aktuellen Position – ohne Umweg",
+      "Bevorzugter Suchmodus (Ort oder Koordinaten) wird gespeichert",
+      "Karte scrollt deutlich flüssiger durch schnelleres Zell-Rendering",
     ],
   },
   {
     version: "0.8.4",
     date: "30.05.2026",
     changes: [
-      "GPS-Rückführung als eigener Navigationspfeil und Standortsuche als Lupe",
+      "Zwei klare Tasten links: Pfeil für GPS-Rückkehr, Lupe für Ortssuche",
     ],
   },
   {
     version: "0.8.3",
     date: "30.05.2026",
     changes: [
-      "Kartenrotation per Blickrichtung mit Kompass zum Einnorden",
+      "Karte dreht sich automatisch mit deiner Blickrichtung",
     ],
   },
   {
     version: "0.8.2",
     date: "30.05.2026",
     changes: [
-      "Bulk-Import für mehrere Screenshots, Bilder und Importdateien",
+      "Mehrere Screenshots oder Dateien auf einmal importieren",
     ],
   },
   {
     version: "0.8.1",
     date: "29.05.2026",
     changes: [
-      "S2-Zellen für Wetter, S14-Planung und S17-Waypoints",
-      "Waypoint-Import, Export, Bearbeiten und lokale Speicherung",
-      "GPS-Following mit 80-m-Drehradius und Blickrichtungsanzeige",
-      "Wetterboost-Overlay mit reduzierter S10-Anzeige",
-      "PWA-Installationshilfe, Rechtstexte und App-Info",
+      "S2-Zellen für Wetter, Arena-Planung und Waypoint-Orientierung",
+      "Waypoints speichern, importieren, exportieren und bearbeiten",
+      "GPS-Verfolgung mit 80-m-Aktionskreis und Blickrichtungsanzeige",
+      "Wetterboost-Overlay zeigt aktuelle Typstärken auf der Karte",
+      "Als App installierbar (PWA)",
     ],
   },
 ];
@@ -112,6 +115,8 @@ const state = {
   labels: new Map(),
   renderedCells: new Map(), // Map<layerId, Map<cellKey, {polygon, labelMarker, fingerprint}>>
   undoStack: [], // Snapshots von state.waypoints vor Mutationen
+  includePlannedInS14: true, // geplante Stops in Kipppunkt-Berechnung einbeziehen
+  highlightedCandidateIds: [], // aktuell hervorgehobene Arena-Kandidaten
 
   weather: new Map(),
   weatherPending: new Set(),
@@ -133,8 +138,6 @@ const state = {
   locationTrackStarted: false,
   locationHeading: null,
   orientationListening: false,
-  mapBearing: 0,
-  mapRotationEnabled: true,
   waypointPlacement: false,
 };
 
@@ -180,12 +183,12 @@ const ui = {
   locationGoButton: document.querySelector("#locationGoButton"),
   locationStatus: document.querySelector("#locationStatus"),
   locationModes: document.querySelectorAll("input[name='locationMode']"),
-  compassButton: document.querySelector("#compassButton"),
   locationRadiusButton: document.querySelector("#locationRadiusButton"),
   weatherButton: document.querySelector("#weatherButton"),
   weatherStatus: document.querySelector("#weatherStatus"),
   waypointNameInput: document.querySelector("#waypointNameInput"),
   waypointTypeInput: document.querySelector("#waypointTypeInput"),
+  waypointStatusInput: document.querySelector("#waypointStatusInput"),
   waypointAreaInput: document.querySelector("#waypointAreaInput"),
   waypointPasteInput: document.querySelector("#waypointPasteInput"),
   waypointStatus: document.querySelector("#waypointStatus"),
@@ -263,7 +266,6 @@ ui.closePanel.addEventListener("click", () => setPanelCollapsed(true));
 ui.locationPanelToggle.addEventListener("click", () => setLocationPanelCollapsed(!state.locationCollapsed));
 ui.closeLocationPanel.addEventListener("click", () => setLocationPanelCollapsed(true));
 ui.gpsReturnButton.addEventListener("click", locateUser);
-ui.compassButton.addEventListener("click", resetMapBearing);
 ui.locationRadiusButton.addEventListener("change", toggleLocationRadius);
 ui.locationGoButton.addEventListener("click", jumpToLocation);
 ui.weatherButton.addEventListener("change", toggleWeather);
@@ -278,7 +280,7 @@ ui.cellPanelToggle.addEventListener("click", () => setCellPanelCollapsed(!ui.cel
 ui.closeCellPanel.addEventListener("click", () => setCellPanelCollapsed(true));
 ui.weatherPanelToggle.addEventListener("click", () => setWeatherPanelCollapsed(!ui.weatherPanel.classList.contains("is-collapsed")));
 ui.closeWeatherPanel.addEventListener("click", () => setWeatherPanelCollapsed(true));
-ui.helpToggle.addEventListener("click", () => setHelpPanelCollapsed(!ui.helpPanel.classList.contains("is-collapsed")));
+ui.helpToggle.addEventListener("click", () => window.open("hilfe.html", "_blank", "noopener"));
 ui.closeHelpPanel.addEventListener("click", () => setHelpPanelCollapsed(true));
 ui.brandButton.addEventListener("click", () => setAboutPanelCollapsed(!ui.aboutPanel.classList.contains("is-collapsed")));
 ui.brandButton.addEventListener("mouseenter", () => setAboutPanelCollapsed(false));
@@ -473,6 +475,7 @@ function renderCells() {
   let visibleWeatherCells = [];
   const activeLayers = layers.filter((layer) => state.active.has(layer.id));
   const occupiedS17Keys = occupiedS17CellKeys();
+  const plannedS17Keys = plannedS17CellKeys();
   const occupiedS14Keys = occupiedS14CellKeys();
   const s14StatusColors = {
     next: "#7c3aed",
@@ -513,6 +516,7 @@ function renderCells() {
 
       const weather = layer.id === "weather" && state.weatherEnabled ? state.weather.get(key) : null;
       const hasWaypoint = layer.id === "stop" && occupiedS17Keys.has(key);
+      const hasPlanned = layer.id === "stop" && !hasWaypoint && plannedS17Keys.has(key);
       const s14Validation = layer.id === "gym" && occupiedS14Keys.has(key) ? s14GymValidationForCell(key) : null;
       const lineWeight = gridWeight(layer.level, zoom);
       const shouldShowS14Status = layer.id === "gym" && occupiedS14Keys.has(key);
@@ -522,6 +526,7 @@ function renderCells() {
       const fingerprint = [
         weather ? weather.pokemonWeather.id : "",
         hasWaypoint,
+        hasPlanned,
         s14Validation ? s14Validation.status : "",
         lineWeight,
         shouldShowLabel,
@@ -545,8 +550,8 @@ function renderCells() {
         color: s14StatusColor || weatherColor,
         weight: lineWeight,
         opacity: 0.9,
-        fillColor: s14StatusColor || (hasWaypoint ? "#475569" : weatherColor),
-        fillOpacity: s14StatusColor ? 0.1 : hasWaypoint ? 0.2 : layer.id === "weather" ? 0.04 : 0,
+        fillColor: s14StatusColor || (hasWaypoint ? "#475569" : hasPlanned ? "#d97706" : weatherColor),
+        fillOpacity: s14StatusColor ? 0.1 : hasWaypoint ? 0.2 : hasPlanned ? 0.15 : layer.id === "weather" ? 0.04 : 0,
         interactive: true,
       }).bindTooltip(buildTooltip(layer, cell, weather), {
         sticky: true,
@@ -617,16 +622,25 @@ function clearRenderedLayer(layerId) {
 function occupiedS17CellKeys() {
   return new Set(
     state.waypoints
-      .filter((waypoint) => waypoint.active)
-      .map((waypoint) => cellKey(latLngToCell(waypoint.lat, waypoint.lng, 17))),
+      .filter((w) => w.active && w.status !== "planned")
+      .map((w) => cellKey(latLngToCell(w.lat, w.lng, 17))),
+  );
+}
+
+function plannedS17CellKeys() {
+  return new Set(
+    state.waypoints
+      .filter((w) => w.active && w.status === "planned")
+      .map((w) => cellKey(latLngToCell(w.lat, w.lng, 17))),
   );
 }
 
 function occupiedS14CellKeys() {
+  const includeAll = state.includePlannedInS14;
   return new Set(
     state.waypoints
-      .filter((waypoint) => waypoint.active)
-      .map((waypoint) => cellKey(latLngToCell(waypoint.lat, waypoint.lng, 14))),
+      .filter((w) => w.active && (w.status !== "planned" || includeAll))
+      .map((w) => cellKey(latLngToCell(w.lat, w.lng, 14))),
   );
 }
 
@@ -802,8 +816,11 @@ function normalizeWaypoint(waypoint) {
     lat: waypoint.lat,
     lng: waypoint.lng,
     type: waypoint.type === "arena" ? "arena" : "stop",
+    status: waypoint.status === "planned" ? "planned" : "active",
     areaKind: ["park", "sponsor", "unclear"].includes(waypoint.areaKind) ? waypoint.areaKind : "normal",
     active: waypoint.active !== false,
+    photoCount: Number.isFinite(waypoint.photoCount) ? waypoint.photoCount : 0,
+    photoVotes: Number.isFinite(waypoint.photoVotes) ? waypoint.photoVotes : 0,
     createdAt: waypoint.createdAt || new Date().toISOString(),
   };
 }
@@ -850,6 +867,7 @@ function addWaypointFromMapClick(event) {
 function waypointFormMeta() {
   return {
     type: ui.waypointTypeInput.value === "arena" ? "arena" : "stop",
+    status: ui.waypointStatusInput.checked ? "planned" : "active",
     areaKind: ui.waypointAreaInput.value,
   };
 }
@@ -886,8 +904,11 @@ function addWaypoint(name, lat, lng, meta = {}) {
     lat,
     lng,
     type: meta.type === "arena" ? "arena" : "stop",
+    status: meta.status === "planned" ? "planned" : "active",
     areaKind: ["park", "sponsor", "unclear"].includes(meta.areaKind) ? meta.areaKind : "normal",
     active: !hasActiveInCell,
+    photoCount: 0,
+    photoVotes: 0,
     createdAt: new Date().toISOString(),
   };
   state.waypoints.push(waypoint);
@@ -993,10 +1014,12 @@ function renderWaypoints() {
 function waypointIcon(waypoint, inactive) {
   const typeClass = waypoint.type === "arena" ? "is-arena" : "is-stop";
   const inactiveClass = inactive ? " is-inactive" : "";
+  const plannedClass = waypoint.status === "planned" ? " is-planned" : "";
+  const highlightClass = state.highlightedCandidateIds.includes(waypoint.id) ? " is-candidate" : "";
   const label = waypoint.type === "arena" ? "A" : "S";
   return L.divIcon({
     className: "",
-    html: `<span class="waypoint-marker ${typeClass}${inactiveClass}" aria-hidden="true">${label}</span>`,
+    html: `<span class="waypoint-marker ${typeClass}${inactiveClass}${plannedClass}${highlightClass}" aria-hidden="true">${label}</span>`,
     iconSize: [34, 34],
     iconAnchor: [17, 17],
     popupAnchor: [0, -18],
@@ -1006,6 +1029,7 @@ function waypointIcon(waypoint, inactive) {
 
 function waypointPopupHtml(waypoint) {
   const isStop = waypoint.type !== "arena";
+  const isPlanned = waypoint.status === "planned";
   return `
     <div class="waypoint-popup">
       <label class="waypoint-name-field">
@@ -1021,10 +1045,23 @@ function waypointPopupHtml(waypoint) {
           <span>Arena</span>
         </label>
       </div>
+      <label class="waypoint-planned-toggle">
+        <input type="checkbox" data-waypoint-planned ${isPlanned ? "checked" : ""} data-original-status="${escapeHtml(waypoint.status || "active")}" />
+        <span>Geplant (eingereicht, noch nicht aktiv)</span>
+      </label>
+      <div class="waypoint-photo-fields">
+        <label>
+          <span>Fotos</span>
+          <input type="number" min="0" value="${waypoint.photoCount || 0}" data-waypoint-photo-count data-original-photo-count="${waypoint.photoCount || 0}" />
+        </label>
+        <label>
+          <span>Votes</span>
+          <input type="number" min="0" value="${waypoint.photoVotes || 0}" data-waypoint-photo-votes data-original-photo-votes="${waypoint.photoVotes || 0}" />
+        </label>
+      </div>
       <div class="waypoint-popup-actions">
         <button type="button" data-waypoint-action="save" hidden>Speichern</button>
         <button type="button" data-waypoint-action="move">Verschieben</button>
-        <button type="button" data-waypoint-action="focus">Fokus</button>
         <button type="button" data-waypoint-action="delete">Löschen</button>
       </div>
     </div>
@@ -1043,16 +1080,32 @@ function wireWaypointPopup(marker, id) {
     const originalName = nameInput.getAttribute("data-original-name");
     const originalType = typeInputs[0] ? typeInputs[0].getAttribute("data-original-type") : "";
     const selectedType = selectedWaypointType(root);
-    saveButton.hidden = nameInput.value.trim() === originalName && selectedType === originalType;
+    const plannedInput = root.querySelector("[data-waypoint-planned]");
+    const originalStatus = plannedInput ? plannedInput.getAttribute("data-original-status") : "active";
+    const currentStatus = plannedInput && plannedInput.checked ? "planned" : "active";
+    const photoCountInput = root.querySelector("[data-waypoint-photo-count]");
+    const photoVotesInput = root.querySelector("[data-waypoint-photo-votes]");
+    const origPhotoCount = photoCountInput ? Number(photoCountInput.getAttribute("data-original-photo-count")) : 0;
+    const origPhotoVotes = photoVotesInput ? Number(photoVotesInput.getAttribute("data-original-photo-votes")) : 0;
+    const curPhotoCount = photoCountInput ? (parseInt(photoCountInput.value) || 0) : 0;
+    const curPhotoVotes = photoVotesInput ? (parseInt(photoVotesInput.value) || 0) : 0;
+    saveButton.hidden = nameInput.value.trim() === originalName
+      && selectedType === originalType
+      && currentStatus === originalStatus
+      && curPhotoCount === origPhotoCount
+      && curPhotoVotes === origPhotoVotes;
   };
   if (nameInput) nameInput.addEventListener("input", updateSaveButton);
   typeInputs.forEach((input) => input.addEventListener("change", updateSaveButton));
+  const plannedInput = root.querySelector("[data-waypoint-planned]");
+  if (plannedInput) plannedInput.addEventListener("change", updateSaveButton);
+  const photoInputs = root.querySelectorAll("[data-waypoint-photo-count],[data-waypoint-photo-votes]");
+  photoInputs.forEach((input) => input.addEventListener("input", updateSaveButton));
   root.querySelectorAll("[data-waypoint-action]").forEach((button) => {
     button.addEventListener("click", () => {
       const action = button.getAttribute("data-waypoint-action");
       if (action === "save") saveWaypointFromPopup(id, root);
       if (action === "move") startWaypointMove(marker, id);
-      if (action === "focus") focusWaypoint(id);
       if (action === "delete") {
         removeWaypoint(id);
         map.closePopup();
@@ -1089,9 +1142,16 @@ function saveWaypointFromPopup(id, root) {
   pushUndoSnapshot();
   waypoint.name = name;
   waypoint.type = selectedWaypointType(root);
+  const plannedInput = root.querySelector("[data-waypoint-planned]");
+  waypoint.status = plannedInput && plannedInput.checked ? "planned" : "active";
+  const photoCountInput = root.querySelector("[data-waypoint-photo-count]");
+  const photoVotesInput = root.querySelector("[data-waypoint-photo-votes]");
+  if (photoCountInput) waypoint.photoCount = Math.max(0, parseInt(photoCountInput.value) || 0);
+  if (photoVotesInput) waypoint.photoVotes = Math.max(0, parseInt(photoVotesInput.value) || 0);
   enforceActiveWaypoints();
   saveWaypoints();
   renderWaypoints();
+  scheduleRender();
   ui.waypointStatus.textContent = `Waypoint gespeichert: ${name}`;
 }
 
@@ -1152,14 +1212,34 @@ function groupWaypointsByCell(level, onlyActive = false) {
 function s14CellPopupHtml(cell) {
   const key = cellKey(cell);
   const validation = s14GymValidationForCell(key);
-  const statusLabel = {
+  const statusLabels = {
     empty: "Keine aktiven POI",
     next: "Nächster Kipppunkt",
     near: "Kipppunkt nah",
     ok: "Plausibel",
     full: "S14 voll",
     over: "Zu viele Arenen",
-  }[validation.status] || "S14-Info";
+  };
+  const statusLabel = statusLabels[validation.status] || "S14-Info";
+
+  // Geplante Stops in dieser Zelle
+  const plannedInCell = state.waypoints.filter((w) =>
+    w.active && w.status === "planned" && cellKey(latLngToCell(w.lat, w.lng, 14)) === key
+  );
+  const hasPlanned = plannedInCell.length > 0;
+  let deltaHtml = "";
+  if (hasPlanned) {
+    const withPlanned = s14GymValidationForCellWithExtra(key, plannedInCell.length);
+    const deltaLabel = statusLabels[withPlanned.status] || "S14-Info";
+    deltaHtml = `
+      <div class="s14-planned-delta">
+        <span class="s14-planned-badge">+${plannedInCell.length} geplant</span>
+        <span class="is-${escapeHtml(withPlanned.status)}">${escapeHtml(deltaLabel)} · ${withPlanned.expected} Arena${withPlanned.expected !== 1 ? "s" : ""} bei ${withPlanned.activeCount} POI</span>
+      </div>`;
+  }
+
+  // Arena-Score-Schätzung
+  const arenaScoreHtml = arenaScoreSection(key);
 
   return `
     <div class="s14-cell-popup is-${escapeHtml(validation.status)}">
@@ -1173,12 +1253,32 @@ function s14CellPopupHtml(cell) {
         <div><dt>Nächste</dt><dd>${validation.next ? `${validation.missing}/${validation.next}` : "-"}</dd></div>
       </dl>
       <p>${escapeHtml(validation.text)}</p>
+      ${deltaHtml}
+      ${arenaScoreHtml}
     </div>
   `;
 }
 
+function s14GymValidationForCellWithExtra(s14Key, extraCount) {
+  const s14Waypoints = (groupWaypointsByCell(14, true).get(s14Key) || [])
+    .filter((w) => w.status !== "planned"); // gleicher Filter wie Basis-Berechnung
+  const totalCount = s14Waypoints.length + extraCount;
+  const arenaCount = s14Waypoints.filter((w) => w.type === "arena").length;
+  const expected = expectedGymCount(totalCount);
+  const next = nextGymThreshold(totalCount);
+  const missing = next ? Math.max(0, next - totalCount) : 0;
+  let status = "next";
+  if (!totalCount) status = "empty";
+  else if (arenaCount > expected) status = "over";
+  else if (arenaCount === expected && arenaCount > 0 && next) status = "ok";
+  else if (!next) status = "full";
+  else if (missing === 1) status = "near";
+  return { status, activeCount: totalCount, arenaCount, expected, next, missing };
+}
+
 function s14GymValidationForCell(s14Key) {
-  const s14Waypoints = groupWaypointsByCell(14, true).get(s14Key) || [];
+  const s14Waypoints = (groupWaypointsByCell(14, true).get(s14Key) || [])
+    .filter((w) => w.status !== "planned");
   const activeCount = s14Waypoints.length;
   const arenaCount = s14Waypoints.filter((entry) => entry.type === "arena").length;
   const expected = expectedGymCount(activeCount);
@@ -1299,6 +1399,45 @@ function s14GymValidationForWaypoint(waypoint) {
 function gymPlausibilityForWaypoint(waypoint) {
   return s14GymValidationForWaypoint(waypoint).text;
 }
+
+function waypointScore(waypoint) {
+  return (waypoint.photoVotes || 0) * 3 + (waypoint.photoCount || 0);
+}
+
+function arenaScoreSection(s14Key) {
+  const waypoints = (groupWaypointsByCell(14, true).get(s14Key) || [])
+    .filter((w) => w.status !== "planned");
+  if (waypoints.length < 2) return "";
+
+  const hasScoreData = waypoints.some((w) => waypointScore(w) > 0);
+  if (!hasScoreData) return `<p class="s14-score-hint">Fotos &amp; Votes hinterlegen für Schätzung.</p>`;
+
+  const validation = s14GymValidationForCell(s14Key);
+  const gymCount = Math.max(1, validation.expected || 1);
+  const topCandidates = waypoints
+    .map((w) => ({ id: w.id, name: w.name, score: waypointScore(w) }))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, gymCount);
+
+  const NUMS = ["①", "②", "③"];
+  const chips = topCandidates.map((w, i) =>
+    `<button class="s14-candidate-chip" type="button" title="${escapeHtml(w.name)}" onclick="highlightCandidate('${escapeHtml(w.id)}')">${NUMS[i] || i + 1}</button>`
+  ).join("");
+
+  return `<div class="s14-score-section"><span class="s14-score-label">Wahrsch. Arena</span>${chips}</div>`;
+}
+
+window.highlightCandidate = function (id) {
+  const waypoint = state.waypoints.find((w) => w.id === id);
+  if (!waypoint) return;
+  state.highlightedCandidateIds = [id];
+  renderWaypoints();
+  map.panTo([waypoint.lat, waypoint.lng], { animate: true });
+  window.setTimeout(() => {
+    state.highlightedCandidateIds = [];
+    renderWaypoints();
+  }, 2800);
+};
 
 function expectedGymCount(activeCount) {
   if (activeCount >= 20) return 3;
@@ -1974,8 +2113,6 @@ function locateUser(options = {}) {
 
   state.locationTrackStarted = false;
   state.locationFollow = true;
-  state.mapRotationEnabled = true;
-  if (Number.isFinite(state.locationHeading)) setMapBearing(state.locationHeading);
   ui.locationStatus.textContent = "GPS wird gestartet ...";
   enableHeadingUpdates();
   state.locationWatchId = navigator.geolocation.watchPosition(
@@ -2063,26 +2200,6 @@ function updateHeading(heading) {
   if (state.locationMarker) {
     state.locationMarker.setIcon(locationIcon(state.locationHeading));
   }
-  if (state.mapRotationEnabled) {
-    setMapBearing(state.locationHeading);
-  }
-}
-
-
-function setMapBearing(bearing) {
-  const normalized = normalizeBearing(bearing);
-  state.mapBearing = normalized;
-  ui.mapStage.style.setProperty("--map-bearing", `${-normalized}deg`);
-  ui.mapStage.style.setProperty("--compass-bearing", `${-normalized}deg`);
-  ui.compassButton.classList.toggle("is-rotated", Math.abs(normalized) > 0.5 && Math.abs(normalized - 360) > 0.5);
-}
-
-function resetMapBearing() {
-  state.mapRotationEnabled = false;
-  setMapBearing(0);
-  ui.locationStatus.textContent = state.locationTrackStarted
-    ? "GPS aktiv · Karte eingenordet"
-    : "Karte eingenordet";
 }
 
 function normalizeBearing(value) {

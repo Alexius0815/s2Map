@@ -1,0 +1,437 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Hilfe · S2 Map für Pokémon GO</title>
+  <link rel="icon" href="icon.svg" type="image/svg+xml" />
+  <style>
+    :root {
+      --blue: #0956b6;
+      --blue-light: #1d8cf8;
+      --blue-soft: #e7f3ff;
+      --teal: #0f766e;
+      --teal-soft: #f0fdf4;
+      --amber: #d97706;
+      --amber-soft: #fefce8;
+      --muted: #5d7288;
+      --ink: #102033;
+      --border: rgba(20, 75, 130, 0.14);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, sans-serif;
+      color: var(--ink);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; }
+    body { background: #f4f8ff; line-height: 1.6; }
+
+    /* ── Nav ── */
+    nav {
+      background: rgba(255,255,255,0.94);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; z-index: 10;
+      padding: 12px 20px;
+      display: flex; align-items: center; gap: 12px;
+    }
+    nav .logo {
+      width: 32px; height: 32px; border-radius: 50%;
+      border: 3px solid var(--blue);
+      background:
+        radial-gradient(circle at 70% 30%, #ffcb05 0 10%, transparent 11%),
+        linear-gradient(90deg, transparent 0 30%, rgba(9,86,182,.7) 31% 36%, transparent 37% 63%, rgba(9,86,182,.7) 64% 69%, transparent 70%),
+        linear-gradient(0deg, transparent 0 30%, rgba(9,86,182,.7) 31% 36%, transparent 37% 63%, rgba(9,86,182,.7) 64% 69%, transparent 70%),
+        radial-gradient(circle, #fff 0 58%, #e7f3ff 59% 100%);
+      flex-shrink: 0;
+    }
+    nav h1 { font-size: 15px; font-weight: 700; color: var(--blue); }
+    nav p  { font-size: 11px; color: var(--muted); }
+    nav a  { margin-left: auto; font-size: 13px; font-weight: 600; color: var(--blue-light); text-decoration: none; white-space: nowrap; }
+    nav a:hover { text-decoration: underline; }
+
+    /* ── Layout ── */
+    main { max-width: 680px; margin: 0 auto; padding: 32px 20px 64px; }
+
+    /* ── Hero ── */
+    .hero {
+      background: linear-gradient(135deg, var(--blue) 0%, #1d8cf8 100%);
+      border-radius: 16px;
+      padding: 32px 28px;
+      color: #fff;
+      margin-bottom: 32px;
+    }
+    .hero h2 { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+    .hero p  { font-size: 14px; opacity: 0.88; line-height: 1.6; max-width: 48ch; }
+
+    /* ── Section titles ── */
+    .section-title {
+      font-size: 11px; font-weight: 700; color: var(--muted);
+      text-transform: uppercase; letter-spacing: .06em;
+      margin: 32px 0 12px;
+    }
+
+    /* ── Steps ── */
+    .steps { display: grid; gap: 10px; }
+    .step {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px;
+      display: flex; gap: 14px; align-items: flex-start;
+    }
+    .step-num {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: var(--blue-soft); color: var(--blue);
+      font-size: 13px; font-weight: 700;
+      display: grid; place-items: center; flex-shrink: 0;
+    }
+    .step h3 { font-size: 14px; font-weight: 700; margin-bottom: 3px; }
+    .step p  { font-size: 13px; color: var(--muted); }
+
+    /* ── Feature cards ── */
+    .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    @media (max-width: 480px) { .cards { grid-template-columns: 1fr; } }
+    .card {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+    }
+    .card-icon {
+      width: 36px; height: 36px; border-radius: 10px;
+      display: grid; place-items: center;
+      font-size: 18px; margin-bottom: 10px;
+    }
+    .card h3 { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+    .card p  { font-size: 12.5px; color: var(--muted); line-height: 1.5; }
+    .card ul { list-style: none; padding: 0; margin-top: 8px; display: grid; gap: 4px; }
+    .card ul li { font-size: 12px; color: var(--muted); padding-left: 14px; position: relative; }
+    .card ul li::before { content: "·"; position: absolute; left: 0; color: var(--blue-light); }
+
+    /* ── Callout ── */
+    .callout {
+      border-radius: 12px;
+      padding: 14px 16px;
+      font-size: 13px;
+      line-height: 1.5;
+      display: flex; gap: 12px; align-items: flex-start;
+    }
+    .callout.blue  { background: var(--blue-soft);  border: 1px solid rgba(29,140,248,.22); color: var(--blue); }
+    .callout.green { background: var(--teal-soft);  border: 1px solid rgba(15,118,110,.22); color: var(--teal); }
+    .callout.amber { background: var(--amber-soft); border: 1px solid rgba(217,119, 6,.22); color: var(--amber); }
+    .callout-icon  { font-size: 20px; flex-shrink: 0; line-height: 1; }
+    .callout strong { display: block; font-weight: 700; margin-bottom: 2px; }
+
+    /* ── FAQ ── */
+    details {
+      background: #fff; border: 1px solid var(--border);
+      border-radius: 10px; margin-bottom: 8px;
+    }
+    summary {
+      padding: 13px 16px; cursor: pointer; font-size: 14px;
+      font-weight: 600; color: var(--ink); list-style: none;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    summary::after { content: "⌄"; color: var(--muted); font-size: 16px; transition: transform 160ms; }
+    details[open] summary::after { transform: rotate(180deg); }
+    details p { padding: 0 16px 14px; font-size: 13px; color: var(--muted); line-height: 1.6; }
+    details p + p { padding-top: 0; }
+
+    /* ── Badge ── */
+    .badge {
+      display: inline-block; font-size: 11px; font-weight: 700;
+      padding: 2px 8px; border-radius: 99px;
+      background: var(--blue-soft); color: var(--blue);
+    }
+
+    /* ── Footer ── */
+    footer {
+      text-align: center; padding: 24px 20px;
+      font-size: 12px; color: var(--muted);
+      border-top: 1px solid var(--border);
+    }
+    footer a { color: var(--blue-light); text-decoration: none; }
+
+    .boost-grid {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .boost-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    .boost-row:last-child { border-bottom: none; }
+    .weather-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--ink);
+      min-width: 130px;
+      flex-shrink: 0;
+    }
+    .type-links { display: flex; gap: 6px; flex-wrap: wrap; }
+    .type-links a {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--blue);
+      background: var(--blue-soft);
+      padding: 2px 9px;
+      border-radius: 99px;
+      text-decoration: none;
+      border: 1px solid rgba(29,140,248,.2);
+      white-space: nowrap;
+    }
+    .type-links a:hover { background: #d0e8ff; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="logo"></div>
+  <div>
+    <h1>S2 Map</h1>
+    <p>für Pokémon GO</p>
+  </div>
+  <a href="index.html">← Zur Karte</a>
+</nav>
+
+<main>
+
+  <div class="hero">
+    <h2>Was kann S2 Map?</h2>
+    <p>S2 Map hilft dir beim Planen von Pokéstops und Arenen in Pokémon GO. Du siehst auf einen Blick, wie viele Waypoints in einer Gegend aktiv sind, wann eine neue Arena entsteht – und ob ein geplanter Stop etwas verändern würde.</p>
+  </div>
+
+  <!-- Schnellstart -->
+  <p class="section-title">In 4 Schritten loslegen</p>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div>
+        <h3>Standort freigeben</h3>
+        <p>Beim ersten Start fragt die App nach deinem Standort. Bestätige mit <strong>Ja</strong> – die Karte springt dann direkt in deine Nähe.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div>
+        <h3>Waypoints eintragen</h3>
+        <p>Tippe unten auf <strong>Waypoints</strong>, gib einen Namen ein und tippe dann auf die Karte – der Marker wird dort gesetzt. Alternativ einen Link aus Pokémon GO oder Apple/Google Maps einfügen.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div>
+        <h3>S14-Zelle antippen</h3>
+        <p>Tippe auf eine orange umrandete S14-Zelle. Du siehst sofort: wie viele aktive POI, wie viele Arenen erwartet werden und wie nah du am nächsten Kipppunkt bist.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div>
+        <h3>Geplante Stops testen</h3>
+        <p>Hast du einen Stop eingereicht, der noch nicht aktiv ist? Markiere ihn als <strong>Geplant</strong> – die App zeigt dir sofort, ob er eine neue Arena auslösen würde.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Was sind S2-Zellen -->
+  <p class="section-title">Was sind S2-Zellen?</p>
+  <div class="callout blue" style="margin-bottom:10px">
+    <span class="callout-icon">🌐</span>
+    <div>
+      <strong>Die Welt als Gitternetz</strong>
+      Niantic teilt die gesamte Erde in ein unsichtbares Gitternetz ein – die sogenannten S2-Zellen. Pokémon GO nutzt dieses Raster intern, um Stops, Arenen und Wetter zu organisieren.
+    </div>
+  </div>
+  <div class="cards" style="margin-bottom:10px">
+    <div class="card">
+      <div class="card-icon" style="background:#e0f2fe; color:#0369a1">L10</div>
+      <h3>Wetterzellen</h3>
+      <p>Große Fläche. Jede Zelle hat genau <strong>ein Wetter</strong> in Pokémon GO. An Zellgrenzen kann das Wetter sichtbar wechseln.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon" style="background:#ede9fe; color:#6d28d9">L14</div>
+      <h3>Arena-Planung</h3>
+      <p>Entscheidend für Arenen. Die Anzahl aktiver Waypoints in einer L14-Zelle bestimmt, wie viele Arenen entstehen können.</p>
+      <ul>
+        <li>ab 2 POI → 1 Arena</li>
+        <li>ab 6 POI → 2 Arenen</li>
+        <li>ab 20 POI → 3 Arenen</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-icon" style="background:#fef3c7; color:#b45309">L17</div>
+      <h3>Stop-Platzierung</h3>
+      <p>Feine Zellen für einzelne Waypoints. Pro L17-Zelle kann in der Regel nur <strong>ein</strong> Stop aktiv sein.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon" style="background:#f0fdf4; color:#15803d">Fazit</div>
+      <h3>Warum das wichtig ist</h3>
+      <p>Ein Stop in der falschen L17-Zelle bleibt inaktiv. Ein Stop in einer gut gefüllten L14-Zelle kann eine Arena auslösen.</p>
+    </div>
+  </div>
+
+  <!-- Features -->
+  <p class="section-title">Features im Überblick</p>
+  <div class="cards">
+    <div class="card">
+      <div class="card-icon" style="background:#e7f3ff; color:#0956b6">📍</div>
+      <h3>Waypoints</h3>
+      <p>Eigene Stops und Arenen speichern, importieren (Screenshot, CSV, Link) und exportieren. Alles bleibt lokal auf deinem Gerät.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon" style="background:#fef3c7; color:#b45309">⏳</div>
+      <h3>Geplante Stops</h3>
+      <p>Eingereichte, aber noch nicht genehmigte Waypoints gelb markieren. Die App zeigt, wie sie den Kipppunkt beeinflussen würden.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon" style="background:#f0fdf4; color:#15803d">🏆</div>
+      <h3>Arena-Schätzung</h3>
+      <p>Foto-Anzahl und Votes pro Waypoint eintragen. Die App schätzt, welcher Stop zur Arena wird – tippe auf <span class="badge">①</span> um ihn auf der Karte zu sehen.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon" style="background:#f0f9ff; color:#0284c7">🌦️</div>
+      <h3>Wetterboost</h3>
+      <p>Aktuelles Wetter für deine L10-Zelle abrufen. Zeigt welche Pokémon-Typen gerade gestärkt sind.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon" style="background:#fdf4ff; color:#7c3aed">📦</div>
+      <h3>Import</h3>
+      <p>Waypoints per Screenshot, CSV-Datei, Text oder Kartenlink importieren. Mehrere Dateien auf einmal möglich.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon" style="background:#fff7ed; color:#c2410c">↩</div>
+      <h3>Rückgängig</h3>
+      <p>Bis zu 20 Waypoint-Aktionen rückgängig machen – versehentlich gelöscht? Kein Problem.</p>
+    </div>
+  </div>
+
+  <!-- Tipps -->
+  <p class="section-title">Tipps für die Community-Planung</p>
+  <div class="callout green" style="margin-bottom:10px">
+    <span class="callout-icon">💡</span>
+    <div>
+      <strong>Kipppunkt-Check vor der Einreichung</strong>
+      Trage deinen Wunsch-Waypoint als "Geplant" ein, bevor du ihn bei Wayfarer einreichst. S2 Map zeigt dir sofort, ob er eine neue Arena auslösen würde – oder ob er in einer zu vollen L17-Zelle landet.
+    </div>
+  </div>
+  <div class="callout amber" style="margin-bottom:10px">
+    <span class="callout-icon">📸</span>
+    <div>
+      <strong>Arena-Schätzung verbessern</strong>
+      Die Schätzung basiert auf Fotos und positiven Votes. Je mehr du einträgst, desto genauer wird sie. Fotos zählen einfach, Votes dreifach.
+    </div>
+  </div>
+  <div class="callout blue">
+    <span class="callout-icon">🔄</span>
+    <div>
+      <strong>Export für die Community</strong>
+      Exportiere deine Waypoints als CSV und teile die Datei in deiner Community-Gruppe. Andere können sie direkt importieren.
+    </div>
+  </div>
+
+
+  <!-- Wetterboosts -->
+  <p class="section-title">Wetterboosts · welche Typen sind gestärkt?</p>
+  <div class="boost-grid">
+    <div class="boost-row">
+      <span class="weather-label">☀️ Sonnig / Klar</span>
+      <span class="type-links">
+        <a href="https://www.pokewiki.de/Pflanze" target="_blank" rel="noreferrer">Pflanze</a>
+        <a href="https://www.pokewiki.de/Feuer" target="_blank" rel="noreferrer">Feuer</a>
+        <a href="https://www.pokewiki.de/Boden" target="_blank" rel="noreferrer">Boden</a>
+      </span>
+    </div>
+    <div class="boost-row">
+      <span class="weather-label">🌧️ Regen</span>
+      <span class="type-links">
+        <a href="https://www.pokewiki.de/Wasser" target="_blank" rel="noreferrer">Wasser</a>
+        <a href="https://www.pokewiki.de/Elektro" target="_blank" rel="noreferrer">Elektro</a>
+        <a href="https://www.pokewiki.de/K%C3%A4fer" target="_blank" rel="noreferrer">Käfer</a>
+      </span>
+    </div>
+    <div class="boost-row">
+      <span class="weather-label">❄️ Schnee</span>
+      <span class="type-links">
+        <a href="https://www.pokewiki.de/Eis" target="_blank" rel="noreferrer">Eis</a>
+        <a href="https://www.pokewiki.de/Stahl" target="_blank" rel="noreferrer">Stahl</a>
+      </span>
+    </div>
+    <div class="boost-row">
+      <span class="weather-label">💨 Windig</span>
+      <span class="type-links">
+        <a href="https://www.pokewiki.de/Flug" target="_blank" rel="noreferrer">Flug</a>
+        <a href="https://www.pokewiki.de/Drache" target="_blank" rel="noreferrer">Drache</a>
+        <a href="https://www.pokewiki.de/Psycho" target="_blank" rel="noreferrer">Psycho</a>
+      </span>
+    </div>
+    <div class="boost-row">
+      <span class="weather-label">☁️ Bewölkt</span>
+      <span class="type-links">
+        <a href="https://www.pokewiki.de/Fee" target="_blank" rel="noreferrer">Fee</a>
+        <a href="https://www.pokewiki.de/Kampf" target="_blank" rel="noreferrer">Kampf</a>
+        <a href="https://www.pokewiki.de/Gift" target="_blank" rel="noreferrer">Gift</a>
+      </span>
+    </div>
+    <div class="boost-row">
+      <span class="weather-label">🌤️ Teils bewölkt</span>
+      <span class="type-links">
+        <a href="https://www.pokewiki.de/Normal" target="_blank" rel="noreferrer">Normal</a>
+        <a href="https://www.pokewiki.de/Gestein" target="_blank" rel="noreferrer">Gestein</a>
+      </span>
+    </div>
+    <div class="boost-row">
+      <span class="weather-label">🌫️ Nebel</span>
+      <span class="type-links">
+        <a href="https://www.pokewiki.de/Unlicht" target="_blank" rel="noreferrer">Unlicht</a>
+        <a href="https://www.pokewiki.de/Geist" target="_blank" rel="noreferrer">Geist</a>
+      </span>
+    </div>
+  </div>
+  <p style="font-size:11px;color:var(--muted);margin-top:8px">Links führen zu PokéWiki. Es werden keine PokéWiki-Inhalte in diese App übernommen.</p>
+
+  <!-- FAQ -->
+  <p class="section-title">Häufige Fragen</p>
+
+  <details>
+    <summary>Warum taucht mein Stop nicht in Pokémon GO auf?</summary>
+    <p>Überprüfe, ob der Stop in einer L17-Zelle liegt, in der bereits ein anderer Waypoint aktiv ist. Pro L17-Zelle kann nur ein Stop aktiv sein. Wähle eine freie Zelle für deinen nächsten Vorschlag.</p>
+  </details>
+
+  <details>
+    <summary>Warum wird kein neues Arena ausgelöst, obwohl genug Stops da sind?</summary>
+    <p>Die Schwellen sind 2, 6 und 20 aktive POI in einer L14-Zelle. Zähle nur die tatsächlich aktiven Stops (inaktive zählen nicht). S2 Map zeigt die aktive Anzahl im S14-Info-Fenster.</p>
+  </details>
+
+  <details>
+    <summary>Wie genau ist die Arena-Schätzung?</summary>
+    <p>Die Schätzung basiert auf der Community-Erfahrung, dass Waypoints mit mehr Fotos und Votes bevorzugt als Arena ausgewählt werden. Niantic veröffentlicht den genauen Algorithmus nicht – die Schätzung ist ein Anhaltspunkt, keine Garantie.</p>
+  </details>
+
+  <details>
+    <summary>Werden meine Daten irgendwo gespeichert?</summary>
+    <p>Nein. Alle Waypoints werden ausschließlich lokal auf deinem Gerät gespeichert. Es gibt keine Anmeldung, keine Cloud, keinen Server der deine Daten empfängt.</p>
+  </details>
+
+  <details>
+    <summary>Kann ich die App auf dem Homescreen installieren?</summary>
+    <p>Ja. Auf dem iPhone: Safari öffnen, Teilen-Symbol antippen, „Zum Homescreen". Auf Android: Chrome öffnen, Menü antippen, „App installieren". Die App funktioniert dann auch ohne Internetverbindung für die Grundfunktionen.</p>
+  </details>
+
+  <details>
+    <summary>Was bedeutet "geplant" bei einem Waypoint?</summary>
+    <p>Geplante Waypoints sind Stops, die du bei Niantic Wayfarer eingereicht hast, aber noch nicht genehmigt wurden. In S2 Map kannst du sie gelb markieren und sehen, welchen Einfluss sie auf die S14-Zelle hätten, wenn sie genehmigt würden.</p>
+  </details>
+
+</main>
+
+<footer>
+  <p>S2 Map für Pokémon GO · Inoffizielle Orientierungshilfe · <a href="impressum.html">Impressum</a> · <a href="datenschutz.html">Datenschutz</a></p>
+  <p style="margin-top:4px">Nicht verbunden mit Niantic, The Pokémon Company oder PokéWiki.</p>
+</footer>
+
+</body>
+</html>
