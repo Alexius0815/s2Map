@@ -1817,11 +1817,11 @@ button {
 }
 
 .s14-cell-popup-wrapper .leaflet-popup-content-wrapper {
-  border: 1px solid rgba(29, 140, 248, 0.22);
+  border: 1px solid var(--line);
   border-radius: 10px;
-  background: #fffffff2;
-  box-shadow: 0 6px 14px rgba(12, 47, 92, 0.13);
-  backdrop-filter: none;
+  background: var(--panel-bg-strong);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(16px);
   animation: s14-popup-in 160ms ease-out;
 }
 
@@ -1830,13 +1830,14 @@ button {
 }
 
 .s14-cell-popup-wrapper .leaflet-popup-tip {
-  background: #fffffff2;
+  background: var(--panel-bg-strong);
 }
 
 .s14-cell-popup {
   display: grid;
   gap: 7px;
   width: 220px;
+  padding: 2px;
   color: var(--ink);
 }
 
@@ -1852,7 +1853,7 @@ button {
 }
 
 .s14-cell-popup span {
-  color: #0956b6;
+  color: var(--accent-strong);
   font-size: 10px;
   font-weight: 700;
   white-space: nowrap;
@@ -1877,9 +1878,9 @@ button {
   display: grid;
   gap: 2px;
   padding: 5px 4px;
-  border: 1px solid rgba(29, 140, 248, 0.12);
+  border: 1px solid var(--line);
   border-radius: 7px;
-  background: #eef6ff;
+  background: var(--panel-card);
 }
 
 .s14-cell-popup dt,
@@ -1902,19 +1903,19 @@ button {
 
 .s14-cell-popup.is-near > div:first-child > span,
 .s14-cell-popup.is-near > p {
-  color: #b45309;
+  color: var(--status-near-ink);
 }
 
 .s14-cell-popup.is-ok > div:first-child > span,
 .s14-cell-popup.is-full > div:first-child > span,
 .s14-cell-popup.is-ok > p,
 .s14-cell-popup.is-full > p {
-  color: #15803d;
+  color: var(--status-ok-ink);
 }
 
 .s14-cell-popup.is-over > div:first-child > span,
 .s14-cell-popup.is-over > p {
-  color: #b91c1c;
+  color: var(--status-over-ink);
 }
 
 @keyframes s14-popup-in {
@@ -2583,6 +2584,16 @@ button {
   background: var(--panel-card);
 }
 
+.s14-cell-popup-wrapper .leaflet-popup-content-wrapper {
+  background: var(--panel-bg-strong);
+  border-color: var(--line);
+  box-shadow: var(--shadow);
+}
+
+.s14-cell-popup-wrapper .leaflet-popup-tip {
+  background: var(--panel-bg-strong);
+}
+
 .location-row input,
 .waypoint-controls input,
 .waypoint-controls textarea,
@@ -2761,22 +2772,29 @@ button {
 
 .s2-label.is-s14-status {
   color: var(--status-next-ink);
+  border-color: color-mix(in srgb, var(--status-next-ink) 38%, transparent);
   background: var(--status-next-bg);
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, var(--panel-bg-strong) 72%, transparent),
+    0 6px 16px rgba(0, 0, 0, 0.22);
 }
 
 .s2-label.is-s14-status.is-near {
   color: var(--status-near-ink);
+  border-color: color-mix(in srgb, var(--status-near-ink) 42%, transparent);
   background: var(--status-near-bg);
 }
 
 .s2-label.is-s14-status.is-ok,
 .s2-label.is-s14-status.is-full {
   color: var(--status-ok-ink);
+  border-color: color-mix(in srgb, var(--status-ok-ink) 42%, transparent);
   background: var(--status-ok-bg);
 }
 
 .s2-label.is-s14-status.is-over {
   color: var(--status-over-ink);
+  border-color: color-mix(in srgb, var(--status-over-ink) 42%, transparent);
   background: var(--status-over-bg);
 }
 

@@ -1,6 +1,14 @@
-const APP_VERSION = "0.8.9";
-const APP_RELEASE_DATE = "30.05.2026";
+const APP_VERSION = "0.8.10";
+const APP_RELEASE_DATE = "31.05.2026";
 const APP_CHANGELOG = [
+  {
+    version: "0.8.10",
+    date: "31.05.2026",
+    changes: [
+      "S14-Info ist im Dunkelmodus kontrastreicher",
+      "Waypoint-Hinzufügen schließt das Panel und öffnet nach Kartentipp direkt das Edit-Popup",
+    ],
+  },
   {
     version: "0.8.9",
     date: "30.05.2026",
@@ -143,6 +151,7 @@ const state = {
   weatherFailed: new Set(),
   weatherEnabled: false,
   waypointGroup: null,
+  waypointMarkers: new Map(),
   waypointsVisible: true,
   waypoints: [],
   installPrompt: null,
@@ -615,6 +624,9 @@ function renderCells() {
         sticky: true,
         direction: "top",
       });
+      leafletPolygon.on("click", (event) => {
+        if (state.waypointPlacement) addWaypointFromMapClick(event);
+      });
       if (layer.id === "gym") wireS14CellPopup(leafletPolygon, cell, lineWeight);
       leafletPolygon.addTo(state.groups.get(layer.id));
 
@@ -714,7 +726,12 @@ function weatherLabelIconSize(zoom) {
 }
 
 function wireS14CellPopup(polygon, cell, lineWeight) {
-  const openInfo = () => {
+  const openInfo = (event) => {
+    if (event && event.waypointPlacementHandled) return;
+    if (state.waypointPlacement) {
+      addWaypointFromMapClick(event);
+      return;
+    }
     polygon.setPopupContent(s14CellPopupHtml(cell));
     polygon.openPopup();
   };
@@ -904,6 +921,7 @@ function startWaypointPlacement() {
   map.getContainer().classList.add("is-placing-waypoint");
   ui.addWaypointButton.textContent = "Auf Karte tippen";
   ui.waypointStatus.textContent = "Tippe auf die Karte, um den Waypoint zu setzen.";
+  setPanelCollapsed(true);
 }
 
 function stopWaypointPlacement() {
@@ -914,10 +932,14 @@ function stopWaypointPlacement() {
 
 function addWaypointFromMapClick(event) {
   if (!state.waypointPlacement) return;
-  L.DomEvent.stop(event);
+  event.waypointPlacementHandled = true;
+  if (event.originalEvent) L.DomEvent.stop(event.originalEvent);
   const name = ui.waypointNameInput.value.trim() || "Eigener Waypoint";
   stopWaypointPlacement();
-  addWaypoint(name, event.latlng.lat, event.latlng.lng, waypointFormMeta());
+  addWaypoint(name, event.latlng.lat, event.latlng.lng, waypointFormMeta(), {
+    focus: false,
+    openPopup: true,
+  });
   ui.waypointNameInput.value = "";
   ui.waypointPasteInput.value = "";
 }
@@ -952,7 +974,7 @@ function updateUndoButton() {
   ui.undoWaypointButton.disabled = state.undoStack.length === 0;
 }
 
-function addWaypoint(name, lat, lng, meta = {}) {
+function addWaypoint(name, lat, lng, meta = {}, options = {}) {
   pushUndoSnapshot();
   const s17Key = cellKey(latLngToCell(lat, lng, 17));
   const hasActiveInCell = state.waypoints.some((waypoint) => waypoint.active && cellKey(latLngToCell(waypoint.lat, waypoint.lng, 17)) === s17Key);
@@ -973,7 +995,8 @@ function addWaypoint(name, lat, lng, meta = {}) {
   enforceActiveWaypoints();
   saveWaypoints();
   renderWaypoints();
-  moveToLocation(lat, lng, name);
+  if (options.focus !== false) moveToLocation(lat, lng, name);
+  if (options.openPopup) window.setTimeout(() => openWaypointPopup(waypoint.id), 80);
   ui.waypointStatus.textContent = `${state.waypoints.length} eigene Waypoints gespeichert`;
 }
 
@@ -1008,6 +1031,7 @@ function renderWaypoints() {
   if (!state.waypointGroup) return;
   enforceActiveWaypoints();
   state.waypointGroup.clearLayers();
+  state.waypointMarkers.clear();
   scheduleRender();
 
   const isEmpty = !state.waypoints.length;
@@ -1066,7 +1090,20 @@ function renderWaypoints() {
       })
       .addTo(state.waypointGroup);
     marker.dragging.disable();
+    state.waypointMarkers.set(waypoint.id, marker);
   });
+}
+
+function openWaypointPopup(id) {
+  if (!state.waypointsVisible) return;
+  const marker = state.waypointMarkers.get(id);
+  if (!marker) return;
+  marker.openPopup();
+  const input = marker.getPopup()?.getElement()?.querySelector("[data-waypoint-name]");
+  if (input) {
+    input.focus();
+    input.select();
+  }
 }
 
 function waypointIcon(waypoint, inactive) {
