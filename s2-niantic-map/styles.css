@@ -753,7 +753,7 @@ button {
 
 .location-panel {
   position: absolute;
-  z-index: 505;
+  z-index: 518;
   top: max(82px, calc(env(safe-area-inset-top) + 82px));
   left: 12px;
   width: min(430px, calc(100vw - 24px));
@@ -1792,6 +1792,7 @@ button {
 .waypoint-tooltip {
   border-color: rgba(239, 59, 120, 0.28);
   font-weight: 700;
+  margin-top: -8px;
 }
 
 .leaflet-popup-content-wrapper {

@@ -1,6 +1,15 @@
-const APP_VERSION = "0.8.10";
+const APP_VERSION = "0.8.11";
 const APP_RELEASE_DATE = "31.05.2026";
 const APP_CHANGELOG = [
+  {
+    version: "0.8.11",
+    date: "31.05.2026",
+    changes: [
+      "Standortsuche überdeckt die Lupe nicht mehr",
+      "Waypoint-Namen erscheinen beim Hover oberhalb des Markers",
+      "Waypoint-Popups bleiben besser im sichtbaren Kartenbereich",
+    ],
+  },
   {
     version: "0.8.10",
     date: "31.05.2026",
@@ -1070,9 +1079,10 @@ function renderWaypoints() {
     });
     marker
       .bindTooltip(markerTitle, {
-        sticky: true,
+        sticky: false,
         direction: "top",
         className: "waypoint-tooltip",
+        offset: [0, -10],
       })
       .on("mouseover", () => marker.openTooltip())
       .on("focus", () => marker.openTooltip())
@@ -1083,7 +1093,7 @@ function renderWaypoints() {
         const element = marker.getElement();
         if (element) element.classList.remove("is-moving-waypoint");
       })
-      .bindPopup(waypointPopupHtml(waypoint))
+      .bindPopup(waypointPopupHtml(waypoint), waypointPopupOptions())
       .on("popupopen", () => {
         marker.closeTooltip();
         wireWaypointPopup(marker, waypoint.id);
@@ -1106,6 +1116,16 @@ function openWaypointPopup(id) {
   }
 }
 
+function waypointPopupOptions() {
+  return {
+    autoPan: true,
+    keepInView: true,
+    maxWidth: 300,
+    autoPanPaddingTopLeft: [22, 118],
+    autoPanPaddingBottomRight: [22, 104],
+  };
+}
+
 function waypointIcon(waypoint, inactive) {
   const typeClass = waypoint.type === "arena" ? "is-arena" : "is-stop";
   const inactiveClass = inactive ? " is-inactive" : "";
@@ -1117,8 +1137,8 @@ function waypointIcon(waypoint, inactive) {
     html: `<span class="waypoint-marker ${typeClass}${inactiveClass}${plannedClass}${highlightClass}" aria-hidden="true">${label}</span>`,
     iconSize: [34, 34],
     iconAnchor: [17, 17],
-    popupAnchor: [0, -18],
-    tooltipAnchor: [0, -18],
+    popupAnchor: [0, -22],
+    tooltipAnchor: [0, -28],
   });
 }
 
