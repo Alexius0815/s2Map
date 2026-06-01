@@ -1568,25 +1568,37 @@ function arenaScoreSection(s14Key) {
     .sort((a, b) => b.score - a.score)
     .slice(0, gymCount);
 
-  const NUMS = ["①", "②", "③"];
-  const chips = topCandidates.map((w, i) =>
-    `<button class="s14-candidate-chip" type="button" title="${escapeHtml(w.name)}" onclick="highlightCandidate('${escapeHtml(w.id)}')">${NUMS[i] || i + 1}</button>`
-  ).join("");
+  const candidateIds = escapeHtml(JSON.stringify(topCandidates.map((w) => w.id)));
+  const buttonLabel = topCandidates.length === 1 ? "Kandidat zeigen" : "Alle anzeigen";
+  const candidateNames = topCandidates.map((w) => w.name).join(", ");
+  const chips = `<button class="s14-candidate-chip" type="button" title="${escapeHtml(candidateNames)}" onclick="highlightCandidates(${candidateIds})">${escapeHtml(buttonLabel)}</button>`;
 
-  return `<div class="s14-score-section"><span class="s14-score-label">Wahrsch. Arena</span>${chips}</div>`;
+  return `<div class="s14-score-section"><span class="s14-score-label">Mögliche Arenen</span>${chips}</div>`;
 }
 
-window.highlightCandidate = function (id) {
-  const waypoint = state.waypoints.find((w) => w.id === id);
-  if (!waypoint) return;
+window.highlightCandidates = function (ids) {
+  const idList = Array.isArray(ids) ? ids : [ids];
+  const waypoints = state.waypoints.filter((w) => idList.includes(w.id));
+  if (!waypoints.length) return;
   map.closePopup();
-  state.highlightedCandidateIds = [id];
+  state.highlightedCandidateIds = waypoints.map((w) => w.id);
   renderWaypoints();
-  map.panTo([waypoint.lat, waypoint.lng], { animate: true });
+  if (waypoints.length === 1) {
+    map.panTo([waypoints[0].lat, waypoints[0].lng], { animate: true });
+  } else {
+    map.fitBounds(L.latLngBounds(waypoints.map((w) => [w.lat, w.lng])).pad(0.35), {
+      animate: true,
+      maxZoom: Math.max(map.getZoom(), 17),
+    });
+  }
   window.setTimeout(() => {
     state.highlightedCandidateIds = [];
     renderWaypoints();
   }, 2800);
+};
+
+window.highlightCandidate = function (id) {
+  window.highlightCandidates([id]);
 };
 
 function expectedGymCount(activeCount) {
