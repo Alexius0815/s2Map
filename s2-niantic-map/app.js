@@ -312,7 +312,9 @@ ui.closeWeatherPanel.addEventListener("click", () => setWeatherPanelCollapsed(tr
 ui.helpToggle.addEventListener("click", () => window.open("hilfe.html", "_blank", "noopener"));
 ui.closeHelpPanel.addEventListener("click", () => setHelpPanelCollapsed(true));
 ui.brandButton.addEventListener("click", () => setAboutPanelCollapsed(!ui.aboutPanel.classList.contains("is-collapsed")));
-ui.brandButton.addEventListener("mouseenter", () => setAboutPanelCollapsed(false));
+if (window.matchMedia?.("(hover: hover) and (pointer: fine)").matches) {
+  ui.brandButton.addEventListener("mouseenter", () => setAboutPanelCollapsed(false));
+}
 ui.appVersion.addEventListener("click", toggleChangelog);
 ui.closeAboutPanel.addEventListener("click", () => setAboutPanelCollapsed(true));
 ui.installButton.addEventListener("click", installApp);
