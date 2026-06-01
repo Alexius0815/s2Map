@@ -1594,7 +1594,7 @@ window.highlightCandidates = function (ids) {
   window.setTimeout(() => {
     state.highlightedCandidateIds = [];
     renderWaypoints();
-  }, 2800);
+  }, 4400);
 };
 
 window.highlightCandidate = function (id) {
