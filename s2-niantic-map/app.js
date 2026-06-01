@@ -1569,7 +1569,7 @@ function arenaScoreSection(s14Key) {
     .slice(0, gymCount);
 
   const candidateIds = escapeHtml(JSON.stringify(topCandidates.map((w) => w.id)));
-  const buttonLabel = topCandidates.length === 1 ? "Kandidat zeigen" : "Alle anzeigen";
+  const buttonLabel = topCandidates.length === 1 ? "zeigen" : "alle zeigen";
   const candidateNames = topCandidates.map((w) => w.name).join(", ");
   const chips = `<button class="s14-candidate-chip" type="button" title="${escapeHtml(candidateNames)}" onclick="highlightCandidates(${candidateIds})">${escapeHtml(buttonLabel)}</button>`;
 

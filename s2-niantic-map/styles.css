@@ -1740,7 +1740,8 @@ button {
 .s14-score-section {
   display: flex;
   align-items: center;
-  gap: 6px;
+  justify-content: space-between;
+  gap: 8px;
   padding-top: 6px;
   border-top: 1px solid rgba(29, 140, 248, 0.1);
 }
@@ -1754,25 +1755,28 @@ button {
 }
 
 .s14-candidate-chip {
-  display: inline-grid;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   place-items: center;
-  min-width: 86px;
-  height: 26px;
-  border-radius: 999px;
-  background: #fff1f2;
-  border: 1.5px solid #fb7185;
+  min-width: 66px;
+  height: 24px;
+  border-radius: 7px;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.32);
   color: #b91c1c;
-  font-size: 10.5px;
+  font-size: 10px;
   font-weight: 750;
   cursor: pointer;
-  transition: background 120ms, transform 120ms;
-  padding: 0 10px;
+  transition: background 120ms, border-color 120ms, transform 120ms;
+  padding: 0 8px;
   line-height: 1;
 }
 
 .s14-candidate-chip:hover {
-  background: #ffe4e6;
-  transform: scale(1.1);
+  background: rgba(239, 68, 68, 0.14);
+  border-color: rgba(239, 68, 68, 0.55);
+  transform: translateY(-1px);
 }
 
 .s14-score-hint {
@@ -2803,8 +2807,8 @@ button {
 
 .s14-candidate-chip {
   color: #fecaca;
-  border-color: #fb7185;
-  background: rgba(239, 68, 68, 0.2);
+  border-color: rgba(251, 113, 133, 0.48);
+  background: rgba(239, 68, 68, 0.12);
 }
 
 .s2-label.is-s14-status {
