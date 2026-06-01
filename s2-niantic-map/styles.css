@@ -177,6 +177,10 @@ body {
   margin-bottom: 10px;
 }
 
+.leaflet-bottom.leaflet-left .leaflet-control-zoom {
+  margin-bottom: max(34px, calc(env(safe-area-inset-bottom) + 34px));
+}
+
 .leaflet-left .leaflet-control {
   margin-left: 10px;
 }
@@ -1510,14 +1514,25 @@ button {
 
 .waypoint-marker.is-candidate {
   box-shadow:
-    0 0 0 4px rgba(16, 185, 129, 0.35),
-    0 0 0 8px rgba(16, 185, 129, 0.12);
-  animation: candidate-pulse 1.4s ease-in-out 2;
+    0 0 0 7px rgba(239, 68, 68, 0.46),
+    0 0 0 16px rgba(239, 68, 68, 0.2),
+    0 0 24px rgba(239, 68, 68, 0.42);
+  animation: candidate-pulse 1.4s ease-in-out 3;
 }
 
 @keyframes candidate-pulse {
-  0%, 100% { box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.35), 0 0 0 8px rgba(16, 185, 129, 0.12); }
-  50%       { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0.5),  0 0 0 12px rgba(16, 185, 129, 0.18); }
+  0%, 100% {
+    box-shadow:
+      0 0 0 7px rgba(239, 68, 68, 0.46),
+      0 0 0 16px rgba(239, 68, 68, 0.2),
+      0 0 24px rgba(239, 68, 68, 0.42);
+  }
+  50% {
+    box-shadow:
+      0 0 0 11px rgba(239, 68, 68, 0.58),
+      0 0 0 24px rgba(239, 68, 68, 0.26),
+      0 0 34px rgba(239, 68, 68, 0.52);
+  }
 }
 
 .leaflet-marker-icon.is-moving-waypoint .waypoint-marker {
@@ -1580,6 +1595,10 @@ button {
   gap: 6px;
   min-width: 220px;
   max-width: min(270px, 80vw);
+  max-height: min(430px, calc(100vh - 180px));
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding-right: 2px;
 }
 
 .waypoint-name-field {
@@ -1740,9 +1759,9 @@ button {
   width: 26px;
   height: 26px;
   border-radius: 50%;
-  background: #f0fdf4;
-  border: 1.5px solid #6ee7b7;
-  color: #0f766e;
+  background: #fff1f2;
+  border: 1.5px solid #fb7185;
+  color: #b91c1c;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
@@ -1752,7 +1771,7 @@ button {
 }
 
 .s14-candidate-chip:hover {
-  background: #d1fae5;
+  background: #ffe4e6;
   transform: scale(1.1);
 }
 
@@ -1790,9 +1809,19 @@ button {
 }
 
 .waypoint-tooltip {
-  border-color: rgba(239, 59, 120, 0.28);
+  border-color: rgba(255, 255, 255, 0.65);
+  background: rgba(14, 24, 40, 0.92);
+  color: #fff;
   font-weight: 700;
-  margin-top: -72px;
+  margin-top: -28px;
+  box-shadow:
+    0 10px 24px rgba(0, 0, 0, 0.34),
+    0 2px 0 rgba(255, 255, 255, 0.12);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
+}
+
+.waypoint-tooltip.leaflet-tooltip-top::before {
+  border-top-color: rgba(14, 24, 40, 0.92);
 }
 
 .leaflet-popup-content-wrapper {
@@ -1838,6 +1867,9 @@ button {
   display: grid;
   gap: 7px;
   width: 220px;
+  max-height: min(360px, calc(100vh - 180px));
+  overflow: auto;
+  overscroll-behavior: contain;
   padding: 2px;
   color: var(--ink);
 }
@@ -2199,6 +2231,10 @@ button {
 }
 
 @media (max-width: 700px) {
+  .leaflet-bottom.leaflet-left .leaflet-control-zoom {
+    margin-bottom: max(62px, calc(env(safe-area-inset-bottom) + 62px));
+  }
+
   .topbar {
     align-items: flex-start;
   }
@@ -2766,9 +2802,9 @@ button {
 }
 
 .s14-candidate-chip {
-  color: #0f766e;
-  border-color: #6ee7b7;
-  background: #d1fae5;
+  color: #fecaca;
+  border-color: #fb7185;
+  background: rgba(239, 68, 68, 0.2);
 }
 
 .s2-label.is-s14-status {

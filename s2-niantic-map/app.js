@@ -637,10 +637,7 @@ function renderCells() {
             iconAnchor: layer.id === "gym" ? [46, 11] : weatherIconSize ? [weatherIconSize[0] / 2, weatherIconSize[1] / 2] : [17, 9],
           }),
         })
-          .on("click", () => L.popup({ className: "s14-cell-popup-wrapper", autoPanPadding: [18, 18] })
-            .setLatLng(center)
-            .setContent(s14CellPopupHtml(cell))
-            .openOn(map))
+          .on("click", () => openS14CellPopup(center, cell))
           .addTo(state.labels.get(layer.id));
       }
 
@@ -724,14 +721,12 @@ function wireS14CellPopup(polygon, cell, lineWeight) {
       addWaypointFromMapClick(event);
       return;
     }
-    polygon.setPopupContent(s14CellPopupHtml(cell));
-    polygon.openPopup();
+    openS14CellPopup(event?.latlng || cellCenter(cell.face, cell.i, cell.j, cell.level), cell);
   };
 
-  polygon.bindPopup(s14CellPopupHtml(cell), {
-    className: "s14-cell-popup-wrapper",
-    closeButton: true,
-    autoPanPadding: [18, 18],
+  polygon.bindPopup(s14CellPopupHtml(cell), s14PopupOptions());
+  polygon.on("popupopen", () => {
+    window.setTimeout(() => keepElementInViewport(document.querySelector(".s14-cell-popup-wrapper")), 60);
   });
   polygon.on("mouseover", () => polygon.setStyle({ weight: lineWeight + 2.4, opacity: 1 }));
   polygon.on("mouseout", () => polygon.setStyle({ weight: lineWeight, opacity: 0.9 }));
@@ -739,6 +734,26 @@ function wireS14CellPopup(polygon, cell, lineWeight) {
   polygon.on("click", openInfo);
   polygon.on("dblclick", openInfo);
   polygon.on("popupclose", () => polygon.setStyle({ weight: lineWeight, opacity: 0.9 }));
+}
+
+function s14PopupOptions() {
+  return {
+    className: "s14-cell-popup-wrapper",
+    closeButton: true,
+    autoPan: true,
+    keepInView: true,
+    maxWidth: 280,
+    autoPanPaddingTopLeft: [18, 112],
+    autoPanPaddingBottomRight: [18, 112],
+  };
+}
+
+function openS14CellPopup(latLng, cell) {
+  L.popup(s14PopupOptions())
+    .setLatLng(latLng)
+    .setContent(s14CellPopupHtml(cell))
+    .openOn(map);
+  window.setTimeout(() => keepElementInViewport(document.querySelector(".s14-cell-popup-wrapper")), 60);
 }
 
 function toggleWeather() {
@@ -1065,7 +1080,7 @@ function renderWaypoints() {
         sticky: false,
         direction: "top",
         className: "waypoint-tooltip",
-        offset: [0, -16],
+        offset: [0, -4],
       })
       .on("mouseover", () => marker.openTooltip())
       .on("focus", () => marker.openTooltip())
@@ -1080,6 +1095,7 @@ function renderWaypoints() {
       .on("popupopen", () => {
         marker.closeTooltip();
         wireWaypointPopup(marker, waypoint.id);
+        window.setTimeout(() => keepWaypointPopupInViewport(marker), 60);
       })
       .addTo(state.waypointGroup);
     marker.dragging.disable();
@@ -1092,6 +1108,7 @@ function openWaypointPopup(id) {
   const marker = state.waypointMarkers.get(id);
   if (!marker) return;
   marker.openPopup();
+  window.setTimeout(() => keepWaypointPopupInViewport(marker), 60);
   const input = marker.getPopup()?.getElement()?.querySelector("[data-waypoint-name]");
   if (input) {
     input.focus();
@@ -1104,9 +1121,30 @@ function waypointPopupOptions() {
     autoPan: true,
     keepInView: true,
     maxWidth: 300,
-    autoPanPaddingTopLeft: [22, 118],
-    autoPanPaddingBottomRight: [22, 104],
+    autoPanPaddingTopLeft: [18, 120],
+    autoPanPaddingBottomRight: [18, 120],
   };
+}
+
+function keepWaypointPopupInViewport(marker) {
+  const popup = marker.getPopup();
+  keepElementInViewport(popup && popup.getElement());
+}
+
+function keepElementInViewport(element) {
+  if (!element) return;
+
+  const rect = element.getBoundingClientRect();
+  const padding = 14;
+  let offsetX = 0;
+  let offsetY = 0;
+
+  if (rect.left < padding) offsetX = rect.left - padding;
+  if (rect.right > window.innerWidth - padding) offsetX = rect.right - window.innerWidth + padding;
+  if (rect.top < padding) offsetY = rect.top - padding;
+  if (rect.bottom > window.innerHeight - padding) offsetY = rect.bottom - window.innerHeight + padding;
+
+  if (offsetX || offsetY) map.panBy([offsetX, offsetY], { animate: true });
 }
 
 function waypointIcon(waypoint, inactive) {
@@ -1121,7 +1159,7 @@ function waypointIcon(waypoint, inactive) {
     iconSize: [34, 34],
     iconAnchor: [17, 17],
     popupAnchor: [0, -22],
-    tooltipAnchor: [0, -32],
+    tooltipAnchor: [0, -26],
   });
 }
 
