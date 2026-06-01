@@ -166,6 +166,7 @@ const state = {
   locationTrackStarted: false,
   locationHeading: null,
   orientationListening: false,
+  waypointPopupOpen: false,
   waypointPlacement: false,
 };
 
@@ -1101,9 +1102,13 @@ function renderWaypoints() {
       })
       .bindPopup(waypointPopupHtml(waypoint), waypointPopupOptions())
       .on("popupopen", () => {
+        state.waypointPopupOpen = true;
         marker.closeTooltip();
         wireWaypointPopup(marker, waypoint.id);
         window.setTimeout(() => keepWaypointPopupInViewport(marker), 60);
+      })
+      .on("popupclose", () => {
+        state.waypointPopupOpen = false;
       })
       .addTo(state.waypointGroup);
     marker.dragging.disable();
@@ -2273,7 +2278,9 @@ function locateUser(options = {}) {
         heading: state.locationHeading,
       });
       ui.locationStatus.textContent = state.locationFollow
-        ? "GPS aktiv · Karte folgt deiner Position"
+        ? state.waypointPopupOpen
+          ? "GPS aktiv · Menü geöffnet"
+          : "GPS aktiv · Karte folgt deiner Position"
         : "GPS aktiv · Karte frei bewegt";
       if (options.initial && firstUpdate) {
         setLocationPanelCollapsed(true);
@@ -2484,9 +2491,10 @@ function jumpToCoordinates() {
 
 function moveToLocation(lat, lng, label, options = {}) {
   if (options.tracking) {
-    if (options.firstUpdate && state.locationFollow) {
+    const canMoveMap = canAutoMoveToGps();
+    if (options.firstUpdate && canMoveMap) {
       focusS2CellForLocation(lat, lng, options.level || 14);
-    } else if (state.locationFollow) {
+    } else if (canMoveMap) {
       const targetZoom = Math.max(map.getZoom(), options.level >= 14 ? 17 : 16);
       map.setView([lat, lng], targetZoom, { animate: true });
     }
@@ -2506,6 +2514,10 @@ function moveToLocation(lat, lng, label, options = {}) {
   }
   state.locationMarker.bindTooltip(label, { permanent: false, direction: "top" });
   updateLocationRadius(lat, lng);
+}
+
+function canAutoMoveToGps() {
+  return state.locationFollow && !state.waypointPopupOpen;
 }
 
 function locationIcon(heading) {
