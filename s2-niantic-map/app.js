@@ -1,6 +1,13 @@
-const APP_VERSION = "0.8.9";
-const APP_RELEASE_DATE = "31.05.2026";
+const APP_VERSION = "0.9.0";
+const APP_RELEASE_DATE = "01.06.2026";
 const APP_CHANGELOG = [
+  {
+    version: "0.9.0",
+    date: "01.06.2026",
+    changes: [
+      "Texte einfacher gemacht",
+    ],
+  },
   {
     version: "0.8.9",
     date: "31.05.2026",
@@ -14,72 +21,71 @@ const APP_CHANGELOG = [
     version: "0.8.8",
     date: "30.05.2026",
     changes: [
-      "Dark Mode – folgt automatisch der Systemeinstellung",
-      "Panel-Animationen fühlen sich flüssiger an",
-      "Hilfeseite mit visuellen Erklärungen und PokéWiki-Links",
-      "Kandidaten-Anzeige: Popup schließt sich bevor zur Karte gesprungen wird",
+      "Dunkelmodus hinzugefügt",
+      "Menüs flüssiger gemacht",
+      "Hilfe verbessert",
+      "Kandidaten besser anklickbar",
     ],
   },
   {
     version: "0.8.7",
     date: "30.05.2026",
     changes: [
-      "Geplante Stops markieren: als 'geplant' einreichen und auf der Karte gelb anzeigen",
-      "Kipppunkt-Vorschau: sieh sofort, was ein geplanter Stop an der S14-Schwelle ändert",
-      "Arena-Schätzung: Fotos und Votes hinterlegen – die wahrscheinlichste Arena wird direkt angezeigt",
-      "Kandidaten auf der Karte: Tippe im S14-Info-Fenster auf ① ② – der Marker blinkt auf",
+      "Geplante Stops sichtbar",
+      "Arena-Hinweise ergänzt",
+      "Kandidaten auf der Karte markierbar",
     ],
   },
   {
     version: "0.8.6",
     date: "30.05.2026",
     changes: [
-      "Rückgängig-Funktion: bis zu 20 Waypoint-Aktionen rückgängig machen",
-      "Übersichtlicheres Waypoint-Panel mit Icons statt langer Buttons",
-      "Alle Tipp-Ziele mindestens 44 × 44 px groß – leichter zu treffen",
-      "Design aufgeräumt: weniger Schatten, ruhigere Schriften, einheitliche Buttons",
+      "Rückgängig hinzugefügt",
+      "Waypoints übersichtlicher",
+      "Buttons leichter antippbar",
+      "Design aufgeräumt",
     ],
   },
   {
     version: "0.8.5",
     date: "30.05.2026",
     changes: [
-      "Blickrichtungspfeil ist jetzt sofort aktiv, sobald GPS läuft",
-      "GPS-Pfeil-Taste springt direkt zur aktuellen Position – ohne Umweg",
-      "Bevorzugter Suchmodus (Ort oder Koordinaten) wird gespeichert",
-      "Karte scrollt deutlich flüssiger durch schnelleres Zell-Rendering",
+      "Blickrichtung verbessert",
+      "GPS-Taste vereinfacht",
+      "Suche merkt sich die Auswahl",
+      "Karte läuft flüssiger",
     ],
   },
   {
     version: "0.8.4",
     date: "30.05.2026",
     changes: [
-      "Zwei klare Tasten links: Pfeil für GPS-Rückkehr, Lupe für Ortssuche",
+      "GPS und Suche getrennt",
     ],
   },
   {
     version: "0.8.3",
     date: "30.05.2026",
     changes: [
-      "Karte dreht sich automatisch mit deiner Blickrichtung",
+      "Karte kann sich drehen",
     ],
   },
   {
     version: "0.8.2",
     date: "30.05.2026",
     changes: [
-      "Mehrere Screenshots oder Dateien auf einmal importieren",
+      "Mehrere Bilder importierbar",
     ],
   },
   {
     version: "0.8.1",
     date: "29.05.2026",
     changes: [
-      "S2-Zellen für Wetter, Arena-Planung und Waypoint-Orientierung",
-      "Waypoints speichern, importieren, exportieren und bearbeiten",
-      "GPS-Verfolgung mit 80-m-Aktionskreis und Blickrichtungsanzeige",
-      "Wetterboost-Overlay zeigt aktuelle Typstärken auf der Karte",
-      "Als App installierbar (PWA)",
+      "S2-Zellen sichtbar",
+      "Waypoints speicherbar",
+      "GPS-Kreis hinzugefügt",
+      "Wetteranzeige ergänzt",
+      "Als App installierbar",
     ],
   },
 ];
