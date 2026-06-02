@@ -1694,7 +1694,7 @@ async function importWaypointsFromFile(event) {
           additions.push(waypoint);
         });
       } catch (error) {
-        failedFiles.push(file.name);
+        failedFiles.push(`${file.name}: ${shortImportError(error)}`);
       }
     }
 
@@ -1728,11 +1728,18 @@ function importSummary(fileCount, added, duplicates, empty, failedFiles) {
   return parts.join(" · ");
 }
 
+function shortImportError(error) {
+  const message = String(error && error.message ? error.message : error || "unbekannter Fehler").trim();
+  return message.length > 42 ? `${message.slice(0, 39)}...` : message;
+}
+
 async function textFromImageFile(file, label = "Screenshot") {
   if (isHeicFile(file)) {
-    throw new Error("HEIC-Bilder kann der Browser nicht sicher lesen. Bitte den Screenshot als PNG/JPEG importieren.");
+    throw new Error("HEIC nicht lesbar");
   }
 
+  let normalizedImageUrl = "";
+  let textDetectorError = "";
   if (window.TextDetector && window.createImageBitmap) {
     try {
       const bitmap = await createImageBitmap(file);
@@ -1741,8 +1748,9 @@ async function textFromImageFile(file, label = "Screenshot") {
       bitmap.close();
       const nativeText = blocks.map((block) => block.rawValue).filter(Boolean).join("\n");
       if (nativeText.trim()) return nativeText;
+      textDetectorError = "TextDetector leer";
     } catch (error) {
-      // Fall through to Tesseract.js. Some browsers expose TextDetector but disable it.
+      textDetectorError = error && error.message ? error.message : "TextDetector fehlgeschlagen";
     }
   }
 
@@ -1752,15 +1760,31 @@ async function textFromImageFile(file, label = "Screenshot") {
 
   ui.waypointStatus.textContent = `${label} wird erkannt ...`;
   await yieldToBrowser();
-  const imageUrl = await fileToDataUrl(file);
-  const result = await window.Tesseract.recognize(imageUrl, "deu+eng", {
+  normalizedImageUrl = await imageFileToReadableDataUrl(file).catch(() => "");
+  const originalImageUrl = await fileToDataUrl(file);
+  const imageUrl = normalizedImageUrl || originalImageUrl;
+  let result = await recognizeImageText(imageUrl, label);
+  let text = result && result.data ? result.data.text : "";
+
+  if (!text.trim() && normalizedImageUrl) {
+    result = await recognizeImageText(originalImageUrl, label);
+    text = result && result.data ? result.data.text : "";
+  }
+
+  if (!text.trim()) {
+    throw new Error(textDetectorError ? `OCR leer (${textDetectorError})` : "OCR leer");
+  }
+
+  return text;
+}
+
+function recognizeImageText(imageUrl, label) {
+  return window.Tesseract.recognize(imageUrl, "deu+eng", {
     logger: (progress) => {
       if (progress.status !== "recognizing text" || !Number.isFinite(progress.progress)) return;
       ui.waypointStatus.textContent = `${label} wird erkannt ... ${Math.round(progress.progress * 100)}%`;
     },
   });
-
-  return result && result.data ? result.data.text : "";
 }
 
 function isImageImportFile(file) {
@@ -1798,6 +1822,28 @@ function fileToDataUrl(file) {
     reader.onerror = () => reject(new Error("Screenshot konnte nicht gelesen werden."));
     reader.readAsDataURL(file);
   });
+}
+
+async function imageFileToReadableDataUrl(file) {
+  if (!window.createImageBitmap) throw new Error("Bildnormalisierung nicht verfügbar");
+  const bitmap = await createImageBitmap(file);
+  try {
+    const maxSide = 1800;
+    const scale = Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height));
+    const width = Math.max(1, Math.round(bitmap.width * scale));
+    const height = Math.max(1, Math.round(bitmap.height * scale));
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const context = canvas.getContext("2d");
+    if (!context) throw new Error("Canvas nicht verfügbar");
+    context.fillStyle = "#fff";
+    context.fillRect(0, 0, width, height);
+    context.drawImage(bitmap, 0, 0, width, height);
+    return canvas.toDataURL("image/png");
+  } finally {
+    bitmap.close();
+  }
 }
 
 function yieldToBrowser() {
