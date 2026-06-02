@@ -1,5 +1,6 @@
 const APP_VERSION = "0.9.1";
 const APP_RELEASE_DATE = "02.06.2026";
+const APP_BUILD = "d77b181";
 const APP_CHANGELOG = [
   {
     version: "0.9.1",
@@ -247,6 +248,7 @@ const ui = {
   closeHelpPanel: document.querySelector("#closeHelpPanel"),
   brandButton: document.querySelector("#brandButton"),
   appVersion: document.querySelector("#appVersion"),
+  appBuild: document.querySelector("#appBuild"),
   appReleaseDate: document.querySelector("#appReleaseDate"),
   changelogList: document.querySelector("#changelogList"),
   themeInputs: document.querySelectorAll("input[name='themeMode']"),
@@ -454,6 +456,7 @@ function setAboutPanelCollapsed(collapsed) {
 function renderAppMetadata() {
   const versionText = `V${APP_VERSION}`;
   if (ui.appVersion) ui.appVersion.textContent = versionText;
+  if (ui.appBuild) ui.appBuild.textContent = APP_BUILD;
   if (ui.appReleaseDate) ui.appReleaseDate.textContent = APP_RELEASE_DATE;
   if (!ui.changelogList) return;
 
