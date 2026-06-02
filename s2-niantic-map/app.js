@@ -1884,7 +1884,7 @@ function nameFromScreenshotText(text) {
     .filter(Boolean);
 
   const coordinateIndex = lines.findIndex((line) => parseCoordinates(line));
-  const detailsIndex = lines.findIndex((line) => /^(details|adresse|koordinaten|beschreibung)$/i.test(line));
+  const detailsIndex = lines.findIndex((line) => /^(details|adresse|koordinaten|beschreibung|galerie)$/i.test(line));
   const wayfarerTitle = lines
     .slice(0, detailsIndex > 0 ? detailsIndex : lines.length)
     .map(cleanScreenshotNameLine)
@@ -1921,7 +1921,7 @@ function isLikelyWaypointName(line) {
   if (/^\d{5}\b/.test(line)) return false;
   if (/^\d+[:.,]\d+$/.test(line)) return false;
   if (/^\d+\s*°?$/.test(line)) return false;
-  if (/^(adresse|details|koordinaten|beschreibung|ort|arena|stop|in spiel|von der community beigesteuert|deutschland|germany|kopieren|anpinnen|problem melden|pokémon go|pokemon go|min\.?|karte|auf karte ansehen)$/i.test(line)) return false;
+  if (/^(adresse|details|koordinaten|beschreibung|galerie|titelfoto|ort|arena|stop|in spiel|von der community beigesteuert|deutschland|germany|kopieren|anpinnen|problem melden|pokémon go|pokemon go|min\.?|karte|auf karte ansehen)$/i.test(line)) return false;
   if (/^par?k?stra[ßs]e\b/i.test(line)) return false;
   if (/^(straße|strasse|weg|platz)$/i.test(line)) return false;
   return /[a-zäöüß]/i.test(line);
