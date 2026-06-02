@@ -461,7 +461,7 @@ function setAboutPanelCollapsed(collapsed) {
 function renderAppMetadata() {
   const versionText = `V${APP_VERSION}`;
   if (ui.appVersion) ui.appVersion.textContent = versionText;
-  if (ui.appBuild) ui.appBuild.textContent = APP_BUILD;
+  if (ui.appBuild) ui.appBuild.textContent = `#${APP_BUILD}`;
   if (ui.appReleaseDate) ui.appReleaseDate.textContent = APP_RELEASE_DATE;
   updateGithubBuild();
   if (!ui.changelogList) return;
@@ -482,7 +482,7 @@ async function updateGithubBuild() {
     const response = await fetch(GITHUB_COMMIT_API, { cache: "no-store" });
     const data = await response.json();
     const sha = String(data && data.sha ? data.sha : "").slice(0, 7);
-    if (response.ok && sha) ui.appBuild.textContent = sha;
+    if (response.ok && sha) ui.appBuild.textContent = `#${sha}`;
   } catch {
     // Offline or rate-limited: keep bundled fallback build id.
   }
