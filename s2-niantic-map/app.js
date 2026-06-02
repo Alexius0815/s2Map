@@ -156,6 +156,7 @@ const state = {
   undoStack: [], // Snapshots von state.waypoints vor Mutationen
   includePlannedInS14: true, // geplante Stops in Kipppunkt-Berechnung einbeziehen
   highlightedCandidateIds: [], // aktuell hervorgehobene Arena-Kandidaten
+  highlightedImportIds: [], // frisch importierte Waypoints kurz hervorheben
 
   weather: new Map(),
   weatherPending: new Set(),
@@ -1192,7 +1193,7 @@ function waypointIcon(waypoint, inactive) {
   const typeClass = waypoint.type === "arena" ? "is-arena" : "is-stop";
   const inactiveClass = inactive ? " is-inactive" : "";
   const plannedClass = waypoint.status === "planned" ? " is-planned" : "";
-  const highlightClass = state.highlightedCandidateIds.includes(waypoint.id) ? " is-candidate" : "";
+  const highlightClass = state.highlightedCandidateIds.includes(waypoint.id) || state.highlightedImportIds.includes(waypoint.id) ? " is-candidate" : "";
   const label = waypoint.type === "arena" ? "A" : "S";
   return L.divIcon({
     className: "",
@@ -1629,6 +1630,16 @@ window.highlightCandidate = function (id) {
   window.highlightCandidates([id]);
 };
 
+function highlightImportedWaypoints(waypoints) {
+  state.highlightedImportIds = waypoints.map((waypoint) => waypoint.id);
+  if (!state.highlightedImportIds.length) return;
+  renderWaypoints();
+  window.setTimeout(() => {
+    state.highlightedImportIds = [];
+    renderWaypoints();
+  }, 4400);
+}
+
 function expectedGymCount(activeCount) {
   if (activeCount >= 20) return 3;
   if (activeCount >= 6) return 2;
@@ -1684,8 +1695,10 @@ async function importWaypointsFromFile(event) {
 
   try {
     const known = new Set(state.waypoints.map(waypointIdentity));
+    const knownPositions = new Set(state.waypoints.map(waypointPositionKey));
     const additions = [];
     let duplicates = 0;
+    let positionDuplicates = 0;
     let empty = 0;
     const failedFiles = [];
 
@@ -1712,6 +1725,13 @@ async function importWaypointsFromFile(event) {
             return;
           }
           known.add(identity);
+          const positionKey = waypointPositionKey(waypoint);
+          if (knownPositions.has(positionKey)) {
+            positionDuplicates += 1;
+            const confirmed = window.confirm(`An dieser Position gibt es bereits einen Waypoint.\n\n${waypoint.name}\n\nTrotzdem importieren?`);
+            if (!confirmed) return;
+          }
+          knownPositions.add(positionKey);
           additions.push(waypoint);
         });
       } catch (error) {
@@ -1720,7 +1740,7 @@ async function importWaypointsFromFile(event) {
     }
 
     if (!additions.length) {
-      ui.waypointStatus.textContent = importSummary(files.length, 0, duplicates, empty, failedFiles);
+      ui.waypointStatus.textContent = importSummary(files.length, 0, duplicates, positionDuplicates, empty, failedFiles);
       return;
     }
 
@@ -1728,7 +1748,8 @@ async function importWaypointsFromFile(event) {
     enforceActiveWaypoints();
     saveWaypoints();
     renderWaypoints();
-    ui.waypointStatus.textContent = importSummary(files.length, additions.length, duplicates, empty, failedFiles);
+    highlightImportedWaypoints(additions);
+    ui.waypointStatus.textContent = importSummary(files.length, additions.length, duplicates, positionDuplicates, empty, failedFiles);
   } catch (error) {
     ui.waypointStatus.textContent = error.message || "Import konnte nicht gelesen werden.";
   } finally {
@@ -1736,10 +1757,11 @@ async function importWaypointsFromFile(event) {
   }
 }
 
-function importSummary(fileCount, added, duplicates, empty, failedFiles) {
+function importSummary(fileCount, added, duplicates, positionDuplicates, empty, failedFiles) {
   const parts = [`${added} Waypoint${added === 1 ? "" : "s"} importiert`];
   if (fileCount > 1) parts.unshift(`${fileCount} Dateien`);
   if (duplicates) parts.push(`${duplicates} doppelt`);
+  if (positionDuplicates) parts.push(`${positionDuplicates} gleiche Position`);
   if (empty) parts.push(`${empty} ohne sicheren Treffer`);
   if (failedFiles.length) {
     const names = failedFiles.join(", ");
@@ -2141,6 +2163,10 @@ function cellValue(row, indexes, key) {
 
 function waypointIdentity(waypoint) {
   return `${waypoint.name.trim().toLowerCase()}|${waypoint.lat.toFixed(6)}|${waypoint.lng.toFixed(6)}`;
+}
+
+function waypointPositionKey(waypoint) {
+  return `${Number(waypoint.lat).toFixed(6)}|${Number(waypoint.lng).toFixed(6)}`;
 }
 
 function csvValue(value) {
