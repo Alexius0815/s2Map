@@ -1,6 +1,7 @@
 const APP_VERSION = "0.9.1";
 const APP_RELEASE_DATE = "02.06.2026";
 const APP_BUILD = "d77b181";
+const GITHUB_COMMIT_API = "https://api.github.com/repos/Alexius0815/s2Map/commits/main";
 const APP_CHANGELOG = [
   {
     version: "0.9.1",
@@ -138,7 +139,11 @@ const WAYPOINT_STORAGE_KEY = "s2MapsWaypoints";
 const LOCATION_CHOICE_STORAGE_KEY = "s2MapsLocationChoice";
 const LOCATION_MODE_STORAGE_KEY = "s2MapsLocationMode";
 const THEME_STORAGE_KEY = "s2MapsTheme";
-const OCR_SCRIPT_URL = "https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js";
+const OCR_SCRIPT_URLS = [
+  "https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js",
+  "https://unpkg.com/tesseract.js@5.1.1/dist/tesseract.min.js",
+  "https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js",
+];
 const INTERACTION_RADIUS_METERS = 80;
 
 let tesseractLoader = null;
@@ -458,6 +463,7 @@ function renderAppMetadata() {
   if (ui.appVersion) ui.appVersion.textContent = versionText;
   if (ui.appBuild) ui.appBuild.textContent = APP_BUILD;
   if (ui.appReleaseDate) ui.appReleaseDate.textContent = APP_RELEASE_DATE;
+  updateGithubBuild();
   if (!ui.changelogList) return;
 
   ui.changelogList.innerHTML = APP_CHANGELOG.map((entry) => `
@@ -468,6 +474,18 @@ function renderAppMetadata() {
       </ul>
     </article>
   `).join("");
+}
+
+async function updateGithubBuild() {
+  if (!ui.appBuild) return;
+  try {
+    const response = await fetch(GITHUB_COMMIT_API, { cache: "no-store" });
+    const data = await response.json();
+    const sha = String(data && data.sha ? data.sha : "").slice(0, 7);
+    if (response.ok && sha) ui.appBuild.textContent = sha;
+  } catch {
+    // Offline or rate-limited: keep bundled fallback build id.
+  }
 }
 
 function toggleChangelog() {
@@ -1804,18 +1822,30 @@ function isHeicFile(file) {
 function loadTesseract() {
   if (window.Tesseract) return Promise.resolve();
   if (!tesseractLoader) {
-    tesseractLoader = new Promise((resolve, reject) => {
-      const script = document.createElement("script");
-      script.src = OCR_SCRIPT_URL;
-      script.integrity = "sha384-OLBgp1GsljhM2TJ+sbHjaiH9txEUvgdDTAzHv2P24donTt6/529l+9Ua0vFImLlb";
-      script.crossOrigin = "anonymous";
-      script.async = true;
-      script.onload = () => (window.Tesseract ? resolve() : reject(new Error("OCR-Modul konnte nicht gestartet werden.")));
-      script.onerror = () => reject(new Error("OCR-Modul konnte nicht geladen werden. Bitte Internetverbindung prüfen."));
-      document.head.appendChild(script);
-    });
+    tesseractLoader = loadTesseractFromUrls([...OCR_SCRIPT_URLS]);
   }
   return tesseractLoader;
+}
+
+function loadTesseractFromUrls(urls) {
+  const scriptUrl = urls.shift();
+  if (!scriptUrl) {
+    return Promise.reject(new Error("OCR-Modul konnte nicht geladen werden. Bitte Internetverbindung prüfen."));
+  }
+
+  return new Promise((resolve, reject) => {
+    const script = document.createElement("script");
+    const tryNext = () => {
+      script.remove();
+      loadTesseractFromUrls(urls).then(resolve).catch(reject);
+    };
+    script.src = scriptUrl;
+    script.crossOrigin = "anonymous";
+    script.async = true;
+    script.onload = () => (window.Tesseract ? resolve() : tryNext());
+    script.onerror = tryNext;
+    document.head.appendChild(script);
+  });
 }
 
 function fileToDataUrl(file) {
