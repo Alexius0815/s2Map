@@ -1,6 +1,13 @@
-const APP_VERSION = "0.9.0";
-const APP_RELEASE_DATE = "01.06.2026";
+const APP_VERSION = "0.9.1";
+const APP_RELEASE_DATE = "02.06.2026";
 const APP_CHANGELOG = [
+  {
+    version: "0.9.1",
+    date: "02.06.2026",
+    changes: [
+      "Import verbessert",
+    ],
+  },
   {
     version: "0.9.0",
     date: "01.06.2026",
