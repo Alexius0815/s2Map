@@ -1622,12 +1622,16 @@ function exportWaypoints() {
   }
   enforceActiveWaypoints();
   const rows = [
-    ["name", "type", "area", "active", "lat", "lng", "s14", "s17", "plausibility"],
+    ["name", "type", "status", "planned", "area", "active", "photo_count", "photo_votes", "lat", "lng", "s14", "s17", "plausibility"],
     ...state.waypoints.map((waypoint) => [
       waypoint.name,
       waypoint.type,
+      waypoint.status === "planned" ? "planned" : "active",
+      waypoint.status === "planned" ? "yes" : "no",
       waypoint.areaKind,
       waypoint.active ? "yes" : "no",
+      waypoint.photoCount || 0,
+      waypoint.photoVotes || 0,
       waypoint.lat.toFixed(6),
       waypoint.lng.toFixed(6),
       cellKey(latLngToCell(waypoint.lat, waypoint.lng, 14)),
@@ -1827,8 +1831,12 @@ function parseCsvWaypoints(text) {
     .map((row, index) => importedWaypointFromObject({
       name: cellValue(row, indexes, "name") || `Import ${index + 1}`,
       type: cellValue(row, indexes, "type"),
+      status: cellValue(row, indexes, "status"),
+      planned: cellValue(row, indexes, "planned") || cellValue(row, indexes, "geplant"),
       areaKind: cellValue(row, indexes, "area") || cellValue(row, indexes, "areakind"),
       active: cellValue(row, indexes, "active"),
+      photoCount: cellValue(row, indexes, "photo_count") || cellValue(row, indexes, "photos") || cellValue(row, indexes, "fotos") || cellValue(row, indexes, "foto"),
+      photoVotes: cellValue(row, indexes, "photo_votes") || cellValue(row, indexes, "votes") || cellValue(row, indexes, "stimmen"),
       lat: cellValue(row, indexes, "lat"),
       lng: cellValue(row, indexes, "lng"),
     }))
@@ -1954,8 +1962,11 @@ function importedWaypointFromObject(entry) {
     lat,
     lng,
     type: String(entry.type || "").toLowerCase() === "arena" ? "arena" : "stop",
+    status: parseImportedStatus(entry),
     areaKind: entry.areaKind || entry.area || "normal",
     active: parseImportedActive(entry.active),
+    photoCount: parseImportedCount(entry.photoCount ?? entry.photo_count ?? entry.photos ?? entry.fotos ?? entry.foto),
+    photoVotes: parseImportedCount(entry.photoVotes ?? entry.photo_votes ?? entry.votes ?? entry.stimmen),
     createdAt: entry.createdAt || new Date().toISOString(),
   });
 }
@@ -1970,6 +1981,18 @@ function parseImportedActive(value) {
   if (typeof value === "boolean") return value;
   const text = String(value ?? "yes").trim().toLowerCase();
   return !["false", "0", "no", "nein", "inactive", "inaktiv"].includes(text);
+}
+
+function parseImportedStatus(entry) {
+  const status = String(entry.status || "").trim().toLowerCase();
+  if (status === "planned" || status === "geplant") return "planned";
+  const planned = String(entry.planned ?? entry.geplant ?? "").trim().toLowerCase();
+  return ["true", "1", "yes", "ja", "planned", "geplant"].includes(planned) ? "planned" : "active";
+}
+
+function parseImportedCount(value) {
+  const number = typeof value === "number" ? value : Number(String(value ?? "").trim().replace(",", "."));
+  return Number.isFinite(number) ? Math.max(0, Math.floor(number)) : 0;
 }
 
 function parseCsvRows(text) {
