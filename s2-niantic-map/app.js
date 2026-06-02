@@ -1728,7 +1728,6 @@ async function importWaypointsFromFile(event) {
     enforceActiveWaypoints();
     saveWaypoints();
     renderWaypoints();
-    focusActiveS14Cell();
     ui.waypointStatus.textContent = importSummary(files.length, additions.length, duplicates, empty, failedFiles);
   } catch (error) {
     ui.waypointStatus.textContent = error.message || "Import konnte nicht gelesen werden.";
