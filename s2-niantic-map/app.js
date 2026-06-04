@@ -1333,12 +1333,6 @@ function saveWaypointFromPopup(id, root) {
   ui.waypointStatus.textContent = `Waypoint gespeichert: ${name}`;
 }
 
-function focusWaypoint(id) {
-  const waypoint = state.waypoints.find((entry) => entry.id === id);
-  if (!waypoint) return;
-  moveToLocation(waypoint.lat, waypoint.lng, waypoint.name, { level: 14 });
-}
-
 function moveWaypointToLatLng(id, latLng, options = {}) {
   const waypoint = state.waypoints.find((entry) => entry.id === id);
   if (!waypoint) return;
@@ -1626,10 +1620,6 @@ window.highlightCandidates = function (ids) {
   }, 4400);
 };
 
-window.highlightCandidate = function (id) {
-  window.highlightCandidates([id]);
-};
-
 function highlightImportedWaypoints(waypoints) {
   state.highlightedImportIds = waypoints.map((waypoint) => waypoint.id);
   if (!state.highlightedImportIds.length) return;
@@ -1699,6 +1689,7 @@ async function importWaypointsFromFile(event) {
     const additions = [];
     let duplicates = 0;
     let positionDuplicates = 0;
+    let importSamePosition = null;
     let empty = 0;
     const failedFiles = [];
 
@@ -1728,8 +1719,10 @@ async function importWaypointsFromFile(event) {
           const positionKey = waypointPositionKey(waypoint);
           if (knownPositions.has(positionKey)) {
             positionDuplicates += 1;
-            const confirmed = window.confirm(`An dieser Position gibt es bereits einen Waypoint.\n\n${waypoint.name}\n\nTrotzdem importieren?`);
-            if (!confirmed) return;
+            if (importSamePosition === null) {
+              importSamePosition = window.confirm("Ein oder mehrere importierte Waypoints liegen exakt auf vorhandenen Positionen.\n\nTrotzdem importieren?");
+            }
+            if (!importSamePosition) return;
           }
           knownPositions.add(positionKey);
           additions.push(waypoint);
@@ -1845,7 +1838,10 @@ function loadTesseract() {
   if (!tesseractLoader) {
     tesseractLoader = loadTesseractFromUrls([...OCR_SCRIPT_URLS]);
   }
-  return tesseractLoader;
+  return tesseractLoader.catch((error) => {
+    tesseractLoader = null;
+    throw error;
+  });
 }
 
 function loadTesseractFromUrls(urls) {
@@ -2445,7 +2441,7 @@ function locateUser(options = {}) {
       });
       ui.locationStatus.textContent = state.locationFollow
         ? state.waypointPopupOpen
-          ? "GPS aktiv · Menü geöffnet"
+          ? "GPS aktiv · Karte bleibt beim Menü"
           : "GPS aktiv · Karte folgt deiner Position"
         : "GPS aktiv · Karte frei bewegt";
       if (options.initial && firstUpdate) {
