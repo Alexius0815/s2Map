@@ -1,8 +1,15 @@
-const APP_VERSION = "0.9.1";
-const APP_RELEASE_DATE = "02.06.2026";
+const APP_VERSION = "0.9.2";
+const APP_RELEASE_DATE = "04.06.2026";
 const APP_BUILD = "d77b181";
 const GITHUB_COMMIT_API = "https://api.github.com/repos/Alexius0815/s2Map/commits/main";
 const APP_CHANGELOG = [
+  {
+    version: "0.9.2",
+    date: "04.06.2026",
+    changes: [
+      "Import klarer",
+    ],
+  },
   {
     version: "0.9.1",
     date: "02.06.2026",
@@ -240,6 +247,7 @@ const ui = {
   exportWaypointsButton: document.querySelector("#exportWaypointsButton"),
   importWaypointsButton: document.querySelector("#importWaypointsButton"),
   waypointImportInput: document.querySelector("#waypointImportInput"),
+  waypointImportSummary: document.querySelector("#waypointImportSummary"),
   clearWaypointsButton: document.querySelector("#clearWaypointsButton"),
   undoWaypointButton: document.querySelector("#undoWaypointButton"),
   waypointsVisibilityButton: document.querySelector("#waypointsVisibilityButton"),
@@ -1682,6 +1690,7 @@ function exportWaypoints() {
 async function importWaypointsFromFile(event) {
   const files = Array.from(event.target.files || []);
   if (!files.length) return;
+  hideImportSummary();
 
   try {
     const known = new Set(state.waypoints.map(waypointIdentity));
@@ -1733,7 +1742,9 @@ async function importWaypointsFromFile(event) {
     }
 
     if (!additions.length) {
-      ui.waypointStatus.textContent = importSummary(files.length, 0, duplicates, positionDuplicates, empty, failedFiles);
+      const summary = importSummaryData(files.length, 0, duplicates, positionDuplicates, empty, failedFiles);
+      ui.waypointStatus.textContent = summary.text;
+      renderImportSummary(summary);
       return;
     }
 
@@ -1742,15 +1753,27 @@ async function importWaypointsFromFile(event) {
     saveWaypoints();
     renderWaypoints();
     highlightImportedWaypoints(additions);
-    ui.waypointStatus.textContent = importSummary(files.length, additions.length, duplicates, positionDuplicates, empty, failedFiles);
+    const summary = importSummaryData(files.length, additions.length, duplicates, positionDuplicates, empty, failedFiles);
+    ui.waypointStatus.textContent = summary.text;
+    renderImportSummary(summary);
   } catch (error) {
-    ui.waypointStatus.textContent = error.message || "Import konnte nicht gelesen werden.";
+    const message = error.message || "Import konnte nicht gelesen werden.";
+    ui.waypointStatus.textContent = message;
+    renderImportSummary({
+      fileCount: files.length,
+      added: 0,
+      duplicates: 0,
+      positionDuplicates: 0,
+      empty: 0,
+      failedFiles: [message],
+      text: message,
+    });
   } finally {
     event.target.value = "";
   }
 }
 
-function importSummary(fileCount, added, duplicates, positionDuplicates, empty, failedFiles) {
+function importSummaryData(fileCount, added, duplicates, positionDuplicates, empty, failedFiles) {
   const parts = [`${added} Waypoint${added === 1 ? "" : "s"} importiert`];
   if (fileCount > 1) parts.unshift(`${fileCount} Dateien`);
   if (duplicates) parts.push(`${duplicates} doppelt`);
@@ -1760,7 +1783,45 @@ function importSummary(fileCount, added, duplicates, positionDuplicates, empty, 
     const names = failedFiles.join(", ");
     parts.push(`Fehler: ${names}`);
   }
-  return parts.join(" · ");
+  return {
+    fileCount,
+    added,
+    duplicates,
+    positionDuplicates,
+    empty,
+    failedFiles,
+    text: parts.join(" · "),
+  };
+}
+
+function hideImportSummary() {
+  if (!ui.waypointImportSummary) return;
+  ui.waypointImportSummary.hidden = true;
+  ui.waypointImportSummary.innerHTML = "";
+}
+
+function renderImportSummary(summary) {
+  if (!ui.waypointImportSummary) return;
+  const issues = summary.duplicates + summary.positionDuplicates + summary.empty + summary.failedFiles.length;
+  const statusClass = summary.added > 0 && !issues ? "is-ok" : summary.added > 0 ? "is-mixed" : "is-error";
+  const issueText = issues ? `${issues} Hinweis${issues === 1 ? "" : "e"}` : "keine Hinweise";
+  const failedList = summary.failedFiles.length
+    ? `<ul>${summary.failedFiles.slice(0, 4).map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>`
+    : "";
+  ui.waypointImportSummary.hidden = false;
+  ui.waypointImportSummary.innerHTML = `
+    <div class="waypoint-import-summary__head ${statusClass}">
+      <strong>${escapeHtml(summary.added)} importiert</strong>
+      <span>${escapeHtml(summary.fileCount)} Datei${summary.fileCount === 1 ? "" : "en"} · ${escapeHtml(issueText)}</span>
+    </div>
+    <div class="waypoint-import-summary__grid">
+      <span><b>${escapeHtml(summary.duplicates)}</b>doppelt</span>
+      <span><b>${escapeHtml(summary.positionDuplicates)}</b>gleiche Position</span>
+      <span><b>${escapeHtml(summary.empty)}</b>ohne Treffer</span>
+      <span><b>${escapeHtml(summary.failedFiles.length)}</b>Fehler</span>
+    </div>
+    ${failedList}
+  `;
 }
 
 function shortImportError(error) {
