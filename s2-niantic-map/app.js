@@ -1,6 +1,6 @@
 const APP_VERSION = "1.0.0";
 const APP_RELEASE_DATE = "09.08.2026";
-const APP_BUILD = "d77b181";
+const APP_BUILD = "6919e13";
 const GITHUB_COMMIT_API = "https://api.github.com/repos/Alexius0815/s2Map/commits/main";
 const APP_CHANGELOG = [
   {
