@@ -1556,7 +1556,7 @@ button {
   border: 3px solid #fff;
   border-radius: 50%;
   color: #fff;
-  background: #1d8cf8;
+  background: var(--tag-color, #1d8cf8);
   box-shadow: 0 4px 10px rgba(12, 47, 92, 0.16);
   font-size: 13px;
   font-weight: 700;
@@ -1567,7 +1567,7 @@ button {
 }
 
 .waypoint-marker.is-arena {
-  background: #ef3b78;
+  background: var(--tag-color, #ef3b78);
 }
 
 .waypoint-marker.is-inactive {
@@ -2949,4 +2949,168 @@ button {
 }
 .inline-link:hover {
   opacity: 0.8;
+}
+
+/* ── Tag-Chips ─────────────────────────────────────────── */
+.waypoint-tag-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 4px 0 2px;
+}
+
+.tag-chip {
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1.5px solid var(--tag-color, var(--border));
+  background: transparent;
+  color: var(--tag-color, var(--text-secondary));
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 120ms, color 120ms;
+}
+
+.tag-chip.is-active {
+  background: var(--tag-color, var(--accent));
+  color: #fff;
+  border-color: transparent;
+}
+
+/* ── Waypoint Tag-Input (Formular & Popup) ─────────────── */
+#waypointTagInput,
+.waypoint-tag-field input {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.waypoint-tag-field {
+  display: block;
+  margin-top: 6px;
+}
+
+/* ── Highscore-Button ──────────────────────────────────── */
+.highscore-toggle {
+  position: absolute;
+  bottom: calc(var(--safe-bottom, 0px) + 136px);
+  right: 14px;
+  z-index: 1000;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: var(--surface);
+  box-shadow: 0 2px 8px rgba(0,0,0,.18);
+  font-size: 18px;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+
+/* ── Highscore-Panel ───────────────────────────────────── */
+.highscore-panel {
+  position: absolute;
+  bottom: calc(var(--safe-bottom, 0px) + 180px);
+  right: 60px;
+  z-index: 1001;
+  width: min(340px, calc(100vw - 32px));
+  max-height: 60vh;
+  overflow-y: auto;
+  background: var(--surface);
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(0,0,0,.18);
+  padding-bottom: 12px;
+  transition: opacity 160ms, transform 160ms;
+}
+
+.highscore-panel.is-collapsed {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(8px);
+}
+
+.highscore-tabs {
+  display: flex;
+  gap: 6px;
+  padding: 4px 16px 10px;
+}
+
+.highscore-tab {
+  flex: 1;
+  padding: 5px 0;
+  border-radius: 8px;
+  border: 1.5px solid var(--border);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.highscore-tab.is-active {
+  background: var(--accent);
+  border-color: transparent;
+  color: #fff;
+}
+
+.highscore-list {
+  padding: 0 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.highscore-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.highscore-rank {
+  font-size: 18px;
+  width: 28px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.highscore-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.highscore-name {
+  font-weight: 700;
+  font-size: 14px;
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.highscore-bar-wrap {
+  height: 6px;
+  background: var(--border);
+  border-radius: 3px;
+  margin-top: 4px;
+  overflow: hidden;
+}
+
+.highscore-bar {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 300ms ease;
+}
+
+.highscore-count {
+  font-size: 16px;
+  font-weight: 700;
+  flex-shrink: 0;
+  color: var(--text);
+}
+
+.highscore-empty {
+  color: var(--text-secondary);
+  font-size: 13px;
+  text-align: center;
+  padding: 12px 0;
 }

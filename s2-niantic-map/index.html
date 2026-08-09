@@ -151,9 +151,31 @@
           Waypoints
         </button>
 
+        <button id="highscorePanelToggle" class="highscore-toggle" type="button" aria-expanded="false" aria-controls="highscorePanel" aria-label="Wettbewerb öffnen">
+          🏆
+        </button>
+
         <button id="helpToggle" class="help-toggle" type="button" aria-expanded="false" aria-controls="helpPanel" aria-label="Hilfe öffnen">
           ?
         </button>
+
+        <aside id="highscorePanel" class="highscore-panel is-collapsed" aria-label="Wettbewerb">
+          <div class="panel-header">
+            <div>
+              <h2>Wettbewerb</h2>
+              <p id="highscoreSubtitle">Waypoints nach Einreicher</p>
+            </div>
+            <button id="closeHighscorePanel" class="panel-close-button" type="button" aria-label="Wettbewerb schließen">×</button>
+          </div>
+          <div class="highscore-tabs" role="group" aria-label="Typ filtern">
+            <button class="highscore-tab is-active" data-highscore-type="all" type="button">Alle</button>
+            <button class="highscore-tab" data-highscore-type="stop" type="button">Stops</button>
+            <button class="highscore-tab" data-highscore-type="arena" type="button">Arenen</button>
+          </div>
+          <div id="highscoreList" class="highscore-list">
+            <p class="highscore-empty">Noch keine getaggten Waypoints</p>
+          </div>
+        </aside>
 
         <aside id="helpPanel" class="help-panel is-collapsed" aria-label="Boost-Hilfe">
           <div class="panel-header">
@@ -276,6 +298,9 @@
               </label>
             </div>
             <input id="waypointNameInput" type="text" placeholder="Name, z.B. Rad- und Wanderweg Wegweiser" autocomplete="off" />
+            <input id="waypointTagInput" type="text" placeholder="Tag (z.B. Alex, Team A)" autocomplete="off" list="waypointTagSuggestions" />
+            <datalist id="waypointTagSuggestions"></datalist>
+            <div id="waypointTagFilters" class="waypoint-tag-filters" hidden></div>
             <label class="waypoint-planned-form-toggle">
               <input type="checkbox" id="waypointStatusInput" />
               <span>Geplant – eingereicht, noch nicht aktiv</span>

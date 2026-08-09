@@ -1,6 +1,8 @@
 const APP_VERSION = "1.0.0";
 const APP_RELEASE_DATE = "09.08.2026";
 const APP_BUILD = "6919e13";
+const TAG_STORAGE_KEY = "s2MapsLastTag";
+const TAG_COLORS = ["#e74c3c","#3498db","#2ecc71","#f39c12","#9b59b6","#1abc9c","#e67e22","#e91e63","#00bcd4","#8bc34a"];
 const GITHUB_COMMIT_API = "https://api.github.com/repos/Alexius0815/s2Map/commits/main";
 const APP_CHANGELOG = [
   {
@@ -174,6 +176,8 @@ const state = {
   highlightedCandidateIds: [], // aktuell hervorgehobene Arena-Kandidaten
   highlightedImportIds: [], // frisch importierte Waypoints kurz hervorheben
 
+  tagFilter: null,      // null = alle anzeigen, string = nur dieser Tag
+  highscoreType: "all", // "all" | "stop" | "arena"
   weather: new Map(),
   weatherPending: new Set(),
   weatherFailed: new Set(),
@@ -246,10 +250,18 @@ const ui = {
   weatherButton: document.querySelector("#weatherButton"),
   weatherStatus: document.querySelector("#weatherStatus"),
   waypointNameInput: document.querySelector("#waypointNameInput"),
+  waypointTagInput: document.querySelector("#waypointTagInput"),
+  waypointTagFilters: document.querySelector("#waypointTagFilters"),
+  waypointTagSuggestions: document.querySelector("#waypointTagSuggestions"),
   waypointTypeInput: document.querySelector("#waypointTypeInput"),
   waypointStatusInput: document.querySelector("#waypointStatusInput"),
   waypointAreaInput: document.querySelector("#waypointAreaInput"),
   waypointPasteInput: document.querySelector("#waypointPasteInput"),
+  highscorePanelToggle: document.querySelector("#highscorePanelToggle"),
+  highscorePanel: document.querySelector("#highscorePanel"),
+  closeHighscorePanel: document.querySelector("#closeHighscorePanel"),
+  highscoreList: document.querySelector("#highscoreList"),
+  highscoreSubtitle: document.querySelector("#highscoreSubtitle"),
   waypointStatus: document.querySelector("#waypointStatus"),
   waypointEmptyState: document.querySelector("#waypointEmptyState"),
   addWaypointButton: document.querySelector("#addWaypointButton"),
@@ -414,6 +426,29 @@ window.addEventListener("appinstalled", () => {
   ui.installButton.classList.add("is-hidden");
   ui.installStatus.textContent = "App ist installiert.";
 });
+// Highscore-Panel
+ui.highscorePanelToggle.addEventListener("click", () => {
+  const isOpen = !ui.highscorePanel.classList.contains("is-collapsed");
+  closeAllPanels();
+  if (!isOpen) setHighscorePanelCollapsed(false);
+});
+ui.closeHighscorePanel.addEventListener("click", () => setHighscorePanelCollapsed(true));
+
+// Highscore-Tabs
+document.querySelectorAll("[data-highscore-type]").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    state.highscoreType = btn.dataset.highscoreType;
+    document.querySelectorAll("[data-highscore-type]").forEach((b) => b.classList.toggle("is-active", b === btn));
+    renderHighscore();
+  });
+});
+
+// Letzten Tag vorausfüllen
+try {
+  const lastTag = localStorage.getItem(TAG_STORAGE_KEY);
+  if (lastTag && ui.waypointTagInput) ui.waypointTagInput.value = lastTag;
+} catch {}
+
 registerServiceWorker();
 updateInstallHelp();
 scheduleRender();
@@ -970,6 +1005,7 @@ function normalizeWaypoint(waypoint) {
     photoCount: Number.isFinite(waypoint.photoCount) ? waypoint.photoCount : 0,
     photoVotes: Number.isFinite(waypoint.photoVotes) ? waypoint.photoVotes : 0,
     createdAt: waypoint.createdAt || new Date().toISOString(),
+    tag: typeof waypoint.tag === "string" ? waypoint.tag.trim() : "",
   };
 }
 
@@ -1022,6 +1058,7 @@ function waypointFormMeta() {
     type: ui.waypointTypeInput.value === "arena" ? "arena" : "stop",
     status: ui.waypointStatusInput.checked ? "planned" : "active",
     areaKind: ui.waypointAreaInput.value,
+    tag: (ui.waypointTagInput?.value || "").trim(),
   };
 }
 
@@ -1063,7 +1100,12 @@ function addWaypoint(name, lat, lng, meta = {}, options = {}) {
     photoCount: 0,
     photoVotes: 0,
     createdAt: new Date().toISOString(),
+    tag: typeof meta.tag === "string" ? meta.tag.trim() : "",
   };
+  // Tag für nächsten Waypoint merken
+  if (waypoint.tag) {
+    try { localStorage.setItem(TAG_STORAGE_KEY, waypoint.tag); } catch {}
+  }
   state.waypoints.push(waypoint);
   enforceActiveWaypoints();
   saveWaypoints();
@@ -1118,12 +1160,20 @@ function renderWaypoints() {
   const activeWaypoints = state.waypoints.filter((waypoint) => waypoint.active);
   ui.waypointStatus.textContent = `${activeWaypoints.length}/${state.waypoints.length} aktive Waypoints`;
 
+  renderTagFilters();
+  renderHighscore();
+  updateTagSuggestions();
+
   if (!state.waypointsVisible) {
     ui.waypointStatus.textContent = `Waypoints ausgeblendet · ${state.waypoints.length} gespeichert`;
     return;
   }
 
-  state.waypoints.forEach((waypoint) => {
+  const visibleWaypoints = state.tagFilter
+    ? state.waypoints.filter((w) => w.tag === state.tagFilter)
+    : state.waypoints;
+
+  visibleWaypoints.forEach((waypoint) => {
     const s14 = latLngToCell(waypoint.lat, waypoint.lng, 14);
     const s17 = latLngToCell(waypoint.lat, waypoint.lng, 17);
     const s14Key = cellKey(s14);
@@ -1173,6 +1223,86 @@ function renderWaypoints() {
   });
 }
 
+function allTags() {
+  const tags = new Set(state.waypoints.map((w) => w.tag).filter(Boolean));
+  return [...tags].sort((a, b) => a.localeCompare(b));
+}
+
+function updateTagSuggestions() {
+  if (!ui.waypointTagSuggestions) return;
+  const tags = allTags();
+  ui.waypointTagSuggestions.innerHTML = tags.map((t) => `<option value="${escapeHtml(t)}"></option>`).join("");
+}
+
+function renderTagFilters() {
+  if (!ui.waypointTagFilters) return;
+  const tags = allTags();
+  if (tags.length < 2) {
+    ui.waypointTagFilters.hidden = true;
+    return;
+  }
+  ui.waypointTagFilters.hidden = false;
+  const chips = [
+    `<button class="tag-chip${state.tagFilter === null ? " is-active" : ""}" data-tag="" type="button">Alle</button>`,
+    ...tags.map((tag) => {
+      const color = tagColor(tag);
+      const active = state.tagFilter === tag ? " is-active" : "";
+      return `<button class="tag-chip${active}" data-tag="${escapeHtml(tag)}" type="button" style="--tag-color:${color}">${escapeHtml(tag)}</button>`;
+    }),
+  ];
+  ui.waypointTagFilters.innerHTML = chips.join("");
+  ui.waypointTagFilters.querySelectorAll(".tag-chip").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const tag = btn.dataset.tag || null;
+      state.tagFilter = tag || null;
+      renderWaypoints();
+    });
+  });
+}
+
+function renderHighscore() {
+  if (!ui.highscoreList) return;
+  const type = state.highscoreType;
+  const filtered = state.waypoints.filter((w) => w.tag && (type === "all" || w.type === type));
+  const counts = new Map();
+  filtered.forEach((w) => counts.set(w.tag, (counts.get(w.tag) || 0) + 1));
+  const ranked = [...counts.entries()].sort((a, b) => b[1] - a[1]);
+
+  if (!ranked.length) {
+    ui.highscoreList.innerHTML = `<p class="highscore-empty">Noch keine getaggten Waypoints</p>`;
+    return;
+  }
+
+  const max = ranked[0][1];
+  ui.highscoreList.innerHTML = ranked.map(([tag, count], index) => {
+    const color = tagColor(tag);
+    const pct = Math.round((count / max) * 100);
+    const medal = index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : `${index + 1}.`;
+    return `
+      <div class="highscore-row">
+        <span class="highscore-rank">${medal}</span>
+        <div class="highscore-info">
+          <span class="highscore-name" style="color:${color}">${escapeHtml(tag)}</span>
+          <div class="highscore-bar-wrap">
+            <div class="highscore-bar" style="width:${pct}%;background:${color}"></div>
+          </div>
+        </div>
+        <span class="highscore-count">${count}</span>
+      </div>`;
+  }).join("");
+
+  const typeLabel = type === "stop" ? "Stops" : type === "arena" ? "Arenen" : "Waypoints";
+  if (ui.highscoreSubtitle) {
+    ui.highscoreSubtitle.textContent = `${state.waypoints.filter((w) => w.tag).length} getaggte ${typeLabel}`;
+  }
+}
+
+function setHighscorePanelCollapsed(collapsed) {
+  ui.highscorePanel.classList.toggle("is-collapsed", collapsed);
+  ui.highscorePanelToggle.setAttribute("aria-expanded", String(!collapsed));
+  if (!collapsed) renderHighscore();
+}
+
 function openWaypointPopup(id) {
   if (!state.waypointsVisible) return;
   const marker = state.waypointMarkers.get(id);
@@ -1217,15 +1347,24 @@ function keepElementInViewport(element) {
   if (offsetX || offsetY) map.panBy([offsetX, offsetY], { animate: true });
 }
 
+function tagColor(tag) {
+  if (!tag) return null;
+  let hash = 5381;
+  for (let i = 0; i < tag.length; i++) hash = ((hash << 5) + hash) ^ tag.charCodeAt(i);
+  return TAG_COLORS[Math.abs(hash) % TAG_COLORS.length];
+}
+
 function waypointIcon(waypoint, inactive) {
   const typeClass = waypoint.type === "arena" ? "is-arena" : "is-stop";
   const inactiveClass = inactive ? " is-inactive" : "";
   const plannedClass = waypoint.status === "planned" ? " is-planned" : "";
   const highlightClass = state.highlightedCandidateIds.includes(waypoint.id) || state.highlightedImportIds.includes(waypoint.id) ? " is-candidate" : "";
   const label = waypoint.type === "arena" ? "A" : "S";
+  const color = waypoint.tag ? tagColor(waypoint.tag) : null;
+  const style = color ? ` style="--tag-color:${color}"` : "";
   return L.divIcon({
     className: "",
-    html: `<span class="waypoint-marker ${typeClass}${inactiveClass}${plannedClass}${highlightClass}" aria-hidden="true">${label}</span>`,
+    html: `<span class="waypoint-marker ${typeClass}${inactiveClass}${plannedClass}${highlightClass}"${style} aria-hidden="true">${label}</span>`,
     iconSize: [34, 34],
     iconAnchor: [17, 17],
     popupAnchor: [0, -22],
@@ -1265,6 +1404,9 @@ function waypointPopupHtml(waypoint) {
           <input type="number" min="0" value="${waypoint.photoVotes || 0}" data-waypoint-photo-votes data-original-photo-votes="${waypoint.photoVotes || 0}" />
         </label>
       </div>
+      <label class="waypoint-tag-field">
+        <input type="text" value="${escapeHtml(waypoint.tag || "")}" placeholder="Tag (z.B. Alex)" data-waypoint-tag data-original-tag="${escapeHtml(waypoint.tag || "")}" />
+      </label>
       <div class="waypoint-popup-actions">
         <button type="button" data-waypoint-action="save" hidden>Speichern</button>
         <button type="button" data-waypoint-action="move">Verschieben</button>
@@ -1295,11 +1437,15 @@ function wireWaypointPopup(marker, id) {
     const origPhotoVotes = photoVotesInput ? Number(photoVotesInput.getAttribute("data-original-photo-votes")) : 0;
     const curPhotoCount = photoCountInput ? (parseInt(photoCountInput.value) || 0) : 0;
     const curPhotoVotes = photoVotesInput ? (parseInt(photoVotesInput.value) || 0) : 0;
+    const tagInput = root.querySelector("[data-waypoint-tag]");
+    const origTag = tagInput ? tagInput.getAttribute("data-original-tag") : "";
+    const curTag = tagInput ? tagInput.value.trim() : "";
     saveButton.hidden = nameInput.value.trim() === originalName
       && selectedType === originalType
       && currentStatus === originalStatus
       && curPhotoCount === origPhotoCount
-      && curPhotoVotes === origPhotoVotes;
+      && curPhotoVotes === origPhotoVotes
+      && curTag === origTag;
   };
   if (nameInput) nameInput.addEventListener("input", updateSaveButton);
   typeInputs.forEach((input) => input.addEventListener("change", updateSaveButton));
@@ -1307,6 +1453,8 @@ function wireWaypointPopup(marker, id) {
   if (plannedInput) plannedInput.addEventListener("change", updateSaveButton);
   const photoInputs = root.querySelectorAll("[data-waypoint-photo-count],[data-waypoint-photo-votes]");
   photoInputs.forEach((input) => input.addEventListener("input", updateSaveButton));
+  const tagInput = root.querySelector("[data-waypoint-tag]");
+  if (tagInput) tagInput.addEventListener("input", updateSaveButton);
   root.querySelectorAll("[data-waypoint-action]").forEach((button) => {
     button.addEventListener("click", () => {
       const action = button.getAttribute("data-waypoint-action");
@@ -1354,6 +1502,8 @@ function saveWaypointFromPopup(id, root) {
   const photoVotesInput = root.querySelector("[data-waypoint-photo-votes]");
   if (photoCountInput) waypoint.photoCount = Math.max(0, parseInt(photoCountInput.value) || 0);
   if (photoVotesInput) waypoint.photoVotes = Math.max(0, parseInt(photoVotesInput.value) || 0);
+  const tagPopupInput = root.querySelector("[data-waypoint-tag]");
+  if (tagPopupInput) waypoint.tag = tagPopupInput.value.trim();
   enforceActiveWaypoints();
   saveWaypoints();
   renderWaypoints();
@@ -1679,7 +1829,7 @@ function exportWaypoints() {
   }
   enforceActiveWaypoints();
   const rows = [
-    ["name", "type", "status", "planned", "area", "active", "photo_count", "photo_votes", "lat", "lng", "s14", "s17", "plausibility"],
+    ["name", "type", "status", "planned", "area", "active", "photo_count", "photo_votes", "lat", "lng", "s14", "s17", "plausibility", "tag"],
     ...state.waypoints.map((waypoint) => [
       waypoint.name,
       waypoint.type,
@@ -1694,6 +1844,7 @@ function exportWaypoints() {
       cellKey(latLngToCell(waypoint.lat, waypoint.lng, 14)),
       cellKey(latLngToCell(waypoint.lat, waypoint.lng, 17)),
       gymPlausibilityForWaypoint(waypoint),
+      waypoint.tag || "",
     ]),
   ];
   const csv = rows.map((row) => row.map(csvValue).join(",")).join("\n");
@@ -2023,6 +2174,7 @@ function parseCsvWaypoints(text) {
       photoVotes: cellValue(row, indexes, "photo_votes") || cellValue(row, indexes, "votes") || cellValue(row, indexes, "stimmen"),
       lat: cellValue(row, indexes, "lat"),
       lng: cellValue(row, indexes, "lng"),
+      tag: cellValue(row, indexes, "tag") || cellValue(row, indexes, "einreicher") || cellValue(row, indexes, "person"),
     }))
     .filter(Boolean);
 }
@@ -2172,6 +2324,7 @@ function importedWaypointFromObject(entry) {
     photoCount: parseImportedCount(entry.photoCount ?? entry.photo_count ?? entry.photos ?? entry.fotos ?? entry.foto),
     photoVotes: parseImportedCount(entry.photoVotes ?? entry.photo_votes ?? entry.votes ?? entry.stimmen),
     createdAt: entry.createdAt || new Date().toISOString(),
+    tag: typeof entry.tag === "string" ? entry.tag.trim() : "",
   });
 }
 
