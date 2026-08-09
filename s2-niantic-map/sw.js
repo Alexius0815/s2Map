@@ -1,4 +1,5 @@
-const CACHE_NAME = "s2-maps-shell-v84";
+// Bei jedem Release: APP_VERSION in app.js erhöhen UND diesen Wert synchron mitziehen.
+const CACHE_NAME = "s2-maps-shell-1.0.0";
 const APP_SHELL = [
   "./",
   "./index.html",

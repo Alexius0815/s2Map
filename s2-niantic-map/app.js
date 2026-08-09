@@ -1,8 +1,17 @@
-const APP_VERSION = "0.9.2";
-const APP_RELEASE_DATE = "04.06.2026";
+const APP_VERSION = "1.0.0";
+const APP_RELEASE_DATE = "09.08.2026";
 const APP_BUILD = "d77b181";
 const GITHUB_COMMIT_API = "https://api.github.com/repos/Alexius0815/s2Map/commits/main";
 const APP_CHANGELOG = [
+  {
+    version: "1.0.0",
+    date: "09.08.2026",
+    changes: [
+      "Stabiler: Warnung bei Speicherfehler mit Export-Link",
+      "Wetter: Fehlgeschlagene Zellen per Button neu laden",
+      "Fehler-Logging im Hintergrund verbessert",
+    ],
+  },
   {
     version: "0.9.2",
     date: "04.06.2026",
@@ -813,6 +822,12 @@ function toggleWeather() {
   scheduleRender();
 }
 
+function retryWeather() {
+  state.weatherFailed.clear();
+  ui.weatherStatus.textContent = `Wird erneut versucht · ${weatherSourceText()}`;
+  scheduleRender();
+}
+
 function weatherSourceText() {
   return "Quelle: Open-Meteo über den eigenen API-Proxy";
 }
@@ -830,13 +845,16 @@ function fetchWeatherForCells(cells) {
   const pending = state.weatherPending.size;
 
   if (!missing.length) {
-    ui.weatherStatus.textContent = loaded
-      ? `${loaded} Wetterzellen geladen · ${weatherSourceText()}`
-      : pending
-        ? `${pending} Wetterzellen werden geladen · ${weatherSourceText()}`
-        : failed
-          ? `Wetterdaten nicht erreichbar · ${weatherSourceText()}`
+    if (failed && !pending) {
+      ui.weatherStatus.innerHTML =
+        `${failed} Wetterzellen fehlgeschlagen · <button type="button" class="inline-link" onclick="retryWeather()">Erneut versuchen</button> · ${weatherSourceText()}`;
+    } else {
+      ui.weatherStatus.textContent = loaded
+        ? `${loaded} Wetterzellen geladen · ${weatherSourceText()}`
+        : pending
+          ? `${pending} Wetterzellen werden geladen · ${weatherSourceText()}`
           : `Keine neuen Wetterzellen sichtbar · ${weatherSourceText()}`;
+    }
     return;
   }
 
@@ -929,7 +947,9 @@ function saveWaypoints() {
   try {
     localStorage.setItem(WAYPOINT_STORAGE_KEY, JSON.stringify(state.waypoints));
   } catch {
-    ui.waypointStatus.textContent = "Waypoints konnten nicht lokal gespeichert werden.";
+    // Speicher voll oder blockiert — User sofort auf Export hinweisen, damit keine Daten verloren gehen
+    ui.waypointStatus.innerHTML =
+      "⚠️ Speichern fehlgeschlagen – <button type=\"button\" class=\"inline-link\" onclick=\"exportWaypoints()\">Jetzt exportieren</button> um Datenverlust zu vermeiden.";
   }
 }
 
@@ -2801,3 +2821,12 @@ function radiansToDegrees(value) {
 function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
 }
+
+// Globales Fehler-Logging – damit stille Promise-Fehler nicht unbemerkt bleiben
+window.addEventListener("unhandledrejection", (event) => {
+  console.error("[s2Map] Unbehandelter Promise-Fehler:", event.reason);
+});
+
+window.addEventListener("error", (event) => {
+  console.error("[s2Map] Globaler Fehler:", event.message, event.filename, event.lineno);
+});
