@@ -1263,7 +1263,7 @@ function renderTagFilters() {
 function renderHighscore() {
   if (!ui.highscoreList) return;
   const type = state.highscoreType;
-  const filtered = state.waypoints.filter((w) => w.tag && (type === "all" || w.type === type));
+  const filtered = state.waypoints.filter((w) => w.tag && w.status !== "planned" && (type === "all" || w.type === type));
   const counts = new Map();
   filtered.forEach((w) => counts.set(w.tag, (counts.get(w.tag) || 0) + 1));
   const ranked = [...counts.entries()].sort((a, b) => b[1] - a[1]);
@@ -1293,7 +1293,7 @@ function renderHighscore() {
 
   const typeLabel = type === "stop" ? "Stops" : type === "arena" ? "Arenen" : "Waypoints";
   if (ui.highscoreSubtitle) {
-    ui.highscoreSubtitle.textContent = `${state.waypoints.filter((w) => w.tag).length} getaggte ${typeLabel}`;
+    ui.highscoreSubtitle.textContent = `${filtered.length} aktive ${typeLabel} · geplante zählen nicht`;
   }
 }
 
