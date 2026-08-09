@@ -1006,6 +1006,7 @@ function normalizeWaypoint(waypoint) {
     photoVotes: Number.isFinite(waypoint.photoVotes) ? waypoint.photoVotes : 0,
     createdAt: waypoint.createdAt || new Date().toISOString(),
     tag: typeof waypoint.tag === "string" ? waypoint.tag.trim() : "",
+    imageUrl: typeof waypoint.imageUrl === "string" ? waypoint.imageUrl : "",
   };
 }
 
@@ -1173,6 +1174,12 @@ function renderWaypoints() {
     ? state.waypoints.filter((w) => w.tag === state.tagFilter)
     : state.waypoints;
 
+  if (state.tagFilter) {
+    const color = tagColor(state.tagFilter);
+    ui.waypointStatus.innerHTML =
+      `<span style="color:${color}">●</span> Filter: <strong>${escapeHtml(state.tagFilter)}</strong> · ${visibleWaypoints.length} Waypoints · <button class="inline-link" type="button" onclick="clearTagFilter()">Aufheben</button>`;
+  }
+
   visibleWaypoints.forEach((waypoint) => {
     const s14 = latLngToCell(waypoint.lat, waypoint.lng, 14);
     const s17 = latLngToCell(waypoint.lat, waypoint.lng, 17);
@@ -1260,6 +1267,12 @@ function renderTagFilters() {
   });
 }
 
+function clearTagFilter() {
+  state.tagFilter = null;
+  renderWaypoints();
+  renderHighscore();
+}
+
 function renderHighscore() {
   if (!ui.highscoreList) return;
   const type = state.highscoreType;
@@ -1278,8 +1291,9 @@ function renderHighscore() {
     const color = tagColor(tag);
     const pct = Math.round((count / max) * 100);
     const medal = index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : `${index + 1}.`;
+    const isActive = state.tagFilter === tag;
     return `
-      <div class="highscore-row">
+      <div class="highscore-row${isActive ? " is-filtered" : ""}" data-filter-tag="${escapeHtml(tag)}" role="button" tabindex="0" title="${escapeHtml(tag)} auf Karte filtern">
         <span class="highscore-rank">${medal}</span>
         <div class="highscore-info">
           <span class="highscore-name" style="color:${color}">${escapeHtml(tag)}</span>
@@ -1288,8 +1302,20 @@ function renderHighscore() {
           </div>
         </div>
         <span class="highscore-count">${count}</span>
+        <span class="highscore-filter-icon" aria-hidden="true">${isActive ? "✕" : "🔍"}</span>
       </div>`;
   }).join("");
+
+  ui.highscoreList.querySelectorAll("[data-filter-tag]").forEach((row) => {
+    const activate = () => {
+      const tag = row.dataset.filterTag;
+      state.tagFilter = state.tagFilter === tag ? null : tag;
+      renderWaypoints();
+      renderHighscore();
+    };
+    row.addEventListener("click", activate);
+    row.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") activate(); });
+  });
 
   const typeLabel = type === "stop" ? "Stops" : type === "arena" ? "Arenen" : "Waypoints";
   if (ui.highscoreSubtitle) {
@@ -1407,6 +1433,16 @@ function waypointPopupHtml(waypoint) {
       <label class="waypoint-tag-field">
         <input type="text" value="${escapeHtml(waypoint.tag || "")}" placeholder="Tag (z.B. Alex)" data-waypoint-tag data-original-tag="${escapeHtml(waypoint.tag || "")}" />
       </label>
+      <div class="waypoint-image-section" data-waypoint-image-section>
+        ${waypoint.imageUrl ? `<img class="waypoint-image-preview" src="${escapeHtml(waypoint.imageUrl)}" alt="Waypoint-Bild" loading="lazy" />` : ""}
+        <div class="waypoint-image-actions">
+          <button type="button" class="waypoint-image-search-btn" data-waypoint-image-search title="Experimentell: Bild auf Wikidata suchen">
+            🔬 Bild suchen
+          </button>
+          ${waypoint.imageUrl ? `<button type="button" class="waypoint-image-remove-btn" data-waypoint-image-remove>Bild entfernen</button>` : ""}
+        </div>
+        <div class="waypoint-image-results" data-waypoint-image-results hidden></div>
+      </div>
       <div class="waypoint-popup-actions">
         <button type="button" data-waypoint-action="save" hidden>Speichern</button>
         <button type="button" data-waypoint-action="move">Verschieben</button>
@@ -1455,6 +1491,57 @@ function wireWaypointPopup(marker, id) {
   photoInputs.forEach((input) => input.addEventListener("input", updateSaveButton));
   const tagInput = root.querySelector("[data-waypoint-tag]");
   if (tagInput) tagInput.addEventListener("input", updateSaveButton);
+
+  // Bild-Suche (experimentell)
+  const imgSearchBtn = root.querySelector("[data-waypoint-image-search]");
+  const imgResults = root.querySelector("[data-waypoint-image-results]");
+  const imgRemoveBtn = root.querySelector("[data-waypoint-image-remove]");
+  const waypoint = state.waypoints.find((w) => w.id === id);
+
+  if (imgRemoveBtn && waypoint) {
+    imgRemoveBtn.addEventListener("click", () => {
+      waypoint.imageUrl = "";
+      saveWaypoints();
+      renderWaypoints();
+      map.closePopup();
+      window.setTimeout(() => openWaypointPopup(id), 80);
+    });
+  }
+
+  if (imgSearchBtn && imgResults && waypoint) {
+    imgSearchBtn.addEventListener("click", async () => {
+      imgSearchBtn.disabled = true;
+      imgSearchBtn.textContent = "🔍 Suche …";
+      imgResults.hidden = false;
+      imgResults.innerHTML = `<p class="image-search-status">Wikidata wird durchsucht …</p>`;
+      try {
+        const results = await searchWikidataImages(waypoint.lat, waypoint.lng);
+        if (!results.length) {
+          imgResults.innerHTML = `<p class="image-search-status">Kein Bild auf Wikidata gefunden.</p>`;
+        } else {
+          imgResults.innerHTML = results.map((r) => `
+            <button class="image-result-thumb" data-image-url="${escapeHtml(r.imageUrl)}" type="button" title="${escapeHtml(r.label)}">
+              <img src="${escapeHtml(r.thumbUrl)}" alt="${escapeHtml(r.label)}" loading="lazy" />
+              <span>${escapeHtml(r.label)}</span>
+            </button>`).join("");
+          imgResults.querySelectorAll("[data-image-url]").forEach((btn) => {
+            btn.addEventListener("click", () => {
+              waypoint.imageUrl = btn.dataset.imageUrl;
+              saveWaypoints();
+              renderWaypoints();
+              map.closePopup();
+              window.setTimeout(() => openWaypointPopup(id), 80);
+            });
+          });
+        }
+      } catch (err) {
+        imgResults.innerHTML = `<p class="image-search-status">Fehler: ${escapeHtml(err.message)}</p>`;
+      } finally {
+        imgSearchBtn.disabled = false;
+        imgSearchBtn.textContent = "🔬 Bild suchen";
+      }
+    });
+  }
   root.querySelectorAll("[data-waypoint-action]").forEach((button) => {
     button.addEventListener("click", () => {
       const action = button.getAttribute("data-waypoint-action");
@@ -1829,7 +1916,7 @@ function exportWaypoints() {
   }
   enforceActiveWaypoints();
   const rows = [
-    ["name", "type", "status", "planned", "area", "active", "photo_count", "photo_votes", "lat", "lng", "s14", "s17", "plausibility", "tag"],
+    ["name", "type", "status", "planned", "area", "active", "photo_count", "photo_votes", "lat", "lng", "s14", "s17", "plausibility", "tag", "image_url"],
     ...state.waypoints.map((waypoint) => [
       waypoint.name,
       waypoint.type,
@@ -1845,6 +1932,7 @@ function exportWaypoints() {
       cellKey(latLngToCell(waypoint.lat, waypoint.lng, 17)),
       gymPlausibilityForWaypoint(waypoint),
       waypoint.tag || "",
+      waypoint.imageUrl || "",
     ]),
   ];
   const csv = rows.map((row) => row.map(csvValue).join(",")).join("\n");
@@ -2175,6 +2263,7 @@ function parseCsvWaypoints(text) {
       lat: cellValue(row, indexes, "lat"),
       lng: cellValue(row, indexes, "lng"),
       tag: cellValue(row, indexes, "tag") || cellValue(row, indexes, "einreicher") || cellValue(row, indexes, "person"),
+      imageUrl: cellValue(row, indexes, "image_url") || cellValue(row, indexes, "imageurl") || cellValue(row, indexes, "bild"),
     }))
     .filter(Boolean);
 }
@@ -2325,6 +2414,7 @@ function importedWaypointFromObject(entry) {
     photoVotes: parseImportedCount(entry.photoVotes ?? entry.photo_votes ?? entry.votes ?? entry.stimmen),
     createdAt: entry.createdAt || new Date().toISOString(),
     tag: typeof entry.tag === "string" ? entry.tag.trim() : "",
+    imageUrl: typeof entry.imageUrl === "string" ? entry.imageUrl.trim() : "",
   });
 }
 
@@ -2969,6 +3059,36 @@ function degreesToRadians(value) {
 
 function radiansToDegrees(value) {
   return (value * 180) / Math.PI;
+}
+
+// ── Wikidata-Bildsuche (experimentell) ───────────────────────────────────────
+
+async function searchWikidataImages(lat, lng, radiusKm = 0.1) {
+  const sparql = `
+    SELECT ?item ?itemLabel ?image WHERE {
+      SERVICE wikibase:around {
+        ?item wdt:P625 ?coord.
+        bd:serviceParam wikibase:center "Point(${lng} ${lat})"^^geo:wktLiteral.
+        bd:serviceParam wikibase:radius "${radiusKm}".
+      }
+      ?item wdt:P18 ?image.
+      SERVICE wikibase:label { bd:serviceParam wikibase:language "de,en". }
+    }
+    LIMIT 6
+  `;
+  const url = "https://query.wikidata.org/sparql?query=" + encodeURIComponent(sparql) + "&format=json";
+  const response = await fetch(url, { headers: { Accept: "application/sparql-results+json" } });
+  if (!response.ok) throw new Error(`Wikidata: HTTP ${response.status}`);
+  const data = await response.json();
+  return (data.results?.bindings || []).map((b) => {
+    const fileName = decodeURIComponent(b.image.value.replace("http://commons.wikimedia.org/wiki/Special:FilePath/", ""));
+    const encoded = encodeURIComponent(fileName.replace(/ /g, "_"));
+    return {
+      label: b.itemLabel?.value || "Unbekannt",
+      imageUrl: `https://commons.wikimedia.org/wiki/Special:FilePath/${encoded}`,
+      thumbUrl: `https://commons.wikimedia.org/wiki/Special:FilePath/${encoded}?width=120`,
+    };
+  });
 }
 
 function clamp(value, min, max) {
